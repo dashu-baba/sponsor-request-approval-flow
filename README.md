@@ -39,4 +39,19 @@ docs/        specs, design, workflow, best-practice rulebooks, task backlog
 - **Full stack (Docker):** added in task T0.3; deployment runbook in `docs/deploy.md` (T4.3).
 
 ## Test accounts & live URLs
-Added once authentication seeding (T1.3) and deployment (T4.3) land.
+
+### Test accounts (development / demo only)
+
+After the API starts (locally or via Docker Compose), the database is seeded with one account per
+role. These credentials are **for local testing only** — never use them in production.
+
+| Role | Email | Password |
+|------|-------|----------|
+| Requestor | `requestor@demo.local` | `Password1!` |
+| Manager | `manager@demo.local` | `Password1!` |
+| Finance Admin | `finance@demo.local` | `Password1!` |
+| System Admin | `admin@demo.local` | `Password1!` |
+
+The seed data also includes sponsorship types and sample requests in every workflow status so
+reviewers can exercise approvals immediately. Final README wording and live URLs are completed in
+task T4.4.
