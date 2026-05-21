@@ -34,7 +34,7 @@ public sealed class JwtTokenServiceTests
 
         token.Should().NotBeNullOrWhiteSpace();
 
-        var handler = new JwtSecurityTokenHandler();
+        var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
         var validationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -46,11 +46,12 @@ public sealed class JwtTokenServiceTests
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes("unit-test-signing-key-at-least-32-characters")),
             RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.Name,
         };
 
         var principal = handler.ValidateToken(token, validationParameters, out _);
         principal.FindFirstValue(ClaimTypes.Role).Should().Be(Roles.Manager);
-        principal.FindFirstValue(ClaimTypes.NameIdentifier).Should().Be("user-123");
+        principal.FindFirstValue(JwtRegisteredClaimNames.Sub).Should().Be("user-123");
     }
 
     [Fact]

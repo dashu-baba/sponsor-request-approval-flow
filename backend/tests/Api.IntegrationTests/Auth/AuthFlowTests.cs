@@ -9,43 +9,18 @@ using SponsorshipApproval.Api.IntegrationTests.Infrastructure;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
 using SponsorshipApproval.Infrastructure.Identity;
-using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Api.IntegrationTests.Auth;
 
-public sealed class AuthFlowTests : IAsyncLifetime
+public sealed class AuthFlowTests(PostgresWebApplicationFactory factory)
+    : IClassFixture<PostgresWebApplicationFactory>
 {
-    private PostgresWebApplicationFactory? _factory;
-
-    public async ValueTask InitializeAsync()
-    {
-        _factory = new PostgresWebApplicationFactory();
-        try
-        {
-            await _factory.StartAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
-        }
-        catch (InvalidOperationException exception) when (exception.Message.Contains("Docker is unavailable", StringComparison.Ordinal))
-        {
-            Assert.Skip(exception.Message);
-        }
-
-        await SeedRolesAsync().ConfigureAwait(true);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync().ConfigureAwait(true);
-        }
-    }
-
     [Fact]
     public async Task Login_refresh_me_and_logout_should_succeed_for_requestor()
     {
         await CreateUserAsync("requestor@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
 
-        using var client = _factory!.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
 
         var loginResponse = await client.PostAsJsonAsync(
             "/auth/login",
@@ -59,9 +34,9 @@ public sealed class AuthFlowTests : IAsyncLifetime
         loginBody!.AccessToken.Should().NotBeNullOrWhiteSpace();
         loginResponse.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders).Should().BeTrue();
         var cookieHeaders = setCookieHeaders!.ToArray();
-        cookieHeaders.Any(header => header.Contains("refresh_token", StringComparison.Ordinal)).Should().BeTrue();
+        AssertRefreshCookieSecurity(cookieHeaders);
 
-        using var authedClient = _factory.CreateClient();
+        using var authedClient = factory.CreateClient();
         authedClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginBody.AccessToken);
 
         using var meResponse = await authedClient
@@ -72,7 +47,7 @@ public sealed class AuthFlowTests : IAsyncLifetime
             cancellationToken: TestContext.Current.CancellationToken).ConfigureAwait(true);
         profile!.Role.Should().Be(Roles.Requestor);
 
-        using var refreshClient = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var refreshClient = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
         foreach (var cookieHeader in cookieHeaders)
         {
             refreshClient.DefaultRequestHeaders.Add("Cookie", cookieHeader.Split(';')[0]);
@@ -92,9 +67,58 @@ public sealed class AuthFlowTests : IAsyncLifetime
     [Fact]
     public async Task Me_without_token_should_return_401()
     {
-        using var client = _factory!.CreateClient();
+        using var client = factory.CreateClient();
         using var response = await client.GetAsync("/me", TestContext.Current.CancellationToken).ConfigureAwait(true);
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Refresh_without_cookie_should_return_401()
+    {
+        using var client = factory.CreateClient();
+        using var response = await client
+            .PostAsync("/auth/refresh", content: null, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Refresh_with_revoked_token_should_return_401()
+    {
+        await CreateUserAsync("refresh-revoke@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+
+        using var loginClient = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var loginResponse = await loginClient.PostAsJsonAsync(
+            "/auth/login",
+            new LoginRequest("refresh-revoke@test.local", "Password1!"),
+            TestContext.Current.CancellationToken).ConfigureAwait(true);
+        loginResponse.EnsureSuccessStatusCode();
+
+        loginResponse.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders).Should().BeTrue();
+        var originalCookieHeaders = setCookieHeaders!.ToArray();
+
+        using var refreshClient = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        foreach (var cookieHeader in originalCookieHeaders)
+        {
+            refreshClient.DefaultRequestHeaders.Add("Cookie", cookieHeader.Split(';')[0]);
+        }
+
+        using var firstRefreshResponse = await refreshClient
+            .PostAsync("/auth/refresh", content: null, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        firstRefreshResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var revokedRefreshClient = factory.CreateClient();
+        foreach (var cookieHeader in originalCookieHeaders)
+        {
+            revokedRefreshClient.DefaultRequestHeaders.Add("Cookie", cookieHeader.Split(';')[0]);
+        }
+
+        using var revokedRefreshResponse = await revokedRefreshClient
+            .PostAsync("/auth/refresh", content: null, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        revokedRefreshResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -123,7 +147,7 @@ public sealed class AuthFlowTests : IAsyncLifetime
     {
         await CreateUserAsync("known@test.local", "Password1!", Roles.Manager).ConfigureAwait(true);
 
-        using var client = _factory!.CreateClient();
+        using var client = factory.CreateClient();
         using var response = await client.PostAsJsonAsync(
             "/auth/login",
             new LoginRequest("known@test.local", "WrongPassword1!"),
@@ -132,9 +156,17 @@ public sealed class AuthFlowTests : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    private static void AssertRefreshCookieSecurity(string[] cookieHeaders)
+    {
+        var cookie = cookieHeaders.Single(header => header.Contains("refresh_token", StringComparison.Ordinal));
+        cookie.Should().ContainEquivalentOf("httponly");
+        cookie.Should().ContainEquivalentOf("samesite=strict");
+        cookie.Should().ContainEquivalentOf("path=/auth");
+    }
+
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email, string password)
     {
-        using var loginClient = _factory!.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var loginClient = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
         using var loginResponse = await loginClient.PostAsJsonAsync(
             "/auth/login",
             new LoginRequest(email, password),
@@ -144,28 +176,14 @@ public sealed class AuthFlowTests : IAsyncLifetime
         var loginBody = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>(
             cancellationToken: TestContext.Current.CancellationToken).ConfigureAwait(true);
 
-        var client = _factory.CreateClient();
+        var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginBody!.AccessToken);
         return client;
     }
 
-    private async Task SeedRolesAsync()
-    {
-        using var scope = _factory!.Services.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        foreach (var role in Roles.All)
-        {
-            if (!await roleManager.RoleExistsAsync(role).ConfigureAwait(true))
-            {
-                await roleManager.CreateAsync(new IdentityRole(role)).ConfigureAwait(true);
-            }
-        }
-    }
-
     private async Task CreateUserAsync(string email, string password, string role)
     {
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = factory.Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         var user = new ApplicationUser
