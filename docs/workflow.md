@@ -29,23 +29,36 @@ Authoritative inputs every task must respect:
 
 ---
 
-## 2. Task Lifecycle
+## 2. Task Lifecycle — human-driven, one agent per phase
+
+The pipeline is **driven manually by the human**, **one agent invocation per phase**. For each
+invocation the human specifies: the **role** (implement / review / resolve / final-review), the
+**target** (task id or PR number), the **model**, and the **reasoning effort**. Agents do **not**
+auto-advance — **each phase ends with a pause**. Handoff state lives **on the PR** (description +
+review comments), not in any agent's memory, so every phase agent reads the PR to get its context.
+
+Every agent records, in its PR comment (or the PR description for Phase A), this line:
 
 ```
-task card (roadmap + DoD)  ──▶  branch off main
-   └▶ implementer agent: code + tests + docs, self-verify (build/test/lint), push
-        └▶ open PR  ──▶  reviewer agent (independent, fresh context): tiered findings
-             └▶ address Must-fix + decided Should-fix, push
-                  └▶ second review  ──▶  CI green + human approval  ──▶  agent squash-merges
-                       └▶ rebase / start next task
+Role: <Implement|Review|Resolve|Final> · Model: <opus|sonnet|haiku> · Effort: <low|medium|high>
 ```
 
-- The **implementer** and **reviewer** are different agents/contexts. The reviewer never
-  rubber-stamps its own work.
-- The implementer must **show evidence** (build, test, lint output) before claiming done — never
+(The model is set when the agent is dispatched; effort is conveyed as an instruction in the
+agent's prompt — there is no separate effort knob for subagents.)
+
+| Phase | Role | Does | Must NOT do | Ends by |
+|-------|------|------|-------------|---------|
+| **A** | Implement | Implements exactly one task on its `feat/…`/`chore/…` branch; self-verifies (build/format/test **evidence**); opens the PR; records role/model/effort. | Review its own work; start another task. | Push + open PR, then **pause**. |
+| **B** | Review | A **different** agent reviews the PR and posts **tiered comments on the PR** (format in §4). | Fix anything; merge. | Post comments + summary, then **pause**. |
+| **C** | Resolve | Reads the PR comments; addresses each per §4 rule; replies on each thread how it was handled; pushes. | Merge. | Push fixes + replies, then **pause**. |
+| **D** | Final review | Re-validates (all comments addressed, branch green); **merges** (squash) + deletes branch + updates the backlog index. | — | Merge, then **pause**. |
+
+- The **implementer and reviewer are always different agents** — no self-review, ever.
+- The implementer must **show evidence** (build/format/test output) before claiming done — never
   assert "it works" without proof.
-- **Manual testing is encouraged but optional** (nice-to-have): if feasible, run the relevant
-  flow and note the result in the PR.
+- **Manual testing is encouraged but optional** (nice-to-have): if feasible, run the relevant flow
+  and note the result in the PR.
+- If a review finds nothing blocking, Phase C may be a no-op and the human may trigger Phase D directly.
 
 ---
 
@@ -80,6 +93,33 @@ The reviewer classifies every finding into exactly one tier:
 | **Nice-to-have** | Optional polish / future improvement. | Logged to [`docs/backlog.md`](./backlog.md) with a one-line rationale; **not** done now. |
 
 Every deferred Should-fix and every Nice-to-have lands in `docs/backlog.md` so nothing is lost.
+
+### Review comment format (Phase B)
+The reviewer posts findings **on the PR** — inline review comments where a line is implicated, plus
+one summary comment listing every finding. Each finding uses this exact format so the resolver can
+act on it unambiguously:
+
+> **[🔴 Must | 🟡 Should | 🟢 Nice] &lt;short title&gt;**
+> **Location:** `path/to/file.cs:123` (or "area: …")
+> **Problem:** what is wrong.
+> **Why it matters:** the impact, and which requirement/standard it violates.
+> **Suggested fix:**
+> ```csharp
+> // a concrete example or numbered steps the dev can follow
+> ```
+
+The summary comment ends with the `Role · Model · Effort` line. The reviewer then **pauses** — it
+does **not** fix anything, and it does **not** merge.
+
+### Resolution rules (Phase C)
+The resolver reads every comment, acts on it, and **replies on that comment's thread** with one of:
+
+- `✅ Resolved — <how / commit>` — **Must:** always. **Should:** unless the human or a rule defers it.
+  **Nice:** only when the fix is simple.
+- `📋 Deferred → backlog <B-id> — <why>` — a **Should** being deferred, or a **Nice** that isn't simple.
+
+Deferred items are added to `docs/backlog.md` in the same push. The resolver pushes its changes and
+**pauses** — it does **not** merge.
 
 ---
 
@@ -168,7 +208,11 @@ regardless, so format/lint are kept whole-repo for consistency.
 
 ## 8. Merge Authority
 
-- **Human approves; agent merges.** After the second review passes and CI is green, the agent
-  asks for explicit go-ahead. On approval, the agent squash-merges and deletes the branch, then
-  rebases/starts the next task.
-- Never force-push `main`; never merge with red CI or unresolved Must-fix.
+- **The Phase D (Final-review) agent merges** — after re-validating that every review comment was
+  addressed and the branch is green (CI green once CI exists). The human's control point is that
+  **they manually trigger Phase D**; invoking it authorizes the merge.
+- Squash-merge into `main`; delete the branch; update the task-backlog status to ✅.
+- `main` is protected. With a single GitHub account there is no second party to satisfy a review
+  requirement, so the owner merges via **admin override** (`gh pr merge --squash --admin`); the real
+  gate is "comments addressed + CI green + human triggered Phase D."
+- Never force-push `main`; never merge with unresolved Must-fix or red CI.

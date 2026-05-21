@@ -16,17 +16,29 @@ React 19 + TypeScript (Vite) · MinIO (S3-compatible) · Docker Compose + nginx.
 - `docs/tasks/` — task cards (the roadmap for each branch).
 - `docs/best-practices/` — C#, ASP.NET Core, React, Postgres/EF, security, deployment, testing.
 
-## How to work a task
-1. Read the task card in `docs/tasks/T<id>-*.md` and the sections it references.
-2. Implement to the standards in `docs/best-practices/` (don't reinvent; follow them).
-3. Invoke the relevant skill for the area, e.g.:
-   - EF Core / Postgres → `dotnet-data:optimizing-ef-core-queries`
-   - File upload → `dotnet-aspnet:minimal-api-file-upload`
-   - Tests → `superpowers:test-driven-development`, `dotnet-test:test-anti-patterns`, `dotnet-test:assertion-quality`
-   - Solution/MSBuild → `dotnet-msbuild:directory-build-organization`, `dotnet-nuget:convert-to-cpm`
-4. **Show evidence before claiming done:** build clean (warnings = errors), `dotnet format` /
-   ESLint / Prettier clean, tests passing. Use LSP diagnostics where available.
-5. Open a PR using the template; satisfy the Definition of Done (`workflow.md` §6).
+## The pipeline (read `workflow.md` §2 — this is mandatory)
+Work is **human-driven, one agent per phase**. You will be told your **role** for this run —
+**Implement**, **Review**, **Resolve**, or **Final-review** — plus the target task/PR, model, and
+effort. **Do only your phase, then PAUSE.** Never advance to another phase on your own. Handoff
+state lives **on the PR** (description + comments) — read the PR for context. Record
+`Role · Model · Effort` on the PR.
+
+- **Implement:** read the task card in `docs/tasks/T<id>-*.md` + referenced sections; implement to
+  the `docs/best-practices/` standards; **show evidence** (build warnings=errors clean, `dotnet
+  format`/ESLint/Prettier clean, tests passing) before claiming done; open the PR with the template;
+  then pause. Do NOT review your own work.
+- **Review:** independently verify the PR against the card + standards; post tiered comments on the
+  PR in the §4 format (🔴 Must / 🟡 Should / 🟢 Nice, with location, problem, why, example fix);
+  then pause. Do NOT fix or merge.
+- **Resolve:** address every PR comment per §4 rules (fix Must always; Should unless deferred; Nice
+  if simple, else →`docs/backlog.md`); reply on each thread; push; then pause. Do NOT merge.
+- **Final-review:** re-validate comments addressed + branch green, then squash-merge, delete branch,
+  update the backlog index; then pause.
+
+Useful skills by area: EF Core/Postgres → `dotnet-data:optimizing-ef-core-queries`; file upload →
+`dotnet-aspnet:minimal-api-file-upload`; tests → `superpowers:test-driven-development`,
+`dotnet-test:test-anti-patterns`, `dotnet-test:assertion-quality`; solution/MSBuild →
+`dotnet-msbuild:directory-build-organization`, `dotnet-nuget:convert-to-cpm`.
 
 ## Hard rules
 - The enforced config is the source of truth for style/format (`.editorconfig`, `.csproj`,
