@@ -42,7 +42,7 @@ The build enforces `TreatWarningsAsErrors=true`. Zero warnings is the bar.
 dotnet run --project src/Api
 ```
 
-The API starts on `https://localhost:7000` (or the port in `launchSettings.json`).
+The API starts on `https://localhost:7208` (or the ports configured in `launchSettings.json`).
 
 ## Test
 

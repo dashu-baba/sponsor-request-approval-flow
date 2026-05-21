@@ -1,0 +1,7 @@
+# Scoped overrides for the Api project only.
+# CA2007 (ConfigureAwait) is a no-op in ASP.NET Core because there is no
+# SynchronizationContext to capture. Suppress it here to avoid false positives
+# while keeping the rule active in Domain / Application / Infrastructure.
+
+[*.cs]
+dotnet_diagnostic.CA2007.severity = none
