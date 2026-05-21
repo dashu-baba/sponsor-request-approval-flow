@@ -40,3 +40,6 @@ pnpm-debug.log*
 # ---- Docker / runtime data ----
 **/docker-data/
 *.log
+
+# ---- Tooling scratch ----
+.superpowers/
