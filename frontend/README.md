@@ -4,8 +4,8 @@ React 19 + TypeScript + Vite frontend for the Sponsorship Request Approval Workf
 
 ## Prerequisites
 
-- Node.js 22+
-- npm 10+
+- Node.js 24 (pinned via `.nvmrc`; run `nvm use`)
+- npm 11+
 
 ## Development
 
@@ -42,7 +42,7 @@ npm run format         # prettier --write .
 
 ## Directory Structure (per HLD §9)
 
-```
+```text
 src/
 ├─ app/         # Router, providers, layout
 ├─ features/
