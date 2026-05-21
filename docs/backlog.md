@@ -10,3 +10,6 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | ID | Tier | Item | Why deferred / rationale | Revisit when |
 |----|------|------|--------------------------|--------------|
 | B-001 | 💡 | Switch CI lint/format from whole-repo to **changed-files-only** | At current size whole-repo verify runs in seconds and prevents drift; incremental adds base-ref/diff plumbing for no gain yet (YAGNI). | Repo grows large / CI time becomes painful. |
+| B-002 | 💡 | Add a comment documenting the `AnalysisLevel=latest` choice in `Directory.Build.props` | T0.1 review (M1): `latest` is stricter than the template default `latest-recommended`; intentional max-strictness, but undocumented. | Touching `Directory.Build.props`. |
+| B-003 | 💡 | Consolidate the two `[*.cs]` sections in backend `.editorconfig` | T0.1 review (M3): valid (sections merge) but harder to read. | Next `.editorconfig` edit. |
+| B-004 | 💡 | Add a comment clarifying global `IsPackable=false` intent | T0.1 review (M4): harmless but could silently block a future NuGet publish of a `src/` lib. | If we ever publish a library package. |
