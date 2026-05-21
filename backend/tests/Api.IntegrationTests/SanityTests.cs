@@ -1,5 +1,7 @@
+using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Testcontainers.PostgreSql;
 
 namespace SponsorshipApproval.Api.IntegrationTests;
 
@@ -12,12 +14,47 @@ public sealed class SanityTests(WebApplicationFactory<Program> factory)
     [Fact]
     public async Task Health_endpoint_should_return_success()
     {
-        using var client = factory.CreateClient();
+        PostgreSqlContainer? postgres = null;
 
-        using var response = await client
-            .GetAsync("/health", TestContext.Current.CancellationToken)
-            .ConfigureAwait(true);
+        try
+        {
+            postgres = new PostgreSqlBuilder("postgres:17.9-alpine3.23")
+                .WithDatabase("sponsorship_approval_tests")
+                .WithUsername("sponsorship_app")
+                .WithWaitStrategy(
+                    Wait.ForUnixContainer()
+                        .UntilExternalTcpPortIsAvailable(5432)
+                        .UntilCommandIsCompleted("pg_isready -U sponsorship_app -d sponsorship_approval_tests"))
+                .Build();
 
-        response.IsSuccessStatusCode.Should().BeTrue();
+            await postgres.StartAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+        }
+        catch (DockerUnavailableException exception)
+        {
+            Assert.Skip($"Docker is unavailable for Testcontainers: {exception.Message}");
+        }
+
+        var scopedFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Default", postgres!.GetConnectionString());
+        });
+
+        try
+        {
+            using var client = scopedFactory.CreateClient();
+
+            using var response = await client
+                .GetAsync("/health", TestContext.Current.CancellationToken)
+                .ConfigureAwait(true);
+
+            response.IsSuccessStatusCode.Should().BeTrue();
+        }
+        finally
+        {
+            if (postgres is not null)
+            {
+                await postgres.DisposeAsync().ConfigureAwait(true);
+            }
+        }
     }
 }

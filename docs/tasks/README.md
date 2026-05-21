@@ -35,7 +35,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 ### Epic 1 — Data & Auth (mostly sequential)
 | ID | Title | Depends on | Branch | Status |
 |----|-------|-----------|--------|--------|
-| T1.1 | Domain model + EF Core `DbContext` + initial migration (entities, enums, money/`timestamptz`, **snake_case naming**, **`xmin` concurrency token** on `SponsorshipRequest`) | T0.3 | `feat/T1.1-domain-efcore` | ⬜ |
+| T1.1 | Domain model + EF Core `DbContext` + initial migration (entities, enums, money/`timestamptz`, **snake_case naming**, **`xmin` concurrency token** on `SponsorshipRequest`) | T0.3 | `feat/T1.1-domain-efcore` | ✅ |
 | T1.2 | Identity + JWT auth (login/refresh/logout, role claims, httpOnly refresh cookie, `[Authorize]` policies) | T1.1 | `feat/T1.2-identity-jwt` | ⬜ |
 | T1.3 | Seed data (4 role accounts, sponsorship types, sample requests across all statuses) | T1.2 | `feat/T1.3-seed-data` | ⬜ |
 
