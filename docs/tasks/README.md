@@ -28,7 +28,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 ### Epic 0 — Foundation (sequential; merges to `main` before any feature work)
 | ID | Title | Depends on | Branch | Status |
 |----|-------|-----------|--------|--------|
-| T0.1 | Repo + .NET solution scaffold (Clean Arch projects, `.editorconfig`, `Directory.Build.props`, analyzers, `.gitignore`, README skeleton) | — | `chore/T0.1-solution-scaffold` | ⬜ |
+| T0.1 | Repo + .NET solution scaffold (Clean Arch projects, `.editorconfig`, `Directory.Build.props`, analyzers, `.gitignore`, README skeleton) | — | `chore/T0.1-solution-scaffold` | ✅ |
 | T0.2 | Frontend scaffold (Vite + React + TS strict, ESLint/Prettier) + Husky + lint-staged pre-commit hooks + CI workflow + PR template | T0.1 | `chore/T0.2-frontend-and-ci` | ⬜ |
 | T0.3 | Docker-Compose walking skeleton (api health endpoint + Postgres + MinIO + nginx + React shell + one-shot `migrator` service, all `up`) + deploy doc skeleton | T0.2 | `chore/T0.3-compose-skeleton` | ⬜ |
 
