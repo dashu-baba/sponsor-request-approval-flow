@@ -4,10 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using SponsorshipApproval.Application;
 using SponsorshipApproval.Application.Auth;
+using SponsorshipApproval.Application.Common;
+using SponsorshipApproval.Application.Common.Behaviors;
 using SponsorshipApproval.Infrastructure.Auth;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence;
+using SponsorshipApproval.Infrastructure.Requests.Handlers;
 
 namespace SponsorshipApproval.Infrastructure;
 
@@ -65,7 +69,16 @@ public static class DependencyInjection
             .AddPolicy(AuthorizationPolicies.FinanceAdmin, policy => policy.RequireRole(Roles.FinanceAdmin))
             .AddPolicy(AuthorizationPolicies.SystemAdmin, policy => policy.RequireRole(Roles.SystemAdmin));
 
+        services.AddHttpContextAccessor();
+        services.AddApplication();
+        services.AddMediatR(configuration =>
+        {
+            configuration.RegisterServicesFromAssembly(typeof(CreateRequestCommandHandler).Assembly);
+            configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
+
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         return services;
