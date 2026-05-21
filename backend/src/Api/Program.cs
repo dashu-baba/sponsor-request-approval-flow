@@ -1,6 +1,7 @@
+using SponsorshipApproval.Api.Endpoints;
 using SponsorshipApproval.Infrastructure;
+using SponsorshipApproval.Infrastructure.Persistence;
 
-// Entrypoint — full DI wiring and middleware configuration come in later tasks.
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
@@ -14,9 +15,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
+app.MapAuthEndpoints();
+app.MapSystemEndpoints();
+
+await app.Services.MigrateAndSeedAsync().ConfigureAwait(false);
 
 app.Run();
 
-// Expose the generated Program class for WebApplicationFactory in integration tests.
 public partial class Program { }

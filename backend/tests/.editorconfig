@@ -1,0 +1,4 @@
+# Test projects run on xUnit's sync context; ConfigureAwait is a no-op and
+# xUnit1030 forbids ConfigureAwait(false) in async test methods.
+[*.cs]
+dotnet_diagnostic.CA2007.severity = none
