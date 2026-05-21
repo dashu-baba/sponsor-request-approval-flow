@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Chain to the backend-level Directory.Build.props so test projects inherit all base settings.
+    MSBuild stops at the first Directory.Build.props it finds walking up, so we import manually.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <ItemGroup>
+    <!-- xunit types (Fact, Theory, etc.) are not auto-imported; expose them globally for all test projects. -->
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
