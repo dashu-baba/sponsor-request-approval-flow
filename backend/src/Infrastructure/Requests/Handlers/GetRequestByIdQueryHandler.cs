@@ -30,11 +30,13 @@ public sealed class GetRequestByIdQueryHandler(AppDbContext dbContext, ICurrentU
             throw new ForbiddenException("You do not have access to this request.");
         }
 
-        return await dbContext.SponsorshipRequests
+        var detail = await dbContext.SponsorshipRequests
             .AsNoTracking()
             .Where(request => request.Id == query.Id)
             .SelectDetailDto()
-            .SingleAsync(cancellationToken)
+            .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        return detail ?? throw new NotFoundException("Request was not found.");
     }
 }
