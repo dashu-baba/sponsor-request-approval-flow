@@ -10,20 +10,27 @@ using SponsorshipApproval.Application.Auth.Models;
 using SponsorshipApproval.Domain.Requests;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence;
+using SponsorshipApproval.Infrastructure.Persistence.Seeding;
 
 namespace SponsorshipApproval.Api.IntegrationTests.Seeding;
 
 public sealed class SeedDataTests(PostgresWebApplicationFactory factory)
     : IClassFixture<PostgresWebApplicationFactory>
 {
-    private const string DefaultPassword = "Password1!";
-
     private static readonly (string Email, string Role, string DisplayName)[] ExpectedUsers =
     [
         ("requestor@demo.local", Roles.Requestor, "Alex Requestor"),
         ("manager@demo.local", Roles.Manager, "Morgan Manager"),
         ("finance@demo.local", Roles.FinanceAdmin, "Finley Finance"),
         ("admin@demo.local", Roles.SystemAdmin, "Sam Admin"),
+    ];
+
+    private static readonly string[] ExpectedSponsorshipTypeNames =
+    [
+        "Conference",
+        "Community Event",
+        "Sports Sponsorship",
+        "Educational Program",
     ];
 
     [Fact]
@@ -43,6 +50,15 @@ public sealed class SeedDataTests(PostgresWebApplicationFactory factory)
             roles.Should().ContainSingle().Which.Should().Be(role);
         }
 
+        var sponsorshipTypes = await dbContext.SponsorshipTypes
+            .AsNoTracking()
+            .Where(type => type.IsActive)
+            .Select(type => type.Name)
+            .ToListAsync(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        sponsorshipTypes.Should().BeEquivalentTo(ExpectedSponsorshipTypeNames);
+
         var requestsByStatus = await dbContext.SponsorshipRequests
             .AsNoTracking()
             .GroupBy(request => request.Status)
@@ -57,32 +73,44 @@ public sealed class SeedDataTests(PostgresWebApplicationFactory factory)
                 $"at least one seeded request should exist in status {status}");
         }
 
-        var pendingManagerRequest = await dbContext.SponsorshipRequests
-            .AsNoTracking()
-            .Include(request => request.WorkflowHistoryEntries)
-            .SingleAsync(
-                request => request.Status == RequestStatus.PendingManagerApproval,
-                TestContext.Current.CancellationToken)
+        await AssertWorkflowTrailAsync(
+                dbContext,
+                RequestStatus.PendingManagerApproval,
+                1,
+                RequestStatus.PendingManagerApproval)
             .ConfigureAwait(true);
 
-        pendingManagerRequest.WorkflowHistoryEntries.Should().HaveCount(1);
-        pendingManagerRequest.WorkflowHistoryEntries.Single().ToStatus.Should().Be(RequestStatus.PendingManagerApproval);
-
-        var approvedRequest = await dbContext.SponsorshipRequests
-            .AsNoTracking()
-            .Include(request => request.WorkflowHistoryEntries)
-            .SingleAsync(request => request.Status == RequestStatus.Approved, TestContext.Current.CancellationToken)
+        await AssertWorkflowTrailAsync(
+                dbContext,
+                RequestStatus.PendingFinanceReview,
+                2,
+                RequestStatus.PendingManagerApproval,
+                RequestStatus.PendingFinanceReview)
             .ConfigureAwait(true);
 
-        approvedRequest.WorkflowHistoryEntries.Should().HaveCount(3);
-        approvedRequest.WorkflowHistoryEntries
-            .OrderBy(entry => entry.OccurredAt)
-            .Select(entry => entry.ToStatus)
-            .Should()
-            .Equal(
+        await AssertWorkflowTrailAsync(
+                dbContext,
+                RequestStatus.Approved,
+                3,
                 RequestStatus.PendingManagerApproval,
                 RequestStatus.PendingFinanceReview,
-                RequestStatus.Approved);
+                RequestStatus.Approved)
+            .ConfigureAwait(true);
+
+        await AssertWorkflowTrailAsync(
+                dbContext,
+                RequestStatus.Rejected,
+                2,
+                RequestStatus.PendingManagerApproval,
+                RequestStatus.Rejected)
+            .ConfigureAwait(true);
+
+        await AssertWorkflowTrailAsync(
+                dbContext,
+                RequestStatus.Cancelled,
+                1,
+                RequestStatus.Cancelled)
+            .ConfigureAwait(true);
 
         var draftRequest = await dbContext.SponsorshipRequests
             .AsNoTracking()
@@ -102,7 +130,7 @@ public sealed class SeedDataTests(PostgresWebApplicationFactory factory)
         {
             using var response = await client.PostAsJsonAsync(
                 "/auth/login",
-                new LoginRequest(email, DefaultPassword),
+                new LoginRequest(email, SeedData.DefaultPassword),
                 TestContext.Current.CancellationToken).ConfigureAwait(true);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK, $"login should succeed for {email}");
@@ -143,5 +171,25 @@ public sealed class SeedDataTests(PostgresWebApplicationFactory factory)
 
         (await dbContext.WorkflowHistoryEntries.CountAsync(TestContext.Current.CancellationToken).ConfigureAwait(true))
             .Should().Be(9);
+    }
+
+    private static async Task AssertWorkflowTrailAsync(
+        AppDbContext dbContext,
+        RequestStatus status,
+        int expectedEntryCount,
+        params RequestStatus[] expectedToStatuses)
+    {
+        var request = await dbContext.SponsorshipRequests
+            .AsNoTracking()
+            .Include(entry => entry.WorkflowHistoryEntries)
+            .SingleAsync(entry => entry.Status == status, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        request.WorkflowHistoryEntries.Should().HaveCount(expectedEntryCount);
+        request.WorkflowHistoryEntries
+            .OrderBy(entry => entry.OccurredAt)
+            .Select(entry => entry.ToStatus)
+            .Should()
+            .Equal(expectedToStatuses);
     }
 }

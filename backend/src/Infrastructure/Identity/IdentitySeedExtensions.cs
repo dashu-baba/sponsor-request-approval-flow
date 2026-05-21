@@ -33,27 +33,30 @@ public static class IdentitySeedExtensions
 
         foreach (var seedUser in SeedData.Users.All)
         {
-            var existingUser = await userManager.FindByEmailAsync(seedUser.Email).ConfigureAwait(false);
-            if (existingUser is not null)
+            var user = await userManager.FindByEmailAsync(seedUser.Email).ConfigureAwait(false);
+            if (user is null)
             {
-                continue;
+                user = new ApplicationUser
+                {
+                    Id = seedUser.Id,
+                    UserName = seedUser.Email,
+                    Email = seedUser.Email,
+                    DisplayName = seedUser.DisplayName,
+                    Department = seedUser.Department,
+                    EmailConfirmed = true,
+                };
+
+                var createResult = await userManager.CreateAsync(user, SeedData.DefaultPassword).ConfigureAwait(false);
+                if (!createResult.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to seed user '{seedUser.Email}': {string.Join(", ", createResult.Errors.Select(error => error.Description))}");
+                }
             }
 
-            var user = new ApplicationUser
+            if (await userManager.IsInRoleAsync(user, seedUser.Role).ConfigureAwait(false))
             {
-                Id = seedUser.Id,
-                UserName = seedUser.Email,
-                Email = seedUser.Email,
-                DisplayName = seedUser.DisplayName,
-                Department = seedUser.Department,
-                EmailConfirmed = true,
-            };
-
-            var createResult = await userManager.CreateAsync(user, SeedData.DefaultPassword).ConfigureAwait(false);
-            if (!createResult.Succeeded)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to seed user '{seedUser.Email}': {string.Join(", ", createResult.Errors.Select(error => error.Description))}");
+                continue;
             }
 
             var roleResult = await userManager.AddToRoleAsync(user, seedUser.Role).ConfigureAwait(false);

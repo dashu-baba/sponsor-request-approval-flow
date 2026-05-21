@@ -12,8 +12,8 @@ public static class ApplicationDataSeedExtensions
         using var scope = services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        if (await dbContext.SponsorshipRequests
-                .AnyAsync(request => request.Id == SeedData.Requests.Draft)
+        if (await dbContext.SponsorshipTypes
+                .AnyAsync(type => type.Id == SeedData.SponsorshipTypes.Conference)
                 .ConfigureAwait(false))
         {
             return;
