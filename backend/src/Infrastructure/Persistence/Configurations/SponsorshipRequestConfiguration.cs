@@ -8,7 +8,11 @@ public sealed class SponsorshipRequestConfiguration : IEntityTypeConfiguration<S
 {
     public void Configure(EntityTypeBuilder<SponsorshipRequest> builder)
     {
-        builder.ToTable("sponsorship_requests");
+        builder.ToTable(
+            "sponsorship_requests",
+            table => table.HasCheckConstraint(
+                "ck_sponsorship_requests_requested_amount_non_negative",
+                "requested_amount >= 0"));
 
         builder.HasKey(request => request.Id);
 

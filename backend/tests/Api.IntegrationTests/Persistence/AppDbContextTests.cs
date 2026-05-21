@@ -19,7 +19,6 @@ public sealed class AppDbContextTests
             postgres = new PostgreSqlBuilder("postgres:17.9-alpine3.23")
                 .WithDatabase("sponsorship_approval_tests")
                 .WithUsername("sponsorship_app")
-                .WithPassword("test-postgres-password")
                 .WithWaitStrategy(
                     Wait.ForUnixContainer()
                         .UntilExternalTcpPortIsAvailable(5432)

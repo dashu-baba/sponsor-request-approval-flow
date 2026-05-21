@@ -8,7 +8,11 @@ public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachmen
 {
     public void Configure(EntityTypeBuilder<Attachment> builder)
     {
-        builder.ToTable("attachments");
+        builder.ToTable(
+            "attachments",
+            table => table.HasCheckConstraint(
+                "ck_attachments_size_bytes_non_negative",
+                "size_bytes >= 0"));
 
         builder.HasKey(attachment => attachment.Id);
 

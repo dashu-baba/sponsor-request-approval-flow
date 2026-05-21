@@ -34,14 +34,14 @@ public sealed class SanityTests(WebApplicationFactory<Program> factory)
             Assert.Skip($"Docker is unavailable for Testcontainers: {exception.Message}");
         }
 
-        const string connectionStringKey = "ConnectionStrings__Default";
-        var previousConnectionString = Environment.GetEnvironmentVariable(connectionStringKey);
+        var scopedFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Default", postgres!.GetConnectionString());
+        });
 
         try
         {
-            Environment.SetEnvironmentVariable(connectionStringKey, postgres!.GetConnectionString());
-
-            using var client = factory.CreateClient();
+            using var client = scopedFactory.CreateClient();
 
             using var response = await client
                 .GetAsync("/health", TestContext.Current.CancellationToken)
@@ -51,8 +51,6 @@ public sealed class SanityTests(WebApplicationFactory<Program> factory)
         }
         finally
         {
-            Environment.SetEnvironmentVariable(connectionStringKey, previousConnectionString);
-
             if (postgres is not null)
             {
                 await postgres.DisposeAsync().ConfigureAwait(true);
