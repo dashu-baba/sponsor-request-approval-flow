@@ -1,6 +1,7 @@
 using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using SponsorshipApproval.Api.IntegrationTests.Infrastructure;
 using Testcontainers.PostgreSql;
 
 namespace SponsorshipApproval.Api.IntegrationTests;
@@ -37,6 +38,7 @@ public sealed class SanityTests(WebApplicationFactory<Program> factory)
         var scopedFactory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseSetting("ConnectionStrings:Default", postgres!.GetConnectionString());
+            TestConfiguration.ApplyJwtSettings(builder);
         });
 
         try

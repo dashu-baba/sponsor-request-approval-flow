@@ -15,3 +15,5 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | B-004 | 💡 | Add a comment clarifying global `IsPackable=false` intent | T0.1 review (M4): harmless but could silently block a future NuGet publish of a `src/` lib. | If we ever publish a library package. |
 | B-005 | 💡 | Drop redundant `Status` single-column index on `sponsorship_requests` | T1.1 CodeRabbit: composite `(status, created_at)` already covers status filters; extra index adds write cost. | When query plans show the composite index is sufficient. |
 | B-006 | 💡 | Add `## Implementation Tasks` h2 before Task 1 in `docs/superpowers/plans/2026-05-22-domain-efcore.md` | T1.1 CodeRabbit nitpick: heading hierarchy skips h2. | Next edit of that plan doc. |
+| B-007 | 💡 | Refresh token reuse detection — revoke all active refresh tokens for user on revoked-token reuse | T1.2 review: common rotation hardening; MVP works without it. | Security hardening pass or auth incident. |
+| B-008 | 💡 | Rate limiting on `/auth/login` and `/auth/refresh` | T1.2 review: security §15; not required for assessment MVP. | Before production exposure or abuse observed. |
