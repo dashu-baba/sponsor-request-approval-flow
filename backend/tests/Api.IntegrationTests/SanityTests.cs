@@ -1,20 +1,23 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace SponsorshipApproval.Api.IntegrationTests;
 
 /// <summary>
-/// Sanity tests: verifies xUnit + FluentAssertions are wired correctly in this project.
-/// Real integration tests (WebApplicationFactory + Testcontainers) are added in later tasks.
+/// API integration tests backed by the in-memory test server.
 /// </summary>
-public class SanityTests
+public sealed class SanityTests(WebApplicationFactory<Program> factory)
+    : IClassFixture<WebApplicationFactory<Program>>
 {
     [Fact]
-    public void True_should_be_true()
+    public async Task Health_endpoint_should_return_success()
     {
-        // Arrange / Act
-        var value = true;
+        using var client = factory.CreateClient();
 
-        // Assert
-        value.Should().BeTrue();
+        using var response = await client
+            .GetAsync("/health", TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        response.IsSuccessStatusCode.Should().BeTrue();
     }
 }
