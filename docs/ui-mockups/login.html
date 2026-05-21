@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand:        #4A3FC8;
+    --brand-dark:   #332C9A;
+    --brand-light:  #EEEDFE;
+    --surface:      #FFFFFF;
+    --bg:           #F4F3FB;
+    --border:       #E2E0F5;
+    --text-primary: #1A1830;
+    --text-secondary:#6B6894;
+    --text-hint:    #AAA8C8;
+    --success:      #0F6E56;
+    --success-bg:   #E1F5EE;
+    --danger:       #A32D2D;
+    --danger-bg:    #FCEBEB;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow-lg: 0 8px 40px rgba(74,63,200,.14), 0 2px 8px rgba(74,63,200,.08);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  /* ── Left panel ── */
+  .panel-left {
+    width: 420px;
+    flex-shrink: 0;
+    background: var(--brand);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px 48px;
+    position: relative;
+    overflow: hidden;
+    gap: 48px;
+  }
+
+  .panel-left::before {
+    content: '';
+    position: absolute;
+    top: -140px; right: -140px;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+  }
+  .panel-left::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; left: -100px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+  }
+  .deco-circle {
+    position: absolute;
+    top: 50%; right: -80px;
+    transform: translateY(-50%);
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+  }
+  .brand-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.15);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .brand-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -.3px;
+  }
+  .brand-name span { opacity: .6; font-weight: 300; }
+
+  .panel-left-body { position: relative; }
+  .panel-tagline {
+    font-size: 32px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.3;
+    letter-spacing: -.5px;
+    margin-bottom: 18px;
+  }
+  .panel-tagline strong { font-weight: 600; display: block; }
+  .panel-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,.58);
+    line-height: 1.75;
+    max-width: 300px;
+  }
+
+  /* ── Right panel ── */
+  .panel-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    background: var(--bg);
+    position: relative;
+  }
+  .panel-right::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle at top right, rgba(74,63,200,.06), transparent 65%);
+    pointer-events: none;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    animation: slideUp .4s cubic-bezier(.22,.68,0,1.2) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .login-header { margin-bottom: 28px; }
+  .login-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -.3px;
+    margin-bottom: 5px;
+  }
+  .login-sub {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+
+  /* Form */
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-icon {
+    position: absolute;
+    left: 11px;
+    color: var(--text-hint);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    transition: color .15s;
+  }
+  .input-wrap:focus-within .input-icon { color: var(--brand); }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    font-size: 13.5px;
+    font-family: var(--font);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #FAFAFA;
+    color: var(--text-primary);
+    outline: none;
+    transition: all .15s;
+  }
+  .form-input:focus {
+    border-color: var(--brand);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(74,63,200,.1);
+  }
+  .form-input.err {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 2px rgba(163,45,45,.1);
+  }
+
+  .pw-toggle {
+    position: absolute; right: 11px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-hint);
+    display: flex; align-items: center;
+    padding: 0; transition: color .15s;
+  }
+  .pw-toggle:hover { color: var(--text-secondary); }
+
+  .field-err {
+    font-size: 11px;
+    color: var(--danger);
+    margin-top: 4px;
+    display: none;
+  }
+  .field-err.show { display: block; }
+
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .checkbox-wrap {
+    display: flex; align-items: center; gap: 7px; cursor: pointer;
+  }
+  .checkbox-wrap input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+  .checkbox-wrap span { font-size: 12.5px; color: var(--text-secondary); }
+  .forgot-link {
+    font-size: 12.5px;
+    color: var(--brand);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .forgot-link:hover { text-decoration: underline; }
+
+  /* Alert */
+  .alert {
+    display: none;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    margin-bottom: 18px;
+    line-height: 1.5;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .alert.show { display: flex; animation: fadeIn .2s ease both; }
+  .alert-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #F7C1C1; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Button */
+  .btn-login {
+    width: 100%;
+    padding: 11px;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all .15s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    letter-spacing: -.1px;
+  }
+  .btn-login:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,63,200,.28); }
+  .btn-login:active { transform: translateY(0); box-shadow: none; }
+  .btn-login.loading { pointer-events: none; opacity: .8; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    display: none;
+  }
+  .btn-login.loading .spinner { display: block; }
+  .btn-login.loading .btn-text { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .login-footer {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-hint);
+    line-height: 1.7;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    body { flex-direction: column; overflow: auto; }
+    .panel-left { width: 100%; padding: 36px 28px; gap: 24px; }
+    .panel-tagline { font-size: 24px; }
+    .panel-right { padding: 32px 16px; }
+    .login-card { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LEFT PANEL ── -->
+<aside class="panel-left" role="complementary" aria-label="Application overview">
+  <div class="deco-circle" aria-hidden="true"></div>
+
+  <div class="brand">
+    <div class="brand-icon" aria-hidden="true">◈</div>
+    <div class="brand-name">Spon<span>Track</span></div>
+  </div>
+
+  <div class="panel-left-body">
+    <p class="panel-tagline">Sponsorship approvals,<strong>simplified.</strong></p>
+    <p class="panel-desc">A structured workflow for submitting, reviewing, and approving corporate sponsorship requests — from draft to final sign-off.</p>
+  </div>
+
+  <p style="font-size:12px;color:rgba(255,255,255,.3);position:relative">© 2025 SponTrack · Internal Use Only</p>
+</aside>
+
+<!-- ── RIGHT PANEL ── -->
+<main class="panel-right">
+  <div class="login-card" role="main">
+
+    <div class="login-header">
+      <h1 class="login-title">Welcome back</h1>
+      <p class="login-sub">Sign in to your account to continue</p>
+    </div>
+
+    <!-- Error alert -->
+    <div class="alert alert-danger" id="alert-error" role="alert" aria-live="polite">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="flex-shrink:0;margin-top:1px"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
+      <span id="alert-error-text">Invalid email or password. Please try again.</span>
+    </div>
+
+    <!-- Login form -->
+    <form id="login-form" novalidate>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email address</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z"/><path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z"/></svg>
+          </span>
+          <input
+            class="form-input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@company.com"
+            autocomplete="email"
+            spellcheck="false"
+          />
+        </div>
+        <span class="field-err" id="email-err">Please enter a valid email address.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
+          </span>
+          <input
+            class="form-input"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          <button class="pw-toggle" type="button" id="pw-toggle" aria-label="Toggle password visibility" onclick="togglePw()">
+            <svg id="eye-icon" width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+        <span class="field-err" id="pw-err">Password is required.</span>
+      </div>
+
+      <div class="form-footer">
+        <label class="checkbox-wrap">
+          <input type="checkbox" id="remember" />
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="forgot-link" onclick="return false;">Forgot password?</a>
+      </div>
+
+      <button class="btn-login" type="submit" id="btn-login">
+        <span class="btn-text">
+          Sign in
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd"/></svg>
+        </span>
+        <div class="spinner" aria-hidden="true"></div>
+      </button>
+    </form>
+
+    <div class="login-footer">
+      © 2025 SponTrack · Internal Use Only
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const ACCOUNTS = {
+    'requestor@spontrack.my': { role: 'Requestor',     name: 'Sarah Chen',   pw: 'Demo@1234' },
+    'manager@spontrack.my':   { role: 'Manager',       name: 'James Okafor', pw: 'Demo@1234' },
+    'finance@spontrack.my':   { role: 'Finance Admin', name: 'Priya Mehta',  pw: 'Demo@1234' },
+    'admin@spontrack.my':     { role: 'System Admin',  name: 'Alex Rivera',  pw: 'Demo@1234' },
+  };
+
+  function togglePw() {
+    const inp = document.getElementById('password');
+    const icon = document.getElementById('eye-icon');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.innerHTML = '<path d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z"/><path d="M10.748 13.93l2.523 2.524a10.002 10.002 0 01-8.957-4.644 1.651 1.651 0 010-1.186A10.007 10.007 0 0110 4.5c.898 0 1.77.121 2.6.348L9.748 6.848a4 4 0 00-4.748 4.748L2.885 9.48A8.003 8.003 0 001.5 10c1.342 2.33 3.641 4 6.5 4.424z"/>';
+    } else {
+      inp.type = 'password';
+      icon.innerHTML = '<path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>';
+    }
+  }
+
+  function clearErrors() {
+    document.getElementById('alert-error').classList.remove('show');
+    document.getElementById('email').classList.remove('err');
+    document.getElementById('password').classList.remove('err');
+    document.getElementById('email-err').classList.remove('show');
+    document.getElementById('pw-err').classList.remove('show');
+  }
+
+  function validate(email, pw) {
+    let ok = true;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('email').classList.add('err');
+      document.getElementById('email-err').classList.add('show');
+      ok = false;
+    }
+    if (!pw) {
+      document.getElementById('password').classList.add('err');
+      document.getElementById('pw-err').classList.add('show');
+      ok = false;
+    }
+    return ok;
+  }
+
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    clearErrors();
+
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const pw    = document.getElementById('password').value;
+
+    if (!validate(email, pw)) return;
+
+    const btn = document.getElementById('btn-login');
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      const account = ACCOUNTS[email];
+      if (account && account.pw === pw) {
+        showSuccess(account.name, account.role);
+      } else {
+        const el = document.getElementById('alert-error');
+        document.getElementById('alert-error-text').textContent = 'Invalid email or password. Please check your credentials and try again.';
+        el.classList.add('show');
+      }
+    }, 1100);
+  });
+
+  function showSuccess(name, role) {
+    const card = document.querySelector('.login-card');
+    card.innerHTML = `
+      <div style="text-align:center;padding:24px 0">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--success-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="26" height="26" viewBox="0 0 20 20" fill="#0F6E56" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+        </div>
+        <h2 style="font-size:20px;font-weight:600;margin-bottom:6px">Signed in successfully</h2>
+        <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.6">Welcome back, <strong>${name}</strong>.<br>Redirecting to your <strong>${role}</strong> dashboard…</p>
+        <div style="margin-top:24px;height:3px;background:var(--border);border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:var(--brand);border-radius:4px;animation:progress 1.8s linear forwards"></div>
+        </div>
+      </div>
+      <style>@keyframes progress{from{width:0}to{width:100%}}</style>`;
+  }
+</script>
+</body>
+</html>
