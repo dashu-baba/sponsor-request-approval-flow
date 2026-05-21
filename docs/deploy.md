@@ -21,11 +21,12 @@ For local overrides, copy the example values and point Compose at the local file
 
 ```bash
 cp .env.example .env
-COMPOSE_ENV_FILE=.env docker compose up --build
+docker compose --env-file .env up --build
 ```
 
 Keep `.env` out of git. Replace every `change-me-*` value before using this outside local
-development.
+development. The `COMPOSE_ENV_FILE` value in `.env.example` tells Compose which service env file to
+mount; the default compose command still falls back to `.env.example` when no local `.env` exists.
 
 ## Services
 
@@ -35,6 +36,11 @@ development.
 - `db` runs PostgreSQL 17 with a named volume.
 - `minio` runs S3-compatible object storage with a named volume.
 - `migrator` is a one-shot placeholder. T1.1 replaces it with EF Core migration execution.
+
+The `app-internal` network is marked `internal: true`, so services can talk to each other but do not
+have outbound internet access from that network. Keep that restriction unless a later task adds a
+runtime dependency that legitimately needs egress; in that case, attach only that service to a
+separate external network.
 
 ## Smoke Checks
 
