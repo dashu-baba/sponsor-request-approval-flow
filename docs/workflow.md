@@ -21,8 +21,13 @@ Authoritative inputs every task must respect:
 - **Foundation lands first.** Epic 0 (scaffold, CI, lint configs, walking skeleton) merges to
   `main` before any feature branch starts, so every later branch inherits the shared base and
   conflicts stay small.
-- **One branch per task.** Branch name: `feat/T<id>-<slug>` (e.g. `feat/T1.2-jwt-auth`),
-  `fix/...`, or `chore/...`. Branch off the latest `main`.
+- **One branch per task — no exceptions.** The Implement agent's **first action** is to create the
+  task branch off the latest `main` (`git checkout main && git pull` → `git checkout -b <branch>`),
+  using the **exact branch name from the task card** (`feat/T<id>-<slug>`, `fix/...`, or `chore/...`).
+  **Never commit directly to `main`, and never reuse another task's branch.** Verify with
+  `git rev-parse --abbrev-ref HEAD` and confirm the name matches the card before writing any code; if
+  you find yourself on `main` or a wrong branch, stop and create the correct branch first. (Past
+  incident: an agent skipped this and worked on the wrong branch.)
 - **Rebase before merge.** Update the branch onto latest `main` and re-run CI before merging.
 - **Squash-merge** each task PR into `main` to keep history readable (one logical change = one
   commit on `main`).
@@ -48,7 +53,7 @@ agent's prompt — there is no separate effort knob for subagents.)
 
 | Phase | Role | Does | Must NOT do | Ends by |
 |-------|------|------|-------------|---------|
-| **A** | Implement | Implements exactly one task on its `feat/…`/`chore/…` branch; self-verifies (build/format/test **evidence**); opens the PR; records role/model/effort. | Review its own work; start another task. | Push + open PR, then **pause**. |
+| **A** | Implement | **First creates the task branch off latest `main`** (exact name from the card — see §1), then implements exactly one task on it; self-verifies (build/format/test **evidence**); opens the PR; records role/model/effort. | Commit to `main` or a wrong/reused branch; skip branch creation; review its own work; start another task. | Push + open PR, then **pause**. |
 | **B** | Review | A **different** agent reviews the PR and posts **tiered comments on the PR** (format in §4). | Fix anything; merge. | Post comments + summary, then **pause**. |
 | **C** | Resolve | Reads the PR comments; addresses each per §4 rule; replies on each thread how it was handled; pushes. | Merge. | Push fixes + replies, then **pause**. |
 | **D** | Final review | Re-validates (all comments addressed, branch green); **merges** (squash) + deletes branch + updates the backlog index. | — | Merge, then **pause**. |
@@ -127,7 +132,24 @@ Deferred items are added to `docs/backlog.md` in the same push. The resolver pus
 
 These are enforced by tooling/CI where possible, not left to memory.
 
+**Runtime & dependency versions — MANDATORY, non-negotiable**
+> This is a hard rule. Do **not** deviate unless a human explicitly tells you to in the task prompt.
+- **Frontend runs on Node 24** (the current active line). Every place a Node version is expressed —
+  `frontend/.nvmrc`, `engines.node` in `package.json`, the CI workflow's `setup-node`, and the
+  Docker base image — **must** pin Node 24. Never an older line (no 18/20/22), never floating `latest`.
+- **Backend runs on .NET 10** (`net10.0`, SDK `10.0.x`).
+- **Always install the newest stable release of every dependency** at the time you add it — NuGet
+  packages (backend) and npm packages (frontend). Do **not** copy an old version number from an
+  example, another file, or memory; check the current latest stable and use it. No betas/RCs unless
+  required.
+- Pin the **resolved exact version**: commit lockfiles (`package-lock.json`), use exact versions in
+  manifests, and pin Docker images to a **specific** tag (e.g. `node:24.x.x-slim`, not `node:latest`
+  and not an unpinned `node:24`). "Latest package" means *choose the newest version*, not *float the
+  tag*.
+- A version that lags behind these rules is a **🔴 Must-fix** in review.
+
 **.NET / C# / ASP.NET Core**
+- **.NET 10** (`net10.0`) + latest stable NuGet packages (see *Runtime & dependency versions* above — mandatory).
 - `Nullable` enabled, `TreatWarningsAsErrors=true`, latest C# language version; Roslyn analyzers
   + `.editorconfig` enforced; `dotnet format` clean.
 - Clean Architecture dependency rule respected (Domain has no outward deps).
@@ -144,6 +166,7 @@ These are enforced by tooling/CI where possible, not left to memory.
   queries only (EF Core) — no string-built SQL; OWASP Top 10 awareness; CORS locked down.
 
 **React / TypeScript**
+- **Node 24** + latest stable npm packages (see *Runtime & dependency versions* above — mandatory).
 - TypeScript `strict`; ESLint + Prettier clean; no `any` without justification.
 - Server state via TanStack Query; forms via React Hook Form + Zod; accessible components.
 - No secrets/tokens in `localStorage`; tokens handled per the auth design.
@@ -175,6 +198,10 @@ These are enforced by tooling/CI where possible, not left to memory.
 ## 6. Definition of Done (global, every task)
 
 A task is mergeable only when **all** are true:
+- [ ] The PR is from the **correct task branch** (exact name from the card, branched off `main`) —
+      not `main`, not a reused branch. (Phase B reviewer verifies this.)
+- [ ] Runtime/dependency versions follow §5 (**Node 24** front end, **.NET 10** back end, latest
+      stable packages, versions pinned).
 - [ ] Acceptance criteria in the card are met.
 - [ ] Builds with zero warnings; `dotnet format` / ESLint / Prettier clean.
 - [ ] Required unit + integration tests written and **passing**; evidence shown.

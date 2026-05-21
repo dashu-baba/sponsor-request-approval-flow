@@ -31,6 +31,7 @@ frontend/backend, clean API design, and reproducible deployment to live URLs.
 | API docs | **Microsoft.AspNetCore.OpenApi + Scalar UI** | The mandated docs URL. |
 | Storage | **MinIO** (S3-compatible) via AWS SDK | Portable to real S3. |
 | Frontend | **React 19 + TypeScript + Vite** | TanStack Query, React Router, RHF + Zod. |
+| Frontend runtime | **Node 24** | Pinned everywhere (`.nvmrc`, `engines`, CI, Docker); latest stable npm deps. See workflow.md §5. |
 | UI kit | **shadcn/ui** (Tailwind + Radix) | Clean, accessible. |
 | Tests | **xUnit + FluentAssertions + Testcontainers** | Unit + integration. |
 | Infra | **Docker Compose + nginx + Let's Encrypt** | Single VPS. |

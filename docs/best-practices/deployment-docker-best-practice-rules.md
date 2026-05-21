@@ -9,8 +9,9 @@ Build/restore/publish in a build stage; copy only the published output into a sm
 image. Keep build tooling out of the final image.
 
 ### 2. Use slim, pinned base images
-Pin specific tags (e.g. the .NET 10 runtime, `node:22`, `postgres:17`) — never `latest`. Prefer
-slim/alpine where compatible.
+Pin specific tags (e.g. the .NET 10 runtime, **`node:24`** — the mandated frontend runtime, see
+workflow.md §5 — `postgres:17`) — never `latest`. Pin to a specific patch tag (e.g.
+`node:24.x.x-slim`), not a floating `node:24`. Prefer slim/alpine where compatible.
 
 ### 3. Run as a non-root user
 Create and switch to a non-root user in the runtime image. Containers should not run as root.

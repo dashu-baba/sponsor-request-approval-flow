@@ -97,5 +97,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 - Integration: <what>
 
 ## Best-Practices Checklist (subset relevant to this task)
-- [ ] <from workflow.md §5>
+- [ ] Branch created off latest `main` with the exact card name before any code (workflow.md §1/§2).
+- [ ] Versions per workflow.md §5: Node 24 (front end) / .NET 10 (back end); latest stable packages, pinned.
+- [ ] <other items from workflow.md §5>
 ```

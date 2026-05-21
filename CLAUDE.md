@@ -6,7 +6,7 @@ do not restate their contents here.
 ## What this is
 Sponsorship Request Approval Workflow — a workflow-driven enterprise module.
 **Stack:** .NET 10 (Clean Architecture + CQRS, MediatR, AutoMapper, EF Core 10) · PostgreSQL 17 ·
-React 19 + TypeScript (Vite) · MinIO (S3-compatible) · Docker Compose + nginx.
+React 19 + TypeScript (Vite, **Node 24**) · MinIO (S3-compatible) · Docker Compose + nginx.
 
 ## Read these first (authoritative)
 - `docs/requirements/NET Senior Developer Tech Assessment.md` — the brief.
@@ -23,10 +23,12 @@ effort. **Do only your phase, then PAUSE.** Never advance to another phase on yo
 state lives **on the PR** (description + comments) — read the PR for context. Record
 `Role · Model · Effort` on the PR.
 
-- **Implement:** read the task card in `docs/tasks/T<id>-*.md` + referenced sections; implement to
-  the `docs/best-practices/` standards; **show evidence** (build warnings=errors clean, `dotnet
-  format`/ESLint/Prettier clean, tests passing) before claiming done; open the PR with the template;
-  then pause. Do NOT review your own work.
+- **Implement:** **first create the task branch off latest `main`** using the exact name from the
+  card (`git checkout main && git pull` → `git checkout -b <branch>`; verify with `git branch --show-current`)
+  — never commit to `main` or a reused branch (workflow.md §1/§2); then read the task card in
+  `docs/tasks/T<id>-*.md` + referenced sections; implement to the `docs/best-practices/` standards;
+  **show evidence** (build warnings=errors clean, `dotnet format`/ESLint/Prettier clean, tests
+  passing) before claiming done; open the PR with the template; then pause. Do NOT review your own work.
 - **Review:** independently verify the PR against the card + standards; post tiered comments on the
   PR in the §4 format (🔴 Must / 🟡 Should / 🟢 Nice, with location, problem, why, example fix);
   then pause. Do NOT fix or merge.
@@ -41,6 +43,13 @@ Useful skills by area: EF Core/Postgres → `dotnet-data:optimizing-ef-core-quer
 `dotnet-msbuild:directory-build-organization`, `dotnet-nuget:convert-to-cpm`.
 
 ## Hard rules
+- **Runtime/dependency versions are non-negotiable (workflow.md §5):** frontend on **Node 24**
+  (pin it in `.nvmrc`, `engines`, CI `setup-node`, Docker image — never 18/20/22, never floating
+  `latest`); backend on **.NET 10**. Always install the **newest stable** version of every npm/NuGet
+  package you add (don't copy old version numbers), and pin the resolved version. Lagging versions
+  are a 🔴 Must-fix.
+- **Every task starts by creating its own branch** off latest `main` (exact name from the card) —
+  never work on `main` or another task's branch (workflow.md §1).
 - The enforced config is the source of truth for style/format (`.editorconfig`, `.csproj`,
   ESLint/Prettier) — the best-practice docs hold the *why*.
 - No secrets in the repo — `.env.example` only.
