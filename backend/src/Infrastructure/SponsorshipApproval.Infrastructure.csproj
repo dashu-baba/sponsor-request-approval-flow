@@ -5,6 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MediatR" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
@@ -24,6 +25,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="SponsorshipApproval.Api.IntegrationTests" />
+    <InternalsVisibleTo Include="SponsorshipApproval.Application.Tests" />
   </ItemGroup>
 
 </Project>
