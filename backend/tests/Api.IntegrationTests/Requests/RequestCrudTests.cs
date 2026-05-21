@@ -21,6 +21,8 @@ public sealed class RequestCrudTests(PostgresWebApplicationFactory factory)
 {
     private static readonly Guid ConferenceTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
 
+    private static readonly Guid CommunityEventTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
+
     private static readonly Guid SeededPendingManagerRequestId =
         Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
 
@@ -83,6 +85,20 @@ public sealed class RequestCrudTests(PostgresWebApplicationFactory factory)
         updated!.Title.Should().Be("Updated draft title");
         updated.RequestedAmount.Should().Be(2200m);
         updated.RequestorName.Should().Be("crud-owner");
+
+        var typeChangeBody = updateBody with { SponsorshipTypeId = CommunityEventTypeId };
+
+        using var typeChangeResponse = await client
+            .PutAsJsonAsync($"/requests/{created.Id}", typeChangeBody, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        typeChangeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var typeChanged = await typeChangeResponse.Content
+            .ReadFromJsonAsync<RequestDetailDto>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        typeChanged!.SponsorshipTypeId.Should().Be(CommunityEventTypeId);
+        typeChanged.SponsorshipTypeName.Should().Be("Community Event");
     }
 
     [Fact]
@@ -128,6 +144,14 @@ public sealed class RequestCrudTests(PostgresWebApplicationFactory factory)
             .GetAsync($"/requests/{created!.Id}", TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
         getResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        using var putResponse = await otherClient
+            .PutAsJsonAsync(
+                $"/requests/{created.Id}",
+                CreateMutationBody(title: "Forbidden update"),
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        putResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]

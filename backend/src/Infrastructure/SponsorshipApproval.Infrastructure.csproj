@@ -5,7 +5,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" />
     <PackageReference Include="MediatR" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
@@ -26,6 +25,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="SponsorshipApproval.Api.IntegrationTests" />
+    <InternalsVisibleTo Include="SponsorshipApproval.Application.Tests" />
   </ItemGroup>
 
 </Project>

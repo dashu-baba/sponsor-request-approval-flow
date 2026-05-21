@@ -1,4 +1,3 @@
-using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Common;
@@ -9,15 +8,12 @@ using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Infrastructure.Requests.Handlers;
 
-public sealed class UpdateDraftRequestCommandHandler(
-    AppDbContext dbContext,
-    ICurrentUserContext currentUser,
-    IMapper mapper) : IRequestHandler<UpdateDraftRequestCommand, RequestDetailDto>
+public sealed class UpdateDraftRequestCommandHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+    : IRequestHandler<UpdateDraftRequestCommand, RequestDetailDto>
 {
     public async Task<RequestDetailDto> Handle(UpdateDraftRequestCommand command, CancellationToken cancellationToken)
     {
         var request = await dbContext.SponsorshipRequests
-            .Include(entity => entity.SponsorshipType)
             .SingleOrDefaultAsync(entity => entity.Id == command.Id, cancellationToken)
             .ConfigureAwait(false);
 
@@ -44,6 +40,11 @@ public sealed class UpdateDraftRequestCommandHandler(
 
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return mapper.Map<RequestDetailDto>(request);
+        return await dbContext.SponsorshipRequests
+            .AsNoTracking()
+            .Where(entity => entity.Id == request.Id)
+            .SelectDetailDto()
+            .SingleAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 }

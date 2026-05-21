@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.Requests.Models;
@@ -20,7 +21,10 @@ internal static class RequestMutationHelper
 
         if (string.IsNullOrWhiteSpace(department))
         {
-            throw new ValidationException("Department is required.");
+            throw new ValidationException(
+            [
+                new ValidationFailure(nameof(RequestMutationBody.Department), "Department is required."),
+            ]);
         }
 
         return Task.FromResult(department);
@@ -40,7 +44,12 @@ internal static class RequestMutationHelper
 
         if (sponsorshipType is null)
         {
-            throw new ValidationException("Sponsorship type is invalid or inactive.");
+            throw new ValidationException(
+            [
+                new ValidationFailure(
+                    nameof(RequestMutationBody.SponsorshipTypeId),
+                    "Sponsorship type is invalid or inactive."),
+            ]);
         }
 
         return sponsorshipType;

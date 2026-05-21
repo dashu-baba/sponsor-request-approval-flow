@@ -21,6 +21,7 @@ public sealed class ListOwnRequestsQueryHandler(AppDbContext dbContext, ICurrent
 
         var items = await requests
             .OrderByDescending(request => request.CreatedAt)
+            .ThenByDescending(request => request.Id)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(request => new RequestListItemDto(

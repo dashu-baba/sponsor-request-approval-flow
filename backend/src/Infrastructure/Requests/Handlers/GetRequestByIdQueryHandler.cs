@@ -1,4 +1,3 @@
-using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Common;
@@ -9,26 +8,33 @@ using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Infrastructure.Requests.Handlers;
 
-public sealed class GetRequestByIdQueryHandler(
-    AppDbContext dbContext,
-    ICurrentUserContext currentUser,
-    IMapper mapper) : IRequestHandler<GetRequestByIdQuery, RequestDetailDto>
+public sealed class GetRequestByIdQueryHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+    : IRequestHandler<GetRequestByIdQuery, RequestDetailDto>
 {
     public async Task<RequestDetailDto> Handle(GetRequestByIdQuery query, CancellationToken cancellationToken)
     {
-        var request = await dbContext.SponsorshipRequests
+        var requestorId = await dbContext.SponsorshipRequests
             .AsNoTracking()
-            .Include(entity => entity.SponsorshipType)
-            .SingleOrDefaultAsync(entity => entity.Id == query.Id, cancellationToken)
+            .Where(request => request.Id == query.Id)
+            .Select(request => request.RequestorId)
+            .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (request is null)
+        if (requestorId is null)
         {
             throw new NotFoundException("Request was not found.");
         }
 
-        RequestMutationHelper.EnsureOwner(request, currentUser.UserId);
+        if (!string.Equals(requestorId, currentUser.UserId, StringComparison.Ordinal))
+        {
+            throw new ForbiddenException("You do not have access to this request.");
+        }
 
-        return mapper.Map<RequestDetailDto>(request);
+        return await dbContext.SponsorshipRequests
+            .AsNoTracking()
+            .Where(request => request.Id == query.Id)
+            .SelectDetailDto()
+            .SingleAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 }

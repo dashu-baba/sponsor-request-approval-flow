@@ -1,5 +1,5 @@
-using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Requests.Commands;
 using SponsorshipApproval.Application.Requests.Models;
@@ -8,10 +8,8 @@ using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Infrastructure.Requests.Handlers;
 
-public sealed class CreateRequestCommandHandler(
-    AppDbContext dbContext,
-    ICurrentUserContext currentUser,
-    IMapper mapper) : IRequestHandler<CreateRequestCommand, RequestDetailDto>
+public sealed class CreateRequestCommandHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+    : IRequestHandler<CreateRequestCommand, RequestDetailDto>
 {
     public async Task<RequestDetailDto> Handle(CreateRequestCommand command, CancellationToken cancellationToken)
     {
@@ -39,11 +37,11 @@ public sealed class CreateRequestCommandHandler(
         dbContext.SponsorshipRequests.Add(request);
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        await dbContext.Entry(request)
-            .Reference(entity => entity.SponsorshipType)
-            .LoadAsync(cancellationToken)
+        return await dbContext.SponsorshipRequests
+            .AsNoTracking()
+            .Where(entity => entity.Id == request.Id)
+            .SelectDetailDto()
+            .SingleAsync(cancellationToken)
             .ConfigureAwait(false);
-
-        return mapper.Map<RequestDetailDto>(request);
     }
 }
