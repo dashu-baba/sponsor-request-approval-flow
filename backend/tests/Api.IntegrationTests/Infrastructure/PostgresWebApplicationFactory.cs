@@ -1,10 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using SponsorshipApproval.Application.Auth;
-using SponsorshipApproval.Infrastructure.Identity;
 using Testcontainers.PostgreSql;
 
 namespace SponsorshipApproval.Api.IntegrationTests.Infrastructure;
@@ -27,7 +23,6 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
                 .Build();
 
             await _postgres.StartAsync().ConfigureAwait(true);
-            await SeedRolesAsync().ConfigureAwait(true);
         }
         catch (DockerUnavailableException exception)
         {
@@ -49,19 +44,5 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
         }
 
         await base.DisposeAsync().ConfigureAwait(true);
-    }
-
-    private async Task SeedRolesAsync()
-    {
-        using var scope = Services.CreateScope();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        foreach (var role in Roles.All)
-        {
-            if (!await roleManager.RoleExistsAsync(role).ConfigureAwait(true))
-            {
-                await roleManager.CreateAsync(new IdentityRole(role)).ConfigureAwait(true);
-            }
-        }
     }
 }

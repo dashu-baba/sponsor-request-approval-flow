@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Domain\SponsorshipApproval.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="SponsorshipApproval.Api.IntegrationTests" />
+  </ItemGroup>
+
 </Project>
