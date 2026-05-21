@@ -1,14 +1,16 @@
 # syntax=docker/dockerfile:1.7
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.101-bookworm-slim AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.101-noble AS build
 WORKDIR /src
 
 COPY Directory.Build.props Directory.Packages.props ./
+COPY .config/dotnet-tools.json .config/
 COPY src/Domain/SponsorshipApproval.Domain.csproj src/Domain/
 COPY src/Application/SponsorshipApproval.Application.csproj src/Application/
 COPY src/Infrastructure/SponsorshipApproval.Infrastructure.csproj src/Infrastructure/
 COPY src/Api/SponsorshipApproval.Api.csproj src/Api/
 RUN dotnet restore src/Api/SponsorshipApproval.Api.csproj
+RUN dotnet tool restore
 
 COPY . .
 RUN dotnet publish src/Api/SponsorshipApproval.Api.csproj \
@@ -17,7 +19,7 @@ RUN dotnet publish src/Api/SponsorshipApproval.Api.csproj \
     --output /app/publish \
     /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.1-bookworm-slim AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.1-noble AS runtime
 WORKDIR /app
 
 RUN apt-get update \
@@ -35,5 +37,5 @@ USER appuser
 
 ENTRYPOINT ["dotnet", "SponsorshipApproval.Api.dll"]
 
-FROM runtime AS migrator-placeholder
-ENTRYPOINT ["sh", "-c", "echo 'No EF migrations exist yet; T1.1 will replace this placeholder.'"]
+FROM build AS migrator
+ENTRYPOINT ["dotnet", "tool", "run", "dotnet-ef", "database", "update", "--project", "src/Infrastructure/SponsorshipApproval.Infrastructure.csproj", "--startup-project", "src/Api/SponsorshipApproval.Api.csproj", "--context", "AppDbContext", "--configuration", "Release", "--no-build"]

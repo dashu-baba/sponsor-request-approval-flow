@@ -12,12 +12,26 @@ public sealed class SanityTests(WebApplicationFactory<Program> factory)
     [Fact]
     public async Task Health_endpoint_should_return_success()
     {
-        using var client = factory.CreateClient();
+        const string connectionStringKey = "ConnectionStrings__Default";
+        var previousConnectionString = Environment.GetEnvironmentVariable(connectionStringKey);
 
-        using var response = await client
-            .GetAsync("/health", TestContext.Current.CancellationToken)
-            .ConfigureAwait(true);
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                connectionStringKey,
+                "Host=localhost;Port=5432;Database=sponsorship_approval_tests;Username=sponsorship_app;Password=test-postgres-password");
 
-        response.IsSuccessStatusCode.Should().BeTrue();
+            using var client = factory.CreateClient();
+
+            using var response = await client
+                .GetAsync("/health", TestContext.Current.CancellationToken)
+                .ConfigureAwait(true);
+
+            response.IsSuccessStatusCode.Should().BeTrue();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(connectionStringKey, previousConnectionString);
+        }
     }
 }
