@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
@@ -10,27 +11,31 @@ using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Infrastructure.Requests.Handlers;
 
-public sealed class TransitionRequestCommandHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+public sealed class TransitionRequestCommandHandler(
+    AppDbContext dbContext,
+    ICurrentUserContext currentUser,
+    IAuditService auditService)
     : IRequestHandler<SubmitRequestCommand, RequestDetailDto>,
       IRequestHandler<CancelRequestCommand, RequestDetailDto>,
       IRequestHandler<ApproveRequestCommand, RequestDetailDto>,
       IRequestHandler<RejectRequestCommand, RequestDetailDto>
 {
     public Task<RequestDetailDto> Handle(SubmitRequestCommand command, CancellationToken cancellationToken)
-        => ApplyTransitionAsync(command.Id, WorkflowAction.Submit, remarks: null, cancellationToken);
+        => ApplyTransitionAsync(command.Id, WorkflowAction.Submit, AuditActions.RequestSubmitted, remarks: null, cancellationToken);
 
     public Task<RequestDetailDto> Handle(CancelRequestCommand command, CancellationToken cancellationToken)
-        => ApplyTransitionAsync(command.Id, WorkflowAction.Cancel, command.Remarks, cancellationToken);
+        => ApplyTransitionAsync(command.Id, WorkflowAction.Cancel, AuditActions.RequestCancelled, command.Remarks, cancellationToken);
 
     public Task<RequestDetailDto> Handle(ApproveRequestCommand command, CancellationToken cancellationToken)
-        => ApplyTransitionAsync(command.Id, WorkflowAction.Approve, command.Remarks, cancellationToken);
+        => ApplyTransitionAsync(command.Id, WorkflowAction.Approve, AuditActions.RequestApproved, command.Remarks, cancellationToken);
 
     public Task<RequestDetailDto> Handle(RejectRequestCommand command, CancellationToken cancellationToken)
-        => ApplyTransitionAsync(command.Id, WorkflowAction.Reject, command.Remarks, cancellationToken);
+        => ApplyTransitionAsync(command.Id, WorkflowAction.Reject, AuditActions.RequestRejected, command.Remarks, cancellationToken);
 
     private async Task<RequestDetailDto> ApplyTransitionAsync(
         long requestId,
         WorkflowAction action,
+        string auditAction,
         string? remarks,
         CancellationToken cancellationToken)
     {
@@ -80,6 +85,26 @@ public sealed class TransitionRequestCommandHandler(AppDbContext dbContext, ICur
             Remarks = remarks,
             OccurredAt = now,
         });
+
+        var metadata = new Dictionary<string, object?>
+        {
+            ["requestId"] = request.Id.ToString(),
+            ["from"] = from.ToString(),
+            ["to"] = nextStatus.ToString(),
+        };
+        if (!string.IsNullOrWhiteSpace(remarks))
+        {
+            metadata["remarks"] = remarks;
+        }
+
+        auditService.Record(new AuditRecord(
+            currentUser.UserId,
+            auditAction,
+            AuditCategories.Request,
+            AuditResourceTypes.SponsorshipRequest,
+            request.Id.ToString(),
+            Summary: $"Status changed from {from} to {nextStatus}",
+            Metadata: metadata));
 
         try
         {

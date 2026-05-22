@@ -4,6 +4,10 @@ public static class AuditActions
 {
     public const string RequestCreated = "request.created";
     public const string RequestUpdated = "request.updated";
+    public const string RequestSubmitted = "request.submitted";
+    public const string RequestCancelled = "request.cancelled";
+    public const string RequestApproved = "request.approved";
+    public const string RequestRejected = "request.rejected";
     public const string AttachmentUploaded = "attachment.uploaded";
     public const string SponsorshipTypeCreated = "sponsorship_type.created";
     public const string SponsorshipTypeUpdated = "sponsorship_type.updated";
