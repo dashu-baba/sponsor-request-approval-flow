@@ -26,7 +26,7 @@ internal sealed class AuthorizeSecurityOperationTransformer : IOpenApiOperationT
         operation.Security ??= [];
         operation.Security.Add(new OpenApiSecurityRequirement
         {
-            [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = [],
+            [new OpenApiSecuritySchemeReference(OpenApiAuthConstants.BearerSchemeName, context.Document)] = [],
         });
 
         return Task.CompletedTask;

@@ -16,13 +16,13 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
             .GetAllSchemesAsync()
             .ConfigureAwait(false);
 
-        if (!authenticationSchemes.Any(scheme => scheme.Name == "Bearer"))
+        if (!authenticationSchemes.Any(scheme => scheme.Name == OpenApiAuthConstants.BearerSchemeName))
         {
             return;
         }
 
         document.AddComponent(
-            "Bearer",
+            OpenApiAuthConstants.BearerSchemeName,
             new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.Http,
