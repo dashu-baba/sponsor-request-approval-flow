@@ -17,10 +17,26 @@ public static class RequestEndpoints
             .WithTags("Requests")
             .RequireAuthorization();
 
-        readGroup.MapGet("/summary", GetSummaryAsync);
-        readGroup.MapGet("/", ListAsync);
-        readGroup.MapGet("/{id:long}", GetByIdAsync);
-        readGroup.MapGet("/{id:long}/history", GetHistoryAsync);
+        readGroup.MapGet("/summary", GetSummaryAsync)
+            .WithSummary("Get request counts for the current user")
+            .Produces<RequestSummaryDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+        readGroup.MapGet("/", ListAsync)
+            .WithSummary("List sponsorship requests")
+            .WithDescription(
+                "Returns a paginated list scoped by role: own requests (Requestor), approval queue (Manager/FinanceAdmin), or all requests with optional status filter (SystemAdmin).")
+            .Produces<PagedResult<RequestListItemDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+        readGroup.MapGet("/{id:long}", GetByIdAsync)
+            .WithSummary("Get a sponsorship request by ID")
+            .Produces<RequestDetailDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        readGroup.MapGet("/{id:long}/history", GetHistoryAsync)
+            .WithSummary("Get workflow history for a request")
+            .Produces<IReadOnlyList<WorkflowHistoryDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         readGroup.MapAttachmentEndpoints();
 
         // Write routes: Requestor only
@@ -28,17 +44,61 @@ public static class RequestEndpoints
             .WithTags("Requests")
             .RequireAuthorization(AuthorizationPolicies.Requestor);
 
-        requestorGroup.MapPost("/", CreateAsync);
-        requestorGroup.MapPut("/{id:long}", UpdateDraftAsync);
+        requestorGroup.MapPost("/", CreateAsync)
+            .WithSummary("Create a draft sponsorship request")
+            .Produces<RequestDetailDto>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+        requestorGroup.MapPut("/{id:long}", UpdateDraftAsync)
+            .WithSummary("Update a draft sponsorship request")
+            .Produces<RequestDetailDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         // Workflow transition routes
         var workflowGroup = app.MapGroup("/requests")
             .WithTags("Requests");
 
-        workflowGroup.MapPost("/{id:long}/submit", SubmitAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
-        workflowGroup.MapPost("/{id:long}/cancel", CancelAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
-        workflowGroup.MapPost("/{id:long}/approve", ApproveAsync).RequireAuthorization(AuthorizationPolicies.Approver);
-        workflowGroup.MapPost("/{id:long}/reject", RejectAsync).RequireAuthorization(AuthorizationPolicies.Approver);
+        workflowGroup.MapPost("/{id:long}/submit", SubmitAsync)
+            .RequireAuthorization(AuthorizationPolicies.Requestor)
+            .WithSummary("Submit a draft request for approval")
+            .Produces<RequestDetailDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+        workflowGroup.MapPost("/{id:long}/cancel", CancelAsync)
+            .RequireAuthorization(AuthorizationPolicies.Requestor)
+            .WithSummary("Cancel a submitted request")
+            .Produces<RequestDetailDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+        workflowGroup.MapPost("/{id:long}/approve", ApproveAsync)
+            .RequireAuthorization(AuthorizationPolicies.Approver)
+            .WithSummary("Approve a request at the current workflow stage")
+            .Produces<RequestDetailDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+        workflowGroup.MapPost("/{id:long}/reject", RejectAsync)
+            .RequireAuthorization(AuthorizationPolicies.Approver)
+            .WithSummary("Reject a request at the current workflow stage")
+            .Produces<RequestDetailDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return app;
     }

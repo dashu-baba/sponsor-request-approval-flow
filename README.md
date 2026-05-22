@@ -128,7 +128,8 @@ On first start the API applies EF migrations and seeds demo data automatically.
 - For auto-restart on code changes: `dotnet watch run --project src/Api --launch-profile http`
   (same env vars must still be set).
 - Sanity check: `curl http://localhost:5256/health`
-- OpenAPI (Development only): http://localhost:5256/openapi/v1.json
+- API docs (Scalar UI): http://localhost:5256/scalar/v1
+- OpenAPI document: http://localhost:5256/openapi/v1.json
 
 **Stop:** `Ctrl+C` in the API terminal.
 
