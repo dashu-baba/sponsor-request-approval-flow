@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Pencil,
   Settings2,
-  User,
   XCircle,
   type LucideIcon,
 } from 'lucide-react'
@@ -62,17 +61,12 @@ export function getNavSections(role: Role): NavSectionConfig[] {
     items: [{ label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard }],
   }
 
-  const account: NavSectionConfig = {
-    label: 'Account',
-    items: [{ label: 'Profile', to: '/profile', icon: User }],
-  }
-
   switch (role) {
     case Roles.Requestor:
-      return [overview, { label: 'Requests', items: requestorRequestItems }, account]
+      return [overview, { label: 'Requests', items: requestorRequestItems }]
     case Roles.Manager:
     case Roles.FinanceAdmin:
-      return [overview, account]
+      return [overview]
     case Roles.SystemAdmin:
       return [
         overview,
@@ -80,10 +74,9 @@ export function getNavSections(role: Role): NavSectionConfig[] {
           label: 'Administration',
           items: [{ label: 'Sponsorship Types', to: '/admin/sponsorship-types', icon: Settings2 }],
         },
-        account,
       ]
     default:
-      return [overview, account]
+      return [overview]
   }
 }
 
