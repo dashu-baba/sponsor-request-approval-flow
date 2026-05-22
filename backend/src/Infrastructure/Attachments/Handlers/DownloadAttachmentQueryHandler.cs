@@ -49,9 +49,8 @@ public sealed class DownloadAttachmentQueryHandler(
             .ConfigureAwait(false);
 
         return new AttachmentDownloadResult(
-            storedObject.Content,
+            storedObject,
             attachment.ContentType,
-            attachment.FileName,
-            storedObject.ContentLength);
+            attachment.FileName);
     }
 }

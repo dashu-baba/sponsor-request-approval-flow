@@ -59,12 +59,15 @@ public static class AttachmentEndpoints
     private static async Task<IResult> DownloadAsync(
         Guid id,
         Guid attachmentId,
+        HttpContext httpContext,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
         var result = await mediator
             .Send(new DownloadAttachmentQuery(id, attachmentId), cancellationToken)
             .ConfigureAwait(false);
+
+        httpContext.Response.RegisterForDispose(result);
 
         return TypedResults.File(
             result.Content,
