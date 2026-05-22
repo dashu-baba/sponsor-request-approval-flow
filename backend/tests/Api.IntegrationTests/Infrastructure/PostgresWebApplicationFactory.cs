@@ -1,4 +1,3 @@
-using System.Net.Sockets;
 using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -51,52 +50,6 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
 
     internal Task StopMinioContainerAsync(CancellationToken cancellationToken = default) =>
         _minio!.StopAsync(cancellationToken);
-
-    internal async Task StartMinioContainerAsync(CancellationToken cancellationToken = default)
-    {
-        await _minio!.StartAsync(cancellationToken).ConfigureAwait(false);
-        await WaitForMinioTcpAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    internal async Task EnsureMinioContainerRunningAsync(CancellationToken cancellationToken = default)
-    {
-        if (_minio!.State == DotNet.Testcontainers.Containers.TestcontainersStates.Running)
-        {
-            await WaitForMinioTcpAsync(cancellationToken).ConfigureAwait(false);
-            return;
-        }
-
-        await StartMinioContainerAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task WaitForMinioTcpAsync(CancellationToken cancellationToken)
-    {
-        const int maxAttempts = 60;
-
-        for (var attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            try
-            {
-                using var tcpClient = new TcpClient();
-                await tcpClient
-                    .ConnectAsync(_minio!.Hostname, _minio.GetMappedPublicPort(9000), cancellationToken)
-                    .ConfigureAwait(false);
-
-                return;
-            }
-            catch (Exception exception) when (exception is SocketException or InvalidOperationException)
-            {
-                if (attempt == maxAttempts - 1)
-                {
-                    throw new TimeoutException("MinIO container did not become reachable.", exception);
-                }
-
-                await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken).ConfigureAwait(false);
-            }
-        }
-    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
