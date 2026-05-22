@@ -12,6 +12,8 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 
         builder.HasKey(token => token.Id);
 
+        builder.Property(token => token.Id).UseIdentityByDefaultColumn();
+
         builder.Property(token => token.UserId).HasMaxLength(450).IsRequired();
         builder.Property(token => token.TokenHash).HasMaxLength(128).IsRequired();
         builder.Property(token => token.ExpiresAt).HasColumnType("timestamp with time zone").IsRequired();

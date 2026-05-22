@@ -25,7 +25,6 @@ public sealed class CreateRequestCommandHandler(AppDbContext dbContext, ICurrent
         var now = DateTimeOffset.UtcNow;
         var request = new SponsorshipRequest
         {
-            Id = Guid.NewGuid(),
             RequestorId = currentUser.UserId,
             RequestorName = currentUser.DisplayName,
             Status = RequestStatus.Draft,

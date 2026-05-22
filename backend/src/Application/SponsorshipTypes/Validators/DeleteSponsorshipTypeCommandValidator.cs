@@ -7,6 +7,6 @@ public sealed class DeleteSponsorshipTypeCommandValidator : AbstractValidator<De
 {
     public DeleteSponsorshipTypeCommandValidator()
     {
-        RuleFor(command => command.Id).NotEmpty();
+        RuleFor(command => command.Id).GreaterThan(0);
     }
 }

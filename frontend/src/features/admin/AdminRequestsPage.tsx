@@ -44,7 +44,7 @@ function matchesSearch(request: RequestListItem, search: string): boolean {
   return (
     request.title.toLowerCase().includes(query) ||
     request.eventName.toLowerCase().includes(query) ||
-    request.id.toLowerCase().includes(query)
+    String(request.id).includes(query)
   )
 }
 

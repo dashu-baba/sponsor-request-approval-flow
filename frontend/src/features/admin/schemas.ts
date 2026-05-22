@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { entityIdSchema } from '@/lib/schemas/requests'
+
 const requestStatusSchema = z.enum([
   'Draft',
   'PendingManagerApproval',
@@ -10,7 +12,7 @@ const requestStatusSchema = z.enum([
 ])
 
 export const requestListItemSchema = z.object({
-  id: z.string().min(1),
+  id: entityIdSchema,
   title: z.string().min(1),
   status: requestStatusSchema,
   eventName: z.string().min(1),
@@ -24,7 +26,7 @@ export const requestDetailSchema = requestListItemSchema.extend({
   requestorName: z.string().min(1),
   requestorId: z.string().min(1),
   department: z.string().min(1),
-  sponsorshipTypeId: z.string().min(1),
+  sponsorshipTypeId: entityIdSchema,
   purpose: z.string().min(1),
   expectedBenefit: z.string().nullable(),
   remarks: z.string().nullable(),
@@ -32,7 +34,7 @@ export const requestDetailSchema = requestListItemSchema.extend({
 })
 
 export const workflowHistoryItemSchema = z.object({
-  id: z.string().min(1),
+  id: entityIdSchema,
   actorId: z.string().min(1),
   actorName: z.string().min(1),
   fromStatus: requestStatusSchema,
@@ -49,7 +51,7 @@ export const adminRequestsSchema = z.object({
 })
 
 export const sponsorshipTypeSchema = z.object({
-  id: z.string().min(1),
+  id: entityIdSchema,
   name: z.string().min(1),
   description: z.string().nullable(),
   isActive: z.boolean(),

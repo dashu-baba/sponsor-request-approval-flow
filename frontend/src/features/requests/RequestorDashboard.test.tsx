@@ -60,7 +60,7 @@ const listFixture: PagedRequests = {
   totalCount: 3,
   items: [
     {
-      id: '11111111-1111-1111-1111-111111111111',
+      id: 1,
       title: 'Draft request',
       requestorName: 'Sarah Chen',
       department: 'Engineering',
@@ -72,7 +72,7 @@ const listFixture: PagedRequests = {
       createdAt: '2025-06-01T00:00:00Z',
     },
     {
-      id: '22222222-2222-2222-2222-222222222222',
+      id: 2,
       title: 'Pending request',
       requestorName: 'Sarah Chen',
       department: 'Engineering',
@@ -84,7 +84,7 @@ const listFixture: PagedRequests = {
       createdAt: '2025-06-02T00:00:00Z',
     },
     {
-      id: '33333333-3333-3333-3333-333333333333',
+      id: 3,
       title: 'Approved request',
       requestorName: 'Sarah Chen',
       department: 'Engineering',

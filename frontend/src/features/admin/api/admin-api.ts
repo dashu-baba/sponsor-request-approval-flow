@@ -67,7 +67,7 @@ export async function createSponsorshipType(
 }
 
 export async function updateSponsorshipType(
-  id: string,
+  id: string | number,
   mutation: SponsorshipTypeMutation,
 ): Promise<SponsorshipType> {
   return apiJson(
@@ -81,7 +81,7 @@ export async function updateSponsorshipType(
   )
 }
 
-export async function deleteSponsorshipType(id: string): Promise<void> {
+export async function deleteSponsorshipType(id: string | number): Promise<void> {
   const response = await apiFetch(`/sponsorship-types/${id}`, { method: 'DELETE' })
 
   if (!response.ok) {

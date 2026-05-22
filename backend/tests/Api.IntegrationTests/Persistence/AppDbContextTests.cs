@@ -42,7 +42,7 @@ public sealed class AppDbContextTests
 
                 db.SponsorshipTypes.Add(new SponsorshipType
                 {
-                    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                    Id = 100L,
                     Name = "Conference",
                     Description = "Industry conference",
                     IsActive = true,
@@ -51,12 +51,12 @@ public sealed class AppDbContextTests
 
                 db.SponsorshipRequests.Add(new SponsorshipRequest
                 {
-                    Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                    Id = 101L,
                     Title = "PostgreSQL Summit",
                     RequestorName = "Ada Lovelace",
                     RequestorId = "requestor-1",
                     Department = "Engineering",
-                    SponsorshipTypeId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                    SponsorshipTypeId = 100L,
                     EventName = "PG Summit",
                     EventDate = new DateOnly(2026, 7, 1),
                     RequestedAmount = 1250.75m,

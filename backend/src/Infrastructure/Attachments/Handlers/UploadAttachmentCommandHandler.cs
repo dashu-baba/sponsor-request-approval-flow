@@ -51,7 +51,6 @@ public sealed class UploadAttachmentCommandHandler(
         var now = DateTimeOffset.UtcNow;
         var attachment = new Attachment
         {
-            Id = Guid.NewGuid(),
             SponsorshipRequestId = command.RequestId,
             ObjectKey = objectKey,
             FileName = sanitizedFileName,

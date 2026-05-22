@@ -12,6 +12,8 @@ public sealed class WorkflowHistoryConfiguration : IEntityTypeConfiguration<Work
 
         builder.HasKey(history => history.Id);
 
+        builder.Property(history => history.Id).UseIdentityByDefaultColumn();
+
         builder.Property(history => history.ActorId).HasMaxLength(450).IsRequired();
         builder.Property(history => history.FromStatus).HasConversion<int>().IsRequired();
         builder.Property(history => history.ToStatus).HasConversion<int>().IsRequired();

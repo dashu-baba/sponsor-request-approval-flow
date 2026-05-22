@@ -22,7 +22,7 @@ export interface ListRequestsParams {
 export interface RequestMutationPayload {
   title: string
   department: string
-  sponsorshipTypeId: string
+  sponsorshipTypeId: number
   eventName: string
   eventDate: string
   requestedAmount: number
@@ -46,19 +46,22 @@ export async function listRequests(params: ListRequestsParams = {}): Promise<Pag
   return apiJson(path, { method: 'GET' }, pagedRequestsSchema)
 }
 
-export async function getRequest(id: string): Promise<RequestDetail> {
+export async function getRequest(id: string | number): Promise<RequestDetail> {
   return apiJson(`/requests/${id}`, { method: 'GET' }, requestDetailSchema)
 }
 
-export async function getRequestHistory(id: string): Promise<WorkflowHistoryEntry[]> {
+export async function getRequestHistory(id: string | number): Promise<WorkflowHistoryEntry[]> {
   return apiJson(`/requests/${id}/history`, { method: 'GET' }, z.array(workflowHistoryEntrySchema))
 }
 
-export async function listAttachments(requestId: string): Promise<Attachment[]> {
+export async function listAttachments(requestId: string | number): Promise<Attachment[]> {
   return apiJson(`/requests/${requestId}/attachments`, { method: 'GET' }, z.array(attachmentSchema))
 }
 
-export async function approveRequest(id: string, remarks?: string): Promise<RequestDetail> {
+export async function approveRequest(
+  id: string | number,
+  remarks?: string,
+): Promise<RequestDetail> {
   return apiJson(
     `/requests/${id}/approve`,
     {
@@ -69,7 +72,7 @@ export async function approveRequest(id: string, remarks?: string): Promise<Requ
   )
 }
 
-export async function rejectRequest(id: string, remarks: string): Promise<RequestDetail> {
+export async function rejectRequest(id: string | number, remarks: string): Promise<RequestDetail> {
   return apiJson(
     `/requests/${id}/reject`,
     {
@@ -92,7 +95,7 @@ export async function createRequest(payload: RequestMutationPayload): Promise<Re
 }
 
 export async function updateDraftRequest(
-  id: string,
+  id: string | number,
   payload: RequestMutationPayload,
 ): Promise<RequestDetail> {
   return apiJson(
@@ -105,7 +108,7 @@ export async function updateDraftRequest(
   )
 }
 
-export async function submitRequest(id: string): Promise<RequestDetail> {
+export async function submitRequest(id: string | number): Promise<RequestDetail> {
   return apiJson(
     `/requests/${id}/submit`,
     { method: 'POST', body: JSON.stringify({}) },
@@ -113,7 +116,7 @@ export async function submitRequest(id: string): Promise<RequestDetail> {
   )
 }
 
-export async function cancelRequest(id: string, remarks?: string): Promise<RequestDetail> {
+export async function cancelRequest(id: string | number, remarks?: string): Promise<RequestDetail> {
   return apiJson(
     `/requests/${id}/cancel`,
     {
@@ -124,7 +127,10 @@ export async function cancelRequest(id: string, remarks?: string): Promise<Reque
   )
 }
 
-export async function uploadAttachment(requestId: string, file: File): Promise<Attachment> {
+export async function uploadAttachment(
+  requestId: string | number,
+  file: File,
+): Promise<Attachment> {
   const formData = new FormData()
   formData.append('file', file)
 

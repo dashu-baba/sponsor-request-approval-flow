@@ -48,8 +48,10 @@ public sealed class SponsorshipTypeHandlerTests
     {
         await using var dbContext = CreateDbContext();
         var type = CreateType("Referenced Type", isActive: true);
-        var request = CreateRequest(type.Id);
         dbContext.SponsorshipTypes.Add(type);
+        await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+
+        var request = CreateRequest(type.Id);
         dbContext.SponsorshipRequests.Add(request);
         await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
 
@@ -83,17 +85,15 @@ public sealed class SponsorshipTypeHandlerTests
     private static SponsorshipType CreateType(string name, bool isActive) =>
         new()
         {
-            Id = Guid.NewGuid(),
             Name = name,
             IsActive = isActive,
             CreatedAt = DateTimeOffset.UtcNow,
             CreatedBy = TestCurrentUserContext.UserIdValue,
         };
 
-    private static SponsorshipRequest CreateRequest(Guid sponsorshipTypeId) =>
+    private static SponsorshipRequest CreateRequest(long sponsorshipTypeId) =>
         new()
         {
-            Id = Guid.NewGuid(),
             Title = "Unit test request",
             RequestorName = "Unit Requestor",
             RequestorId = "requestor-1",

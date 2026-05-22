@@ -24,6 +24,18 @@ public static class ApplicationDataSeedExtensions
         dbContext.WorkflowHistoryEntries.AddRange(CreateWorkflowHistory());
 
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
+        await SyncIdentitySequencesAsync(dbContext).ConfigureAwait(false);
+    }
+
+    private static async Task SyncIdentitySequencesAsync(AppDbContext dbContext)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            SELECT setval(pg_get_serial_sequence('sponsorship_types', 'id'), COALESCE((SELECT MAX(id) FROM sponsorship_types), 1));
+            SELECT setval(pg_get_serial_sequence('sponsorship_requests', 'id'), COALESCE((SELECT MAX(id) FROM sponsorship_requests), 1));
+            SELECT setval(pg_get_serial_sequence('workflow_history', 'id'), COALESCE((SELECT MAX(id) FROM workflow_history), 1));
+            """)
+            .ConfigureAwait(false);
     }
 
     private static IEnumerable<SponsorshipType> CreateSponsorshipTypes()
@@ -49,7 +61,7 @@ public static class ApplicationDataSeedExtensions
             "Training, workshops, and educational partnerships.");
     }
 
-    private static SponsorshipType CreateSponsorshipType(Guid id, string name, string description)
+    private static SponsorshipType CreateSponsorshipType(long id, string name, string description)
     {
         return new SponsorshipType
         {
@@ -132,10 +144,10 @@ public static class ApplicationDataSeedExtensions
     }
 
     private static SponsorshipRequest CreateRequest(
-        Guid id,
+        long id,
         string title,
         RequestStatus status,
-        Guid sponsorshipTypeId,
+        long sponsorshipTypeId,
         string eventName,
         DateOnly eventDate,
         decimal requestedAmount,
@@ -192,7 +204,7 @@ public static class ApplicationDataSeedExtensions
         }
     }
 
-    private static WorkflowHistory CreateHistoryEntry(Guid requestId, SeedData.SeedTransition transition)
+    private static WorkflowHistory CreateHistoryEntry(long requestId, SeedData.SeedTransition transition)
     {
         return new WorkflowHistory
         {

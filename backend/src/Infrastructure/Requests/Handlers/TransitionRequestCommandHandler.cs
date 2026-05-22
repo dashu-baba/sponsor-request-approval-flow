@@ -29,7 +29,7 @@ public sealed class TransitionRequestCommandHandler(AppDbContext dbContext, ICur
         => ApplyTransitionAsync(command.Id, WorkflowAction.Reject, command.Remarks, cancellationToken);
 
     private async Task<RequestDetailDto> ApplyTransitionAsync(
-        Guid requestId,
+        long requestId,
         WorkflowAction action,
         string? remarks,
         CancellationToken cancellationToken)
@@ -73,7 +73,6 @@ public sealed class TransitionRequestCommandHandler(AppDbContext dbContext, ICur
 
         dbContext.WorkflowHistoryEntries.Add(new WorkflowHistory
         {
-            Id = Guid.NewGuid(),
             SponsorshipRequestId = request.Id,
             ActorId = currentUser.UserId,
             FromStatus = from,

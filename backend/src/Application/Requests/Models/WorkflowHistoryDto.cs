@@ -3,7 +3,7 @@ using SponsorshipApproval.Domain.Requests;
 namespace SponsorshipApproval.Application.Requests.Models;
 
 public sealed record WorkflowHistoryDto(
-    Guid Id,
+    long Id,
     string ActorId,
     string ActorName,
     RequestStatus FromStatus,

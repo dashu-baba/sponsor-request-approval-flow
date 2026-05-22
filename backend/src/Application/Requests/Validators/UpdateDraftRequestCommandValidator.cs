@@ -7,7 +7,7 @@ public sealed class UpdateDraftRequestCommandValidator : AbstractValidator<Updat
 {
     public UpdateDraftRequestCommandValidator()
     {
-        RuleFor(command => command.Id).NotEmpty();
+        RuleFor(command => command.Id).GreaterThan(0);
         RuleFor(command => command.Body).SetValidator(new RequestMutationBodyValidator());
     }
 }

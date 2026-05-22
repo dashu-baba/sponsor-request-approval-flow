@@ -52,7 +52,7 @@ function detailToFormValues(request: RequestDetail): RequestMutationFormValues {
   return {
     title: request.title,
     department: request.department,
-    sponsorshipTypeId: request.sponsorshipTypeId,
+    sponsorshipTypeId: String(request.sponsorshipTypeId),
     eventName: request.eventName,
     eventDate: toDateInputValue(request.eventDate),
     requestedAmount: request.requestedAmount,
@@ -82,13 +82,13 @@ function emptyFormValues(department: string): RequestMutationFormValues {
 interface RequestFormModalProps {
   open: boolean
   onClose: () => void
-  requestId?: string
+  requestId?: string | number
   onSuccess?: () => void
 }
 
 interface RequestFormBodyProps {
   defaultValues: RequestMutationFormValues
-  requestId?: string
+  requestId?: string | number
   isEdit: boolean
   types: SponsorshipType[]
   displayName: string
@@ -213,7 +213,7 @@ function RequestFormBody({
             {types
               .filter((type) => type.isActive)
               .map((type) => (
-                <option key={type.id} value={type.id}>
+                <option key={type.id} value={String(type.id)}>
                   {type.name}
                 </option>
               ))}

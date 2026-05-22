@@ -14,7 +14,7 @@ export interface PagedResult<T> {
 }
 
 export interface RequestListItem {
-  id: string
+  id: number
   title: string
   status: RequestStatus
   eventName: string
@@ -28,7 +28,7 @@ export interface RequestDetail extends RequestListItem {
   requestorName: string
   requestorId: string
   department: string
-  sponsorshipTypeId: string
+  sponsorshipTypeId: number
   purpose: string
   expectedBenefit: string | null
   remarks: string | null
@@ -36,7 +36,7 @@ export interface RequestDetail extends RequestListItem {
 }
 
 export interface WorkflowHistoryItem {
-  id: string
+  id: number
   actorId: string
   actorName: string
   fromStatus: RequestStatus
@@ -46,7 +46,7 @@ export interface WorkflowHistoryItem {
 }
 
 export interface SponsorshipType {
-  id: string
+  id: number
   name: string
   description: string | null
   isActive: boolean

@@ -18,11 +18,14 @@ import type { Attachment } from '@/lib/schemas/requests'
 import { cn } from '@/lib/utils'
 
 interface RequestAttachmentsSectionProps {
-  requestId: string
+  requestId: string | number
   allowUpload?: boolean
 }
 
-async function downloadAttachment(requestId: string, attachment: Attachment): Promise<void> {
+async function downloadAttachment(
+  requestId: string | number,
+  attachment: Attachment,
+): Promise<void> {
   const response = await apiFetch(`/requests/${requestId}/attachments/${attachment.id}`)
 
   if (!response.ok) {

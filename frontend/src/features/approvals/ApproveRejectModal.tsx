@@ -24,7 +24,7 @@ interface ApproveRejectModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   action: ApprovalAction
-  requestId: string
+  requestId: string | number
   requestTitle: string
   onSuccess?: () => void
   onConflict409?: () => void

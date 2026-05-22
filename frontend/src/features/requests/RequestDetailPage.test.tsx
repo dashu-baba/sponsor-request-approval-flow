@@ -13,17 +13,17 @@ import type { Role } from '@/lib/roles'
 let currentRole: Role = Roles.Manager
 let currentUserId = 'manager-1'
 
-const getRequestMock = vi.fn<(id: string) => Promise<RequestDetail>>()
-const getRequestHistoryMock = vi.fn<(id: string) => Promise<WorkflowHistoryEntry[]>>()
+const getRequestMock = vi.fn<(id: string | number) => Promise<RequestDetail>>()
+const getRequestHistoryMock = vi.fn<(id: string | number) => Promise<WorkflowHistoryEntry[]>>()
 const approveRequestMock = vi.fn()
 const rejectRequestMock = vi.fn()
 const listAttachmentsMock = vi.fn().mockResolvedValue([])
 
-const requestId = '11111111-1111-1111-1111-111111111111'
+const requestId = 1
 
 vi.mock('@/lib/api/requests-api', () => ({
-  getRequest: (id: string) => getRequestMock(id),
-  getRequestHistory: (id: string) => getRequestHistoryMock(id),
+  getRequest: (id: string | number) => getRequestMock(id),
+  getRequestHistory: (id: string | number) => getRequestHistoryMock(id),
   approveRequest: (...args: unknown[]) => approveRequestMock(...args),
   rejectRequest: (...args: unknown[]) => rejectRequestMock(...args),
   listAttachments: (...args: unknown[]) => listAttachmentsMock(...args),
@@ -45,7 +45,7 @@ const requestFixture: RequestDetail = {
   requestorName: 'Sarah Chen',
   requestorId: 'user-1',
   department: 'Engineering',
-  sponsorshipTypeId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
+  sponsorshipTypeId: 1,
   sponsorshipTypeName: 'Conference',
   eventName: 'TechConf Asia',
   eventDate: '2025-08-15T00:00:00Z',
@@ -60,7 +60,7 @@ const requestFixture: RequestDetail = {
 
 const historyFixture: WorkflowHistoryEntry[] = [
   {
-    id: '99999999-9999-9999-9999-999999999999',
+    id: 1,
     actorId: 'user-1',
     actorName: 'Sarah Chen',
     fromStatus: 'Draft',

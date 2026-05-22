@@ -13,7 +13,7 @@ const submitRequestMock = vi.fn()
 const getRequestMock = vi.fn()
 const toastSuccessMock = vi.fn()
 
-const typeId = '11111111-1111-4111-8111-111111111111'
+const typeId = 1
 
 vi.mock('@/lib/api/sponsorship-types-api', () => ({
   listSponsorshipTypes: () => listSponsorshipTypesMock(),
@@ -54,7 +54,7 @@ const typesFixture = [
   },
 ]
 
-function renderModal(props: { requestId?: string } = {}) {
+function renderModal(props: { requestId?: number } = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -69,7 +69,7 @@ function renderModal(props: { requestId?: string } = {}) {
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await screen.findByLabelText(/sponsorship type/i)
   await user.type(screen.getByLabelText(/request title/i), 'Test request')
-  await user.selectOptions(screen.getByLabelText(/sponsorship type/i), typeId)
+  await user.selectOptions(screen.getByLabelText(/sponsorship type/i), String(typeId))
   await user.type(screen.getByLabelText(/department/i), 'Engineering')
   await user.type(screen.getByLabelText(/event \/ organisation/i), 'Org')
   fireEvent.change(screen.getByLabelText(/event date/i), { target: { value: '2099-12-31' } })
@@ -81,10 +81,10 @@ describe('RequestFormModal', () => {
   beforeEach(() => {
     listSponsorshipTypesMock.mockResolvedValue(typesFixture)
     createRequestMock.mockResolvedValue({
-      id: '22222222-2222-2222-2222-222222222222',
+      id: 2,
       status: 'Draft',
     })
-    submitRequestMock.mockResolvedValue({ id: '22222222-2222-2222-2222-222222222222' })
+    submitRequestMock.mockResolvedValue({ id: 2 })
   })
 
   it('shows validation errors for empty required fields', async () => {
@@ -111,7 +111,7 @@ describe('RequestFormModal', () => {
 
   it('blocks edit UI when loaded request is not a draft', async () => {
     const submitted: RequestDetail = {
-      id: '33333333-3333-3333-3333-333333333333',
+      id: 3,
       title: 'Submitted',
       requestorName: 'Sarah Chen',
       requestorId: 'requestor-1',

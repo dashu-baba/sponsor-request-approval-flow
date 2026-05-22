@@ -82,7 +82,7 @@ const managerQueueFixture: PagedRequests = {
   totalCount: 3,
   items: [
     {
-      id: '11111111-1111-1111-1111-111111111111',
+      id: 1,
       title: 'TechConf 2025 Sponsorship',
       requestorName: 'Sarah Chen',
       department: 'Engineering',
@@ -94,7 +94,7 @@ const managerQueueFixture: PagedRequests = {
       createdAt: '2025-06-01T09:00:00Z',
     },
     {
-      id: '22222222-2222-2222-2222-222222222222',
+      id: 2,
       title: 'Draft should not render',
       requestorName: 'Hidden User',
       department: 'Finance',
@@ -106,7 +106,7 @@ const managerQueueFixture: PagedRequests = {
       createdAt: '2025-06-02T09:00:00Z',
     },
     {
-      id: '33333333-3333-3333-3333-333333333333',
+      id: 3,
       title: 'Women in Tech Forum',
       requestorName: 'Sarah Chen',
       department: 'HR',
@@ -126,7 +126,7 @@ const financeQueueFixture: PagedRequests = {
   totalCount: 1,
   items: [
     {
-      id: '44444444-4444-4444-4444-444444444444',
+      id: 4,
       title: 'Annual Gala Sponsorship',
       requestorName: 'Alex Rivera',
       department: 'Marketing',
@@ -216,17 +216,14 @@ describe('ApproverDashboard', () => {
     await user.click(screen.getByRole('button', { name: /confirm rejection/i }))
 
     await waitFor(() => {
-      expect(rejectRequestMock).toHaveBeenCalledWith(
-        '11111111-1111-1111-1111-111111111111',
-        'Budget constraints for this quarter.',
-      )
+      expect(rejectRequestMock).toHaveBeenCalledWith(1, 'Budget constraints for this quarter.')
     })
   })
 
   it('submits approve from the dashboard modal', async () => {
     getRequestSummaryMock.mockResolvedValue(summaryFixture)
     listRequestsMock.mockResolvedValue(managerQueueFixture)
-    approveRequestMock.mockResolvedValueOnce({ id: '11111111-1111-1111-1111-111111111111' })
+    approveRequestMock.mockResolvedValueOnce({ id: 1 })
     const user = userEvent.setup()
 
     renderDashboard()
@@ -237,7 +234,7 @@ describe('ApproverDashboard', () => {
     await user.click(screen.getByRole('button', { name: /confirm approval/i }))
 
     await waitFor(() => {
-      expect(approveRequestMock).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', '')
+      expect(approveRequestMock).toHaveBeenCalledWith(1, '')
     })
   })
 

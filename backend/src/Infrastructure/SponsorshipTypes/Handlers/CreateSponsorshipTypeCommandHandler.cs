@@ -23,7 +23,6 @@ public sealed class CreateSponsorshipTypeCommandHandler(AppDbContext dbContext, 
         var now = DateTimeOffset.UtcNow;
         var sponsorshipType = new SponsorshipType
         {
-            Id = Guid.NewGuid(),
             Name = name,
             Description = NormalizeDescription(command.Body.Description),
             IsActive = true,
@@ -45,7 +44,7 @@ public sealed class CreateSponsorshipTypeCommandHandler(AppDbContext dbContext, 
     internal static async Task EnsureActiveNameIsUniqueAsync(
         AppDbContext dbContext,
         string name,
-        Guid? excludedId,
+        long? excludedId,
         CancellationToken cancellationToken)
     {
         var normalizedName = name.ToUpperInvariant();

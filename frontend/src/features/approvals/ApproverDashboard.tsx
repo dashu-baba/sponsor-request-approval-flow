@@ -39,7 +39,7 @@ type ViewMode = 'list' | 'grid'
 type StatusFilterValue = '' | RequestStatus
 
 interface PendingModalState {
-  requestId: string
+  requestId: number
   requestTitle: string
   action: ApprovalAction
 }
@@ -234,7 +234,7 @@ export function ApproverDashboard() {
         item.eventName.toLowerCase().includes(query) ||
         item.requestorName.toLowerCase().includes(query) ||
         item.department.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
+        String(item.id).toLowerCase().includes(query) ||
         formatRequestId(item.id).toLowerCase().includes(query)
       )
     })

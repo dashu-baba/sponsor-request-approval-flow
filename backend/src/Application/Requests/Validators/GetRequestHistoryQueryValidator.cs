@@ -7,6 +7,6 @@ public sealed class GetRequestHistoryQueryValidator : AbstractValidator<GetReque
 {
     public GetRequestHistoryQueryValidator()
     {
-        RuleFor(query => query.RequestId).NotEmpty();
+        RuleFor(query => query.RequestId).GreaterThan(0);
     }
 }

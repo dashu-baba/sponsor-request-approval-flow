@@ -213,7 +213,7 @@ export function RequestorDashboard() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
-  const [editingRequestId, setEditingRequestId] = useState<string | undefined>()
+  const [editingRequestId, setEditingRequestId] = useState<number | undefined>()
   const [cancellingRequest, setCancellingRequest] = useState<RequestListItem | null>(null)
 
   function updateStatusFilter(value: StatusFilterValue) {
@@ -263,7 +263,7 @@ export function RequestorDashboard() {
         item.title.toLowerCase().includes(query) ||
         item.eventName.toLowerCase().includes(query) ||
         item.department.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
+        String(item.id).toLowerCase().includes(query) ||
         formatRequestId(item.id).toLowerCase().includes(query)
       )
     })

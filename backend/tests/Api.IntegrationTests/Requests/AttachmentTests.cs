@@ -20,7 +20,7 @@ namespace SponsorshipApproval.Api.IntegrationTests.Requests;
 public sealed class AttachmentTests(PostgresWebApplicationFactory factory)
     : IClassFixture<PostgresWebApplicationFactory>
 {
-    private static readonly Guid ConferenceTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
+    private static readonly long ConferenceTypeId = 1L;
 
     private static readonly byte[] MinimalPdfBytes = "%PDF-1.4\n%EOF\n"u8.ToArray();
 
@@ -229,7 +229,7 @@ public sealed class AttachmentTests(PostgresWebApplicationFactory factory)
         problem!.Title.Should().Be("Validation failed");
     }
 
-    private static async Task<Guid> CreateDraftRequestAsync(HttpClient client)
+    private static async Task<long> CreateDraftRequestAsync(HttpClient client)
     {
         var body = new RequestMutationBody(
             Title: "Attachment test request",
@@ -257,7 +257,7 @@ public sealed class AttachmentTests(PostgresWebApplicationFactory factory)
 
     private static Task<HttpResponseMessage> UploadPdfAsync(
         HttpClient client,
-        Guid requestId,
+        long requestId,
         byte[] fileBytes,
         string fileName)
     {
@@ -316,7 +316,6 @@ public sealed class AttachmentTests(PostgresWebApplicationFactory factory)
 
         public const string Password = "Password1!";
 
-        public static readonly Guid PendingManagerRequestId =
-            Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
+        public const long PendingManagerRequestId = 2L;
     }
 }

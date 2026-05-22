@@ -17,7 +17,7 @@ public sealed class RequestMutationBodyValidator : AbstractValidator<RequestMuta
             .When(body => !string.IsNullOrWhiteSpace(body.Department));
 
         RuleFor(body => body.SponsorshipTypeId)
-            .NotEmpty();
+            .GreaterThan(0);
 
         RuleFor(body => body.EventName)
             .NotEmpty()

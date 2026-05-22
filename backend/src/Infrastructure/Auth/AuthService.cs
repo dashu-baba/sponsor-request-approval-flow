@@ -162,7 +162,6 @@ public sealed class AuthService(
 
         dbContext.RefreshTokens.Add(new RefreshToken
         {
-            Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = refreshTokenHash,
             CreatedAt = DateTimeOffset.UtcNow,

@@ -19,12 +19,11 @@ namespace SponsorshipApproval.Api.IntegrationTests.Requests;
 public sealed class RequestCrudTests(PostgresWebApplicationFactory factory)
     : IClassFixture<PostgresWebApplicationFactory>
 {
-    private static readonly Guid ConferenceTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
+    private static readonly long ConferenceTypeId = 1L;
 
-    private static readonly Guid CommunityEventTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
+    private static readonly long CommunityEventTypeId = 2L;
 
-    private static readonly Guid SeededPendingManagerRequestId =
-        Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
+    private static readonly long SeededPendingManagerRequestId = 2L;
 
     [Fact]
     public async Task Create_list_get_and_update_draft_should_succeed_for_requestor()
