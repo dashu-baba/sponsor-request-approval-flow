@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ApproverDashboard } from '@/features/approvals/ApproverDashboard'
 import { useCurrentUser } from '@/features/auth/use-auth'
 import {
   getDashboardHeading,
@@ -26,7 +27,7 @@ function parseStatusFilter(value: string | null): DashboardStatusFilter {
   return 'overview'
 }
 
-export function DashboardPage() {
+function RequestorDashboardPlaceholder() {
   const user = useCurrentUser()
   const [searchParams] = useSearchParams()
   const statusFilter = parseStatusFilter(searchParams.get('status'))
@@ -36,13 +37,6 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={heading.title} subtitle={heading.subtitle} />
-
-      {user.role === Roles.SystemAdmin ? (
-        <Alert variant="info">
-          <AlertTitle>Submitted requests only</AlertTitle>
-          <AlertDescription>Private drafts are visible only to their requestor.</AlertDescription>
-        </Alert>
-      ) : null}
 
       <div
         className={`grid gap-4 sm:grid-cols-2 ${metricCount === 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}
@@ -62,14 +56,65 @@ export function DashboardPage() {
         <CardContent className="space-y-3 p-8 text-center">
           <h2 className="text-base font-semibold">Request list placeholder</h2>
           <p className="text-[13px] text-text-secondary">
-            {user.role === Roles.Requestor
-              ? statusFilter === 'overview' || statusFilter === 'all'
-                ? 'Your dashboard request table will render here in T3.2.'
-                : `Filtered by status: ${statusFilter}. Same dashboard view — sidebar sets ?status= for T3.2.`
-              : 'Submitted requests for your role will render here in T3.2–T3.3.'}
+            {statusFilter === 'overview' || statusFilter === 'all'
+              ? 'Your dashboard request table will render here in T3.2.'
+              : `Filtered by status: ${statusFilter}. Same dashboard view — sidebar sets ?status= for T3.2.`}
           </p>
         </CardContent>
       </Card>
     </div>
   )
+}
+
+function SystemAdminDashboardPlaceholder() {
+  const heading = getDashboardHeading(Roles.SystemAdmin, 'overview')
+  const metricCount = getDashboardMetricCount(Roles.SystemAdmin)
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title={heading.title} subtitle={heading.subtitle} />
+
+      <Alert variant="info">
+        <AlertTitle>Submitted requests only</AlertTitle>
+        <AlertDescription>Private drafts are visible only to their requestor.</AlertDescription>
+      </Alert>
+
+      <div
+        className={`grid gap-4 sm:grid-cols-2 ${metricCount === 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}
+      >
+        {Array.from({ length: metricCount }).map((_, index) => (
+          <Card key={index}>
+            <CardContent className="space-y-2 p-5">
+              <Skeleton className="h-4 w-24" />
+              <div className="text-[28px] font-semibold text-text-primary">—</div>
+              <p className="text-xs text-text-hint">Metrics arrive in T3.2</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardContent className="space-y-3 p-8 text-center">
+          <h2 className="text-base font-semibold">Request list placeholder</h2>
+          <p className="text-[13px] text-text-secondary">
+            Submitted requests for system administrators will render here in T3.2–T3.3.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function DashboardPage() {
+  const user = useCurrentUser()
+
+  if (user.role === Roles.Manager || user.role === Roles.FinanceAdmin) {
+    return <ApproverDashboard />
+  }
+
+  if (user.role === Roles.SystemAdmin) {
+    return <SystemAdminDashboardPlaceholder />
+  }
+
+  return <RequestorDashboardPlaceholder />
 }

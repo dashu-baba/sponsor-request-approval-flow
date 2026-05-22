@@ -8,6 +8,7 @@ import { adminOnly } from '@/features/auth/route-policy'
 import { GuestRoute, ProtectedRoute, RoleRedirect } from '@/features/auth/ProtectedRoute'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { UiStatesDemoPage } from '@/features/dev/UiStatesDemoPage'
+import { RequestDetailPage } from '@/features/requests/RequestDetailPage'
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
+          { path: 'requests/:id', element: <RequestDetailPage /> },
           { path: 'dev/ui-states', element: <UiStatesDemoPage /> },
           { path: 'profile', element: <ProfileStubPage /> },
           {

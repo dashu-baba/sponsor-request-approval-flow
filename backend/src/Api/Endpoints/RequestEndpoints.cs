@@ -17,6 +17,7 @@ public static class RequestEndpoints
             .WithTags("Requests")
             .RequireAuthorization();
 
+        readGroup.MapGet("/summary", GetSummaryAsync);
         readGroup.MapGet("/", ListAsync);
         readGroup.MapGet("/{id:guid}", GetByIdAsync);
         readGroup.MapGet("/{id:guid}/history", GetHistoryAsync);
@@ -76,6 +77,14 @@ public static class RequestEndpoints
             new ListOwnRequestsQuery(p, ps),
             cancellationToken).ConfigureAwait(false);
         return TypedResults.Ok(ownResult);
+    }
+
+    private static async Task<IResult> GetSummaryAsync(
+        IMediator mediator,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetRequestSummaryQuery(), cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(result);
     }
 
     private static async Task<IResult> GetByIdAsync(

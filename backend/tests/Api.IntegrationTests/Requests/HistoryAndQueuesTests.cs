@@ -184,6 +184,9 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
         result!.Items.Should().AllSatisfy(item =>
             item.Status.Should().Be(RequestStatus.PendingManagerApproval));
         result.Items.Should().Contain(item => item.Id == submitted.Id);
+        var queued = result.Items.Single(item => item.Id == submitted.Id);
+        queued.RequestorName.Should().Be(reqEmail.Split('@')[0]);
+        queued.Department.Should().Be("Engineering");
     }
 
     [Fact]
