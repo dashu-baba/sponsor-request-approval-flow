@@ -213,7 +213,7 @@ sequenceDiagram
     ID-->>API: ok
     API-->>FE: new access token → FE retries original request
 
-    Note over FE,API: password change rotates SecurityStamp →<br/>all old access tokens fail validation; other sessions die
+    Note over FE,API: password change rotates SecurityStamp →<br/>all old access tokens fail validation, other sessions die
 ```
 
 Key points:
