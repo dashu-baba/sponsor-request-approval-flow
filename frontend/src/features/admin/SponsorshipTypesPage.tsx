@@ -24,6 +24,7 @@ import {
 import { getErrorMessage } from '@/features/admin/format'
 import { sponsorshipTypeMutationSchema } from '@/features/admin/schemas'
 import type { SponsorshipType, SponsorshipTypeMutation } from '@/features/admin/types'
+import { queryKeys } from '@/lib/query-client'
 
 type FormValues = z.input<typeof sponsorshipTypeMutationSchema>
 type SubmitValues = z.output<typeof sponsorshipTypeMutationSchema>
@@ -47,7 +48,7 @@ export function SponsorshipTypesPage() {
   })
 
   const query = useQuery({
-    queryKey: ['sponsorship-types'],
+    queryKey: queryKeys.sponsorshipTypes.list,
     queryFn: listSponsorshipTypes,
   })
 
@@ -70,7 +71,7 @@ export function SponsorshipTypesPage() {
       setMutationError(null)
       setSuccessMessage('Sponsorship type created.')
       closeFormModal()
-      void queryClient.invalidateQueries({ queryKey: ['sponsorship-types'] })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sponsorshipTypes.list })
     },
     onError: (error) => setMutationError(getErrorMessage(error)),
   })
@@ -82,7 +83,7 @@ export function SponsorshipTypesPage() {
       setMutationError(null)
       setSuccessMessage('Sponsorship type updated.')
       closeFormModal()
-      void queryClient.invalidateQueries({ queryKey: ['sponsorship-types'] })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sponsorshipTypes.list })
     },
     onError: (error) => setMutationError(getErrorMessage(error)),
   })
@@ -99,7 +100,7 @@ export function SponsorshipTypesPage() {
           : `${deletedName} was deleted.`,
       )
       setDeletingType(null)
-      void queryClient.invalidateQueries({ queryKey: ['sponsorship-types'] })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sponsorshipTypes.list })
       void queryClient.invalidateQueries({ queryKey: ['admin-requests-for-type-counts'] })
       if (editingType?.id === id) {
         closeFormModal()

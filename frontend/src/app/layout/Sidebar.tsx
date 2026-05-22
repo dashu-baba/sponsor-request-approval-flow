@@ -1,10 +1,41 @@
+import { useQuery } from '@tanstack/react-query'
 import { LogOut } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { useAuth, useCurrentUser } from '@/features/auth/use-auth'
 import { getNavSections, type DashboardStatusFilter } from '@/features/auth/role-nav'
+import { getRequestSummary } from '@/lib/api/requests-api'
+import { queryKeys } from '@/lib/query-client'
+import { Roles } from '@/lib/roles'
 import { cn } from '@/lib/utils'
+
+function getRequestorNavBadgeCount(
+  statusFilter: DashboardStatusFilter | undefined,
+  summary: {
+    total: number
+    draft: number
+    pendingManagerApproval: number
+    pendingFinanceReview: number
+    approved: number
+    rejected: number
+  },
+): number | null {
+  switch (statusFilter) {
+    case 'all':
+      return summary.total
+    case 'Draft':
+      return summary.draft
+    case 'PendingManagerApproval':
+      return summary.pendingManagerApproval + summary.pendingFinanceReview
+    case 'Approved':
+      return summary.approved
+    case 'Rejected':
+      return summary.rejected
+    default:
+      return null
+  }
+}
 
 function parseStatusFilter(search: string): DashboardStatusFilter | null {
   const params = new URLSearchParams(search)
@@ -50,6 +81,14 @@ export function Sidebar() {
   const sections = getNavSections(user.role)
   const currentFilter = parseStatusFilter(location.search)
 
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.requests.summary,
+    queryFn: getRequestSummary,
+    enabled: user.role === Roles.Requestor,
+  })
+
+  const summary = summaryQuery.data
+
   return (
     <aside
       className="fixed top-[var(--topbar-height)] bottom-0 left-0 z-[100] flex w-[var(--sidebar-width)] flex-col overflow-y-auto border-r border-border bg-surface py-4"
@@ -83,11 +122,24 @@ export function Sidebar() {
                   aria-hidden="true"
                 />
                 <span>{item.label}</span>
-                {item.statusFilter && item.statusFilter === currentFilter ? (
-                  <span className="ml-auto rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    •
-                  </span>
-                ) : null}
+                {user.role === Roles.Requestor && item.statusFilter && summary
+                  ? (() => {
+                      const count = getRequestorNavBadgeCount(item.statusFilter, summary)
+                      if (count === null || count <= 0) return null
+                      return (
+                        <span
+                          className={cn(
+                            'ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+                            item.statusFilter === currentFilter
+                              ? 'bg-brand text-white'
+                              : 'bg-page text-text-secondary',
+                          )}
+                        >
+                          {count}
+                        </span>
+                      )
+                    })()
+                  : null}
               </NavLink>
             )
           })}

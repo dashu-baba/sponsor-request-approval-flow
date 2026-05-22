@@ -84,7 +84,7 @@ public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory fact
     }
 
     [Fact]
-    public async Task Non_admin_should_be_forbidden_for_all_crud_endpoints()
+    public async Task Non_admin_can_list_active_types_but_cannot_mutate()
     {
         using var client = await CreateAuthenticatedClientAsync(SeedCredentials.RequestorEmail, SeedCredentials.Password)
             .ConfigureAwait(true);
@@ -104,7 +104,13 @@ public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory fact
             .DeleteAsync($"/sponsorship-types/{id}", TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
-        getResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var list = await getResponse.Content
+            .ReadFromJsonAsync<IReadOnlyList<SponsorshipTypeDto>>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        list.Should().NotBeEmpty();
+        list.Should().OnlyContain(type => type.IsActive);
+
         postResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         putResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);

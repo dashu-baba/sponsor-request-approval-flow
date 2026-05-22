@@ -1,10 +1,12 @@
 import { apiJson, apiFetch } from '@/lib/api/auth-api'
 import { parseProblemResponse } from '@/lib/api/api-error'
 import {
+  listSponsorshipTypes as listSponsorshipTypesFromApi,
+  sponsorshipTypeSchema,
+} from '@/lib/api/sponsorship-types-api'
+import {
   adminRequestsSchema,
   requestDetailSchema,
-  sponsorshipTypeSchema,
-  sponsorshipTypesSchema,
   workflowHistorySchema,
 } from '@/features/admin/schemas'
 import type {
@@ -47,7 +49,7 @@ export async function getRequestHistory(id: string): Promise<WorkflowHistoryItem
 }
 
 export async function listSponsorshipTypes(): Promise<SponsorshipType[]> {
-  return apiJson('/sponsorship-types', { method: 'GET' }, sponsorshipTypesSchema)
+  return listSponsorshipTypesFromApi()
 }
 
 export async function createSponsorshipType(

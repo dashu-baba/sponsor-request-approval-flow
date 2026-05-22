@@ -11,13 +11,13 @@ public static class SponsorshipTypeEndpoints
     public static IEndpointRouteBuilder MapSponsorshipTypeEndpoints(this IEndpointRouteBuilder app)
     {
         var sponsorshipTypes = app.MapGroup("/sponsorship-types")
-            .WithTags("Sponsorship Types")
-            .RequireAuthorization(AuthorizationPolicies.SystemAdmin);
+            .WithTags("Sponsorship Types");
 
-        sponsorshipTypes.MapGet("/", ListAsync);
-        sponsorshipTypes.MapPost("/", CreateAsync);
-        sponsorshipTypes.MapPut("/{id:guid}", UpdateAsync);
+        sponsorshipTypes.MapGet("/", ListAsync).RequireAuthorization();
+        sponsorshipTypes.MapPost("/", CreateAsync).RequireAuthorization(AuthorizationPolicies.SystemAdmin);
+        sponsorshipTypes.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(AuthorizationPolicies.SystemAdmin);
         sponsorshipTypes.MapDelete("/{id:guid}", DeleteAsync)
+            .RequireAuthorization(AuthorizationPolicies.SystemAdmin)
             .WithSummary("Soft-delete a sponsorship type")
             .WithDescription(
                 "Sets IsActive=false. Referenced requests are preserved; new requests cannot select this type.");

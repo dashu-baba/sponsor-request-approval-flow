@@ -8,7 +8,9 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/states/query-
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { RequestAttachmentsList } from '@/features/requests/RequestAttachmentsList'
+import { CancelRequestModal } from '@/features/requests/CancelRequestModal'
+import { RequestAttachmentsSection } from '@/features/requests/RequestAttachmentsSection'
+import { RequestFormModal } from '@/features/requests/RequestFormModal'
 import { RequestHistoryTimeline } from '@/features/requests/RequestHistoryTimeline'
 import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
 import { useCurrentUser } from '@/features/auth/use-auth'
@@ -16,7 +18,13 @@ import { ApiError } from '@/lib/api/api-error'
 import { getRequest, getRequestHistory } from '@/lib/api/requests-api'
 import { formatCurrency, formatDate, formatDateTime, formatRequestId } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
-import { canApproveRequest } from '@/lib/request-status'
+import {
+  canApproveRequest,
+  canCancelRequest,
+  canEditRequest,
+  canUploadAttachments,
+} from '@/lib/request-status'
+import { Roles } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 
 interface PendingModalState {
@@ -29,6 +37,8 @@ export function RequestDetailPage() {
   const [pendingModal, setPendingModal] = useState<PendingModalState | null>(null)
   const [conflictDetected, setConflictDetected] = useState(false)
   const [forbiddenDetected, setForbiddenDetected] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
 
   const detailQuery = useQuery({
     queryKey: queryKeys.requests.detail(id ?? ''),
@@ -99,8 +109,12 @@ export function RequestDetailPage() {
     return <EmptyState title="Request not found" description="This request could not be loaded." />
   }
 
+  const isOwnerRequestor = user.role === Roles.Requestor && request.requestorId === user.id
   const canAct =
     !conflictDetected && !forbiddenDetected && canApproveRequest(request.status, user.role)
+  const showEdit = isOwnerRequestor && canEditRequest(request.status)
+  const showCancel = isOwnerRequestor && canCancelRequest(request.status)
+  const showUpload = isOwnerRequestor && canUploadAttachments(request.status)
 
   function refreshRequest() {
     setConflictDetected(false)
@@ -156,6 +170,21 @@ export function RequestDetailPage() {
             You no longer have permission to approve or reject this request.
           </AlertDescription>
         </Alert>
+      ) : null}
+
+      {showEdit || showCancel ? (
+        <div className="flex flex-wrap gap-2">
+          {showEdit ? (
+            <Button type="button" variant="outline" onClick={() => setEditModalOpen(true)}>
+              Edit draft
+            </Button>
+          ) : null}
+          {showCancel ? (
+            <Button type="button" variant="destructive" onClick={() => setCancelModalOpen(true)}>
+              Cancel request
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       {canAct || conflictDetected ? (
@@ -218,7 +247,7 @@ export function RequestDetailPage() {
               <CardTitle>Supporting documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <RequestAttachmentsList requestId={request.id} />
+              <RequestAttachmentsSection requestId={request.id} allowUpload={showUpload} />
             </CardContent>
           </Card>
         </div>
@@ -240,6 +269,31 @@ export function RequestDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {editModalOpen ? (
+        <RequestFormModal
+          open
+          onClose={() => setEditModalOpen(false)}
+          requestId={request.id}
+          onSuccess={() => {
+            void detailQuery.refetch()
+            void historyQuery.refetch()
+          }}
+        />
+      ) : null}
+
+      {cancelModalOpen ? (
+        <CancelRequestModal
+          open
+          onClose={() => setCancelModalOpen(false)}
+          requestId={request.id}
+          requestTitle={request.title}
+          onSuccess={() => {
+            void detailQuery.refetch()
+            void historyQuery.refetch()
+          }}
+        />
+      ) : null}
 
       {pendingModal ? (
         <ApproveRejectModal
