@@ -7,33 +7,34 @@ using SponsorshipApproval.Application.Requests.Models;
 using SponsorshipApproval.Application.Requests.Queries;
 using SponsorshipApproval.Domain.Requests;
 using SponsorshipApproval.Infrastructure.Persistence;
-using SponsorshipApproval.Infrastructure.Requests;
 
 namespace SponsorshipApproval.Infrastructure.Requests.Handlers;
 
-public sealed class GetRequestByIdQueryHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
-    : IRequestHandler<GetRequestByIdQuery, RequestDetailDto>
+public sealed class GetRequestHistoryQueryHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+    : IRequestHandler<GetRequestHistoryQuery, IReadOnlyList<WorkflowHistoryDto>>
 {
-    public async Task<RequestDetailDto> Handle(GetRequestByIdQuery query, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<WorkflowHistoryDto>> Handle(
+        GetRequestHistoryQuery query,
+        CancellationToken cancellationToken)
     {
-        var meta = await dbContext.SponsorshipRequests
+        var request = await dbContext.SponsorshipRequests
             .AsNoTracking()
-            .Where(r => r.Id == query.Id)
+            .Where(r => r.Id == query.RequestId)
             .Select(r => new { r.RequestorId, r.Status })
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (meta is null)
+        if (request is null)
         {
             throw new NotFoundException("Request was not found.");
         }
 
-        var isOwner = string.Equals(meta.RequestorId, currentUser.UserId, StringComparison.Ordinal);
+        var isOwner = string.Equals(request.RequestorId, currentUser.UserId, StringComparison.Ordinal);
         var isReviewer = currentUser.Roles.Contains(Roles.Manager)
                          || currentUser.Roles.Contains(Roles.FinanceAdmin);
         var isAdmin = currentUser.Roles.Contains(Roles.SystemAdmin);
 
-        if (meta.Status == RequestStatus.Draft && !isOwner)
+        if (request.Status == RequestStatus.Draft && !isOwner)
         {
             throw new ForbiddenException("You do not have access to this request.");
         }
@@ -43,13 +44,25 @@ public sealed class GetRequestByIdQueryHandler(AppDbContext dbContext, ICurrentU
             throw new ForbiddenException("You do not have access to this request.");
         }
 
-        var detail = await dbContext.SponsorshipRequests
+        var history = await dbContext.WorkflowHistoryEntries
             .AsNoTracking()
-            .Where(r => r.Id == query.Id)
-            .SelectDetailDto()
-            .SingleOrDefaultAsync(cancellationToken)
+            .Where(h => h.SponsorshipRequestId == query.RequestId)
+            .OrderBy(h => h.OccurredAt)
+            .Join(
+                dbContext.Users,
+                h => h.ActorId,
+                u => u.Id,
+                (h, u) => new WorkflowHistoryDto(
+                    h.Id,
+                    h.ActorId,
+                    u.DisplayName ?? u.UserName ?? h.ActorId,
+                    h.FromStatus,
+                    h.ToStatus,
+                    h.Remarks,
+                    h.OccurredAt))
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return detail ?? throw new NotFoundException("Request was not found.");
+        return history;
     }
 }
