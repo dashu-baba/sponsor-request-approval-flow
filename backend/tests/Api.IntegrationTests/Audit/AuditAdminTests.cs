@@ -106,7 +106,7 @@ public sealed class AuditAdminTests(PostgresWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task Submit_request_should_not_write_audit_event()
+    public async Task Submit_request_should_write_request_submitted_audit_event()
     {
         var email = $"audit-submit-{Guid.NewGuid():N}@test.local";
         await CreateUserAsync(email, SeedCredentials.Password, Roles.Requestor, "Engineering").ConfigureAwait(true);
@@ -130,10 +130,23 @@ public sealed class AuditAdminTests(PostgresWebApplicationFactory factory)
         submitResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var afterCount = await CountAuditEventsAsync().ConfigureAwait(true);
-        afterCount.Should().Be(beforeCount);
+        afterCount.Should().Be(beforeCount + 1);
 
         using var scope = factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var auditEvent = await dbContext.AuditEvents
+            .AsNoTracking()
+            .SingleAsync(
+                entry => entry.Action == AuditActions.RequestSubmitted && entry.ResourceId == created.Id.ToString(),
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        auditEvent.Category.Should().Be(AuditCategories.Request);
+        auditEvent.ResourceType.Should().Be(AuditResourceTypes.SponsorshipRequest);
+        auditEvent.Metadata.Should().Contain("Draft");
+        auditEvent.Metadata.Should().Contain("PendingManagerApproval");
+
         var historyCount = await dbContext.WorkflowHistoryEntries
             .CountAsync(entry => entry.SponsorshipRequestId == created.Id, TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
