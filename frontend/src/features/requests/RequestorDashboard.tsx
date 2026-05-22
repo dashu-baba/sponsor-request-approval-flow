@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { CancelRequestModal } from '@/features/requests/CancelRequestModal'
 import { RequestFormModal } from '@/features/requests/RequestFormModal'
+import { SubmitRequestModal } from '@/features/requests/SubmitRequestModal'
 import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
 import { RequestsTable } from '@/features/requests/RequestsTable'
 import { getDashboardHeading, type DashboardStatusFilter } from '@/features/auth/role-nav'
@@ -30,7 +31,7 @@ import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
 import { listSponsorshipTypes } from '@/lib/api/sponsorship-types-api'
 import { formatCurrency, formatDate, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
-import { canCancelRequest, canEditRequest } from '@/lib/request-status'
+import { canCancelRequest, canEditRequest, canSubmitRequest } from '@/lib/request-status'
 import { Roles } from '@/lib/roles'
 import type { RequestListItem, RequestStatus } from '@/lib/schemas/requests'
 import { cn } from '@/lib/utils'
@@ -157,11 +158,13 @@ interface RowActionsProps {
   request: RequestListItem
   onEdit: (request: RequestListItem) => void
   onCancel: (request: RequestListItem) => void
+  onSubmit: (request: RequestListItem) => void
 }
 
-function RequestRowActions({ request, onEdit, onCancel }: RowActionsProps) {
+function RequestRowActions({ request, onEdit, onCancel, onSubmit }: RowActionsProps) {
   const showEdit = canEditRequest(request.status)
   const showCancel = canCancelRequest(request.status)
+  const showSubmit = canSubmitRequest(request.status)
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -178,6 +181,20 @@ function RequestRowActions({ request, onEdit, onCancel }: RowActionsProps) {
         >
           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
           Edit
+        </Button>
+      ) : null}
+      {showSubmit ? (
+        <Button
+          type="button"
+          variant="success"
+          size="sm"
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            onSubmit(request)
+          }}
+        >
+          Submit
         </Button>
       ) : null}
       {showCancel ? (
@@ -216,6 +233,7 @@ export function RequestorDashboard() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingRequestId, setEditingRequestId] = useState<number | undefined>()
   const [cancellingRequest, setCancellingRequest] = useState<RequestListItem | null>(null)
+  const [submittingRequest, setSubmittingRequest] = useState<RequestListItem | null>(null)
 
   function updateStatusFilter(value: StatusFilterValue) {
     setPage(1)
@@ -484,6 +502,7 @@ export function RequestorDashboard() {
                 request={request}
                 onEdit={openEditModal}
                 onCancel={setCancellingRequest}
+                onSubmit={setSubmittingRequest}
               />
             )}
           />
@@ -545,6 +564,7 @@ export function RequestorDashboard() {
                       request={request}
                       onEdit={openEditModal}
                       onCancel={setCancellingRequest}
+                      onSubmit={setSubmittingRequest}
                     />
                   </div>
                 </CardContent>
@@ -576,6 +596,19 @@ export function RequestorDashboard() {
           onClose={() => setCancellingRequest(null)}
           requestId={cancellingRequest.id}
           requestTitle={cancellingRequest.title}
+          onSuccess={() => {
+            void summaryQuery.refetch()
+            void listQuery.refetch()
+          }}
+        />
+      ) : null}
+
+      {submittingRequest ? (
+        <SubmitRequestModal
+          open
+          onClose={() => setSubmittingRequest(null)}
+          requestId={submittingRequest.id}
+          requestTitle={submittingRequest.title}
           onSuccess={() => {
             void summaryQuery.refetch()
             void listQuery.refetch()

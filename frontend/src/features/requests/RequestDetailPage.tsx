@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CancelRequestModal } from '@/features/requests/CancelRequestModal'
 import { RequestAttachmentsSection } from '@/features/requests/RequestAttachmentsSection'
 import { RequestFormModal } from '@/features/requests/RequestFormModal'
+import { SubmitRequestModal } from '@/features/requests/SubmitRequestModal'
 import { RequestHistoryTimeline } from '@/features/requests/RequestHistoryTimeline'
 import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
 import { useCurrentUser } from '@/features/auth/use-auth'
@@ -23,6 +24,7 @@ import {
   canApproveRequest,
   canCancelRequest,
   canEditRequest,
+  canSubmitRequest,
   canUploadAttachments,
 } from '@/lib/request-status'
 import { Roles } from '@/lib/roles'
@@ -41,6 +43,7 @@ export function RequestDetailPage() {
   const [forbiddenDetected, setForbiddenDetected] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [submitModalOpen, setSubmitModalOpen] = useState(false)
 
   const detailQuery = useQuery({
     queryKey: queryKeys.requests.detail(requestId ?? ''),
@@ -115,6 +118,7 @@ export function RequestDetailPage() {
   const canAct =
     !conflictDetected && !forbiddenDetected && canApproveRequest(request.status, user.role)
   const showEdit = isOwnerRequestor && canEditRequest(request.status)
+  const showSubmit = isOwnerRequestor && canSubmitRequest(request.status)
   const showCancel = isOwnerRequestor && canCancelRequest(request.status)
   const showUpload = isOwnerRequestor && canUploadAttachments(request.status)
 
@@ -174,11 +178,16 @@ export function RequestDetailPage() {
         </Alert>
       ) : null}
 
-      {showEdit || showCancel ? (
+      {showEdit || showSubmit || showCancel ? (
         <div className="flex flex-wrap gap-2">
           {showEdit ? (
             <Button type="button" variant="outline" onClick={() => setEditModalOpen(true)}>
               Edit draft
+            </Button>
+          ) : null}
+          {showSubmit ? (
+            <Button type="button" variant="success" onClick={() => setSubmitModalOpen(true)}>
+              Submit for approval
             </Button>
           ) : null}
           {showCancel ? (
@@ -288,6 +297,19 @@ export function RequestDetailPage() {
         <CancelRequestModal
           open
           onClose={() => setCancelModalOpen(false)}
+          requestId={request.id}
+          requestTitle={request.title}
+          onSuccess={() => {
+            void detailQuery.refetch()
+            void historyQuery.refetch()
+          }}
+        />
+      ) : null}
+
+      {submitModalOpen ? (
+        <SubmitRequestModal
+          open
+          onClose={() => setSubmitModalOpen(false)}
           requestId={request.id}
           requestTitle={request.title}
           onSuccess={() => {

@@ -48,6 +48,10 @@ export function canCancelRequest(status: RequestStatus): boolean {
   return status === 'Draft' || status === 'PendingManagerApproval'
 }
 
+export function canSubmitRequest(status: RequestStatus): boolean {
+  return status === 'Draft'
+}
+
 export function canUploadAttachments(status: RequestStatus): boolean {
   return status === 'Draft'
 }
