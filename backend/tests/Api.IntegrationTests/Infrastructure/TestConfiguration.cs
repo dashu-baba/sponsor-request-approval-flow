@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Testcontainers.Minio;
 
 namespace SponsorshipApproval.Api.IntegrationTests.Infrastructure;
 
@@ -17,5 +18,13 @@ internal static class TestConfiguration
         builder.UseSetting("Jwt:SigningKey", JwtSigningKey);
         builder.UseSetting("Jwt:AccessTokenLifetimeMinutes", "15");
         builder.UseSetting("Jwt:RefreshTokenLifetimeDays", "7");
+    }
+
+    internal static void ApplyMinioSettings(IWebHostBuilder builder, MinioContainer minioContainer)
+    {
+        builder.UseSetting("Minio:Endpoint", minioContainer.GetConnectionString());
+        builder.UseSetting("Minio:AccessKey", minioContainer.GetAccessKey());
+        builder.UseSetting("Minio:SecretKey", minioContainer.GetSecretKey());
+        builder.UseSetting("Minio:BucketName", PostgresWebApplicationFactory.MinioBucketName);
     }
 }

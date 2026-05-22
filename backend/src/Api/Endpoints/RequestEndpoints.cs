@@ -19,6 +19,7 @@ public static class RequestEndpoints
         requestorGroup.MapPost("/", CreateAsync);
         requestorGroup.MapGet("/{id:guid}", GetByIdAsync);
         requestorGroup.MapPut("/{id:guid}", UpdateDraftAsync);
+        requestorGroup.MapAttachmentEndpoints();
 
         // Workflow transition endpoints: any authenticated user can reach the route;
         // role and ownership enforcement is handled by the state machine and handler.

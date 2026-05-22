@@ -1,9 +1,23 @@
+using Microsoft.AspNetCore.Http.Features;
 using SponsorshipApproval.Api.Endpoints;
 using SponsorshipApproval.Api.Infrastructure;
+using SponsorshipApproval.Application.Attachments;
 using SponsorshipApproval.Infrastructure;
 using SponsorshipApproval.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = AttachmentValidationConstants.MaxSizeBytes;
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = AttachmentValidationConstants.MaxSizeBytes;
+    options.ValueLengthLimit = 1024 * 1024;
+    options.MultipartHeadersLengthLimit = 16 * 1024;
+});
 
 builder.Services.AddHealthChecks();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -28,6 +42,7 @@ app.MapRequestEndpoints();
 app.MapSystemEndpoints();
 
 await app.Services.MigrateAndSeedAsync().ConfigureAwait(false);
+await app.Services.EnsureObjectStorageAsync().ConfigureAwait(false);
 
 app.Run();
 
