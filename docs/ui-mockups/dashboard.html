@@ -645,6 +645,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         <label class="form-label" for="nr-title">Request title <span class="req">*</span></label>
         <input class="form-input" type="text" id="nr-title" placeholder="e.g. TechConf 2025 Sponsorship" />
       </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label" for="nr-requestor">Requestor</label>
+        <input class="form-input" type="text" id="nr-requestor" value="Sarah Chen" readonly aria-readonly="true" style="background:var(--bg);color:var(--text-secondary);cursor:default" />
+      </div>
       <div class="form-group">
         <label class="form-label" for="nr-type">Sponsorship type <span class="req">*</span></label>
         <select class="form-input" id="nr-type">
@@ -676,6 +680,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label" for="nr-purpose">Purpose / justification <span class="req">*</span></label>
         <textarea class="form-input" id="nr-purpose" placeholder="Describe the purpose and business rationale…"></textarea>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label" for="nr-benefit">Expected benefit</label>
+        <textarea class="form-input" id="nr-benefit" placeholder="Describe the expected business benefit (optional)…"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -725,7 +733,7 @@ let REQUESTS = [
   { id:'SR-002', title:'StartupBD Summit',             dept:'Business Dev', type:'Summit',        org:'BD Alliance',      date:'2025-09-20', amount:12000, status:'Pending Finance Review',   submitted:'2025-05-20', purpose:'Sponsor regional startup summit to establish BD partnerships.' },
   { id:'SR-003', title:'Women in Tech Forum',          dept:'HR',           type:'Community',     org:'WiT Malaysia',     date:'2025-07-30', amount:3500,  status:'Approved',                 submitted:'2025-05-10', purpose:'Support diversity and inclusion initiatives.' },
   { id:'SR-004', title:'APAC FinTech Expo',            dept:'Finance',      type:'Exhibition',    org:'FinTech APAC',     date:'2025-10-05', amount:25000, status:'Rejected',                 submitted:'2025-05-18', purpose:'Showcase fintech capabilities to regional market.' },
-  { id:'SR-005', title:'Internal Hackathon 2025',      dept:'Engineering',  type:'Internal Event',org:'SponTrack Eng',    date:'2025-07-10', amount:2000,  status:'Draft',                    submitted:'',           purpose:'Fund internal innovation hackathon.' },
+  { id:'SR-005', title:'Internal Hackathon 2025',      dept:'Engineering',  type:'Internal Event',org:'SponTrack Eng',    date:'2025-07-10', amount:2000,  status:'Draft',                    submitted:'',           purpose:'Fund internal innovation hackathon.', benefit:'' },
   { id:'SR-006', title:'Cybersec Summit 2025',         dept:'IT',           type:'Conference',    org:'CyberAlliance',    date:'2025-11-01', amount:8500,  status:'Cancelled',                submitted:'2025-05-25', purpose:'Sponsor cybersecurity summit for brand awareness.' },
 ];
 
@@ -935,6 +943,7 @@ function openEdit(id) {
   document.getElementById('nr-date').value    = r.date;
   document.getElementById('nr-amount').value  = r.amount;
   document.getElementById('nr-purpose').value = r.purpose;
+  document.getElementById('nr-benefit').value = r.benefit || '';
   openModal('modal-new');
 }
 

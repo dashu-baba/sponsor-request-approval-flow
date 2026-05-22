@@ -51,11 +51,11 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 ### Epic 3 — Frontend (design first, then shell, then role views)
 | ID | Title | Depends on | Branch | Status |
 |----|-------|-----------|--------|--------|
-| T3.0 | UI/UX design system + static prototype (`docs/ui-design.md` + clickable mock-data screens) | T0.2 | `feat/T3.0-ui-design` | ⬜ |
+| T3.0 | UI/UX design system + static prototype (`docs/ui-design.md` + `docs/ui-mockups/` HTML screens) | T0.2 | `feat/T3.0-ui-design` | ✅ |
 | T3.1 | App shell + routing + auth flow (login, token/refresh, role context, route guards) | T3.0, T1.2 | `feat/T3.1-app-shell-auth` | ⬜ |
-| T3.2 | Requestor experience (create/edit/draft form w/ Zod, my-requests list, detail + history, attachments) | T3.1, T2.1, T2.4 | `feat/T3.2-requestor-ui` | ⬜ |
-| T3.3 | Manager + Finance approval queues + approve/reject with remarks | T3.1, T2.2, T2.5 | `feat/T3.3-approvals-ui` | ⬜ |
-| T3.4 | SystemAdmin console (all requests, workflow history, sponsorship-type CRUD) | T3.1, T2.3, T2.5 | `feat/T3.4-admin-ui` | ⬜ |
+| T3.2 | Requestor dashboard + modal create/edit, detail + history, attachments (draft UI requestor-only) | T3.1, T2.1, T2.4 | `feat/T3.2-requestor-ui` | ⬜ |
+| T3.3 | Manager/Finance role dashboards + approve/reject (no drafts; 409/403 handling) | T3.1, T2.2, T2.5 | `feat/T3.3-approvals-ui` | ⬜ |
+| T3.4 | SystemAdmin dashboard (submitted requests) + sponsorship-type CRUD (no separate all-requests page) | T3.1, T2.3, T2.5 | `feat/T3.4-admin-ui` | ⬜ |
 
 ### Epic 4 — Cross-cutting & Delivery
 | ID | Title | Depends on | Branch | Status |
