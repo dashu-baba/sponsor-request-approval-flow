@@ -11,20 +11,32 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getRequestDetail, getRequestHistory } from '@/features/admin/api/admin-api'
 import { formatDate, formatMoney, formatStatus, getErrorMessage } from '@/features/admin/format'
+import { parseRouteEntityId } from '@/lib/parse-entity-id'
 
 export function AdminRequestDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id: idParam } = useParams<{ id: string }>()
+  const requestId = parseRouteEntityId(idParam)
 
   const detailQuery = useQuery({
-    queryKey: ['admin-request-detail', id],
-    queryFn: () => getRequestDetail(id ?? ''),
-    enabled: Boolean(id),
+    queryKey: ['admin-request-detail', requestId],
+    queryFn: () => {
+      if (requestId === null) throw new Error('Request id is required')
+      return getRequestDetail(requestId)
+    },
+    enabled: requestId !== null,
   })
   const historyQuery = useQuery({
-    queryKey: ['admin-request-history', id],
-    queryFn: () => getRequestHistory(id ?? ''),
-    enabled: Boolean(id),
+    queryKey: ['admin-request-history', requestId],
+    queryFn: () => {
+      if (requestId === null) throw new Error('Request id is required')
+      return getRequestHistory(requestId)
+    },
+    enabled: requestId !== null,
   })
+
+  if (requestId === null) {
+    return <ErrorState message="Invalid request id in the URL." />
+  }
 
   if (detailQuery.isLoading || historyQuery.isLoading) {
     return <LoadingState title="Loading request history" metricCount={0} tableRows={6} />

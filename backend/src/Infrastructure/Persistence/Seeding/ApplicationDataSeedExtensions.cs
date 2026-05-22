@@ -31,9 +31,19 @@ public static class ApplicationDataSeedExtensions
     {
         await dbContext.Database.ExecuteSqlRawAsync(
             """
-            SELECT setval(pg_get_serial_sequence('sponsorship_types', 'id'), COALESCE((SELECT MAX(id) FROM sponsorship_types), 1));
-            SELECT setval(pg_get_serial_sequence('sponsorship_requests', 'id'), COALESCE((SELECT MAX(id) FROM sponsorship_requests), 1));
-            SELECT setval(pg_get_serial_sequence('workflow_history', 'id'), COALESCE((SELECT MAX(id) FROM workflow_history), 1));
+            SELECT setval(pg_get_serial_sequence('sponsorship_types', 'id'), COALESCE((SELECT MAX(id) FROM sponsorship_types), 0));
+            """)
+            .ConfigureAwait(false);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            SELECT setval(pg_get_serial_sequence('sponsorship_requests', 'id'), COALESCE((SELECT MAX(id) FROM sponsorship_requests), 0));
+            """)
+            .ConfigureAwait(false);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            SELECT setval(pg_get_serial_sequence('workflow_history', 'id'), COALESCE((SELECT MAX(id) FROM workflow_history), 0));
             """)
             .ConfigureAwait(false);
     }

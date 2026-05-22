@@ -82,13 +82,13 @@ function emptyFormValues(department: string): RequestMutationFormValues {
 interface RequestFormModalProps {
   open: boolean
   onClose: () => void
-  requestId?: string | number
+  requestId?: number
   onSuccess?: () => void
 }
 
 interface RequestFormBodyProps {
   defaultValues: RequestMutationFormValues
-  requestId?: string | number
+  requestId?: number
   isEdit: boolean
   types: SponsorshipType[]
   displayName: string
@@ -182,8 +182,11 @@ function RequestFormBody({
         </Alert>
       ) : null}
 
-      <form className="grid gap-3.5 sm:grid-cols-2" onSubmit={(event) => event.preventDefault()}>
-        <div className="space-y-1.5 sm:col-span-2">
+      <form
+        className="grid min-w-0 gap-3.5 sm:grid-cols-2"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="min-w-0 space-y-1.5 sm:col-span-2">
           <Label htmlFor="request-title">Request title</Label>
           <Input id="request-title" {...form.register('title')} />
           {form.formState.errors.title ? (
@@ -191,7 +194,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="min-w-0 space-y-1.5 sm:col-span-2">
           <Label htmlFor="request-requestor">Requestor</Label>
           <Input
             id="request-requestor"
@@ -202,11 +205,11 @@ function RequestFormBody({
           />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <Label htmlFor="request-type">Sponsorship type</Label>
           <select
             id="request-type"
-            className="flex h-9 w-full rounded-[8px] border border-border bg-surface px-2.5 text-[13px] text-text-primary"
+            className="flex h-9 w-full min-w-0 max-w-full rounded-[8px] border border-border bg-surface px-2.5 text-[13px] text-text-primary"
             {...form.register('sponsorshipTypeId')}
           >
             <option value="">— select —</option>
@@ -223,7 +226,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <Label htmlFor="request-department">Department</Label>
           <Input id="request-department" {...form.register('department')} />
           {form.formState.errors.department ? (
@@ -231,7 +234,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <Label htmlFor="request-event">Event / organisation</Label>
           <Input id="request-event" {...form.register('eventName')} />
           {form.formState.errors.eventName ? (
@@ -239,7 +242,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <Label htmlFor="request-date">Event date</Label>
           <Input id="request-date" type="date" {...form.register('eventDate')} />
           {form.formState.errors.eventDate ? (
@@ -247,7 +250,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="min-w-0 space-y-1.5 sm:col-span-2">
           <Label htmlFor="request-amount">Requested amount (RM)</Label>
           <Input
             id="request-amount"
@@ -261,7 +264,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="min-w-0 space-y-1.5 sm:col-span-2">
           <Label htmlFor="request-purpose">Purpose / justification</Label>
           <Textarea id="request-purpose" rows={3} {...form.register('purpose')} />
           {form.formState.errors.purpose ? (
@@ -269,7 +272,7 @@ function RequestFormBody({
           ) : null}
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="min-w-0 space-y-1.5 sm:col-span-2">
           <Label htmlFor="request-benefit">Expected benefit (optional)</Label>
           <Textarea id="request-benefit" rows={2} {...form.register('expectedBenefit')} />
           {form.formState.errors.expectedBenefit ? (
@@ -278,14 +281,15 @@ function RequestFormBody({
         </div>
       </form>
 
-      <div className="mt-6 flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
+      <div className="mt-6 flex min-w-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button type="button" variant="outline" onClick={onClose} disabled={isBusy} className="w-full sm:w-auto">
           Cancel
         </Button>
         <Button
           type="button"
           variant="outline"
           disabled={isBusy}
+          className="w-full sm:w-auto"
           onClick={() => {
             setFormError(null)
             void form.handleSubmit((values) => saveMutation.mutate(values))()
@@ -299,6 +303,7 @@ function RequestFormBody({
         <Button
           type="button"
           disabled={isBusy}
+          className="w-full sm:w-auto"
           onClick={() => {
             setFormError(null)
             void form.handleSubmit((values) => submitMutation.mutate(values))()

@@ -13,7 +13,7 @@ import { queryKeys } from '@/lib/query-client'
 interface CancelRequestModalProps {
   open: boolean
   onClose: () => void
-  requestId: string | number
+  requestId: number
   requestTitle: string
   onSuccess?: () => void
 }

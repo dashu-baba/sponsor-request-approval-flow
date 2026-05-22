@@ -25,7 +25,7 @@ import { useCurrentUser } from '@/features/auth/use-auth'
 import { getDashboardHeading } from '@/features/auth/role-nav'
 import { ApiError } from '@/lib/api/api-error'
 import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
-import { formatCurrency, formatDate, formatRequestId } from '@/lib/format'
+import { formatCurrency, formatDate, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 import { canApproveRequest, getPendingReviewCount } from '@/lib/request-status'
 import { Roles, type Role } from '@/lib/roles'
@@ -234,8 +234,7 @@ export function ApproverDashboard() {
         item.eventName.toLowerCase().includes(query) ||
         item.requestorName.toLowerCase().includes(query) ||
         item.department.toLowerCase().includes(query) ||
-        String(item.id).toLowerCase().includes(query) ||
-        formatRequestId(item.id).toLowerCase().includes(query)
+        requestIdMatchesQuery(item.id, query)
       )
     })
   }, [listQuery.data?.items, search, statusFilter, typeFilter])

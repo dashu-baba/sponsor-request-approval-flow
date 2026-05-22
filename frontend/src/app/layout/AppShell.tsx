@@ -6,9 +6,9 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export function AppShell() {
   return (
-    <div className="min-h-screen bg-page">
+    <div className="flex min-h-screen flex-col bg-page">
       <Sidebar />
-      <main className="ml-[var(--sidebar-width)] min-h-screen px-7 py-7">
+      <main className="ml-[var(--sidebar-width)] flex-1 px-7 py-7">
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>

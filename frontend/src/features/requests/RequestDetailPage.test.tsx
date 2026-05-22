@@ -13,8 +13,8 @@ import type { Role } from '@/lib/roles'
 let currentRole: Role = Roles.Manager
 let currentUserId = 'manager-1'
 
-const getRequestMock = vi.fn<(id: string | number) => Promise<RequestDetail>>()
-const getRequestHistoryMock = vi.fn<(id: string | number) => Promise<WorkflowHistoryEntry[]>>()
+const getRequestMock = vi.fn<(id: number) => Promise<RequestDetail>>()
+const getRequestHistoryMock = vi.fn<(id: number) => Promise<WorkflowHistoryEntry[]>>()
 const approveRequestMock = vi.fn()
 const rejectRequestMock = vi.fn()
 const listAttachmentsMock = vi.fn().mockResolvedValue([])
@@ -22,8 +22,8 @@ const listAttachmentsMock = vi.fn().mockResolvedValue([])
 const requestId = 1
 
 vi.mock('@/lib/api/requests-api', () => ({
-  getRequest: (id: string | number) => getRequestMock(id),
-  getRequestHistory: (id: string | number) => getRequestHistoryMock(id),
+  getRequest: (id: number) => getRequestMock(id),
+  getRequestHistory: (id: number) => getRequestHistoryMock(id),
   approveRequest: (...args: unknown[]) => approveRequestMock(...args),
   rejectRequest: (...args: unknown[]) => rejectRequestMock(...args),
   listAttachments: (...args: unknown[]) => listAttachmentsMock(...args),

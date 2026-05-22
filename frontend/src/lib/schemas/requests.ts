@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+// PostgreSQL bigint exceeds Number.MAX_SAFE_INTEGER; IDs stay within JS safe range for this app.
 export const entityIdSchema = z.number().int().positive()
 
 export const requestStatusSchema = z.enum([

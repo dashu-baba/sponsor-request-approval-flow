@@ -40,11 +40,11 @@ export async function listAdminRequests(
   return apiJson(`/requests?${searchParams.toString()}`, { method: 'GET' }, adminRequestsSchema)
 }
 
-export async function getRequestDetail(id: string): Promise<RequestDetail> {
+export async function getRequestDetail(id: number): Promise<RequestDetail> {
   return apiJson(`/requests/${id}`, { method: 'GET' }, requestDetailSchema)
 }
 
-export async function getRequestHistory(id: string): Promise<WorkflowHistoryItem[]> {
+export async function getRequestHistory(id: number): Promise<WorkflowHistoryItem[]> {
   return apiJson(`/requests/${id}/history`, { method: 'GET' }, workflowHistorySchema)
 }
 
@@ -67,7 +67,7 @@ export async function createSponsorshipType(
 }
 
 export async function updateSponsorshipType(
-  id: string | number,
+  id: number,
   mutation: SponsorshipTypeMutation,
 ): Promise<SponsorshipType> {
   return apiJson(
@@ -81,7 +81,7 @@ export async function updateSponsorshipType(
   )
 }
 
-export async function deleteSponsorshipType(id: string | number): Promise<void> {
+export async function deleteSponsorshipType(id: number): Promise<void> {
   const response = await apiFetch(`/sponsorship-types/${id}`, { method: 'DELETE' })
 
   if (!response.ok) {

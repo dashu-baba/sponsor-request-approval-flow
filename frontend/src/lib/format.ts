@@ -24,6 +24,21 @@ export function formatRequestId(id: number | string): string {
   return `SR-${String(id).padStart(6, '0')}`
 }
 
+export function requestIdMatchesQuery(id: number, query: string): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+
+  if (formatRequestId(id).toLowerCase().includes(normalized)) {
+    return true
+  }
+
+  if (/^\d+$/.test(normalized)) {
+    return String(id).startsWith(normalized)
+  }
+
+  return false
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`

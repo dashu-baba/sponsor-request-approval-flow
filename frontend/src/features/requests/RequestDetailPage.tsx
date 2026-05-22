@@ -17,6 +17,7 @@ import { useCurrentUser } from '@/features/auth/use-auth'
 import { ApiError } from '@/lib/api/api-error'
 import { getRequest, getRequestHistory } from '@/lib/api/requests-api'
 import { formatCurrency, formatDate, formatDateTime, formatRequestId } from '@/lib/format'
+import { parseRouteEntityId } from '@/lib/parse-entity-id'
 import { queryKeys } from '@/lib/query-client'
 import {
   canApproveRequest,
@@ -32,7 +33,8 @@ interface PendingModalState {
 }
 
 export function RequestDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id: idParam } = useParams<{ id: string }>()
+  const requestId = parseRouteEntityId(idParam)
   const user = useCurrentUser()
   const [pendingModal, setPendingModal] = useState<PendingModalState | null>(null)
   const [conflictDetected, setConflictDetected] = useState(false)
@@ -41,25 +43,25 @@ export function RequestDetailPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
 
   const detailQuery = useQuery({
-    queryKey: queryKeys.requests.detail(id ?? ''),
+    queryKey: queryKeys.requests.detail(requestId ?? ''),
     queryFn: () => {
-      if (!id) throw new Error('Request id is required')
-      return getRequest(id)
+      if (requestId === null) throw new Error('Request id is required')
+      return getRequest(requestId)
     },
-    enabled: Boolean(id),
+    enabled: requestId !== null,
   })
 
   const historyQuery = useQuery({
-    queryKey: queryKeys.requests.history(id ?? ''),
+    queryKey: queryKeys.requests.history(requestId ?? ''),
     queryFn: () => {
-      if (!id) throw new Error('Request id is required')
-      return getRequestHistory(id)
+      if (requestId === null) throw new Error('Request id is required')
+      return getRequestHistory(requestId)
     },
-    enabled: Boolean(id),
+    enabled: requestId !== null,
   })
 
-  if (!id) {
-    return <ErrorState message="Request id is missing from the URL." />
+  if (requestId === null) {
+    return <ErrorState message="Invalid request id in the URL." />
   }
 
   if (detailQuery.isLoading || historyQuery.isLoading) {
