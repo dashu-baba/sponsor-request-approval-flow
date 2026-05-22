@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — Loading State</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app-shell.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar-brand" href="dashboard.html">
+    <div class="brand-icon" aria-hidden="true">◈</div>
+    <div class="brand-name">Spon<span>Track</span></div>
+  </a>
+  <div class="topbar-center"></div>
+  <div class="topbar-right">
+    <button class="user-chip" aria-label="User menu">
+      <div class="user-avatar">SC</div>
+      <div class="user-meta">
+        <div class="user-name">Sarah Chen</div>
+        <div class="user-role">Requestor</div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<aside class="sidebar" role="navigation">
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" href="dashboard.html">Dashboard</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Requests</div>
+    <a class="nav-item" href="dashboard.html">My Requests</a>
+  </div>
+  <div class="sidebar-footer">
+    <a class="sidebar-footer-btn" href="login.html">Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My requests</h1>
+      <p class="page-sub">Loading your sponsorship requests…</p>
+    </div>
+  </div>
+
+  <div class="banner banner-info" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    <div><strong>Loading</strong>Fetching requests from the server…</div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric-card"><div class="skeleton skeleton-metric"></div><div class="skeleton skeleton-bar w40"></div></div>
+    <div class="metric-card"><div class="skeleton skeleton-metric"></div><div class="skeleton skeleton-bar w40"></div></div>
+    <div class="metric-card"><div class="skeleton skeleton-metric"></div><div class="skeleton skeleton-bar w40"></div></div>
+    <div class="metric-card"><div class="skeleton skeleton-metric"></div><div class="skeleton skeleton-bar w40"></div></div>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Title</th><th>Department</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr class="skeleton-row"><td colspan="5"><div class="skeleton skeleton-bar w80"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="5"><div class="skeleton skeleton-bar w60"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="5"><div class="skeleton skeleton-bar w80"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="5"><div class="skeleton skeleton-bar w60"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:20px;font-size:12px;color:var(--text-hint)">
+    UI state mockup · See also: <a href="dashboard.html" style="color:var(--brand)">loaded state</a> ·
+    <a href="error-state.html" style="color:var(--brand)">error state</a>
+  </p>
+</main>
+
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<footer class="footer"><div class="footer-left">© 2025 SponTrack · Loading state mockup</div></footer>
+</body>
+</html>

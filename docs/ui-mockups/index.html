@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — UI Mockup Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app-shell.css" />
+<style>
+  body { padding: 40px 24px; max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  .intro { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
+  section { margin-bottom: 28px; }
+  section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-hint); margin-bottom: 12px; }
+  .links { display: grid; gap: 8px; }
+  .links a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); text-decoration: none; color: var(--text-primary); font-size: 14px;
+    transition: all .15s;
+  }
+  .links a:hover { border-color: var(--brand-mid); background: var(--brand-light); }
+  .links a span { font-size: 12px; color: var(--text-hint); }
+  .demo { margin-top: 32px; padding: 16px; background: var(--brand-light); border-radius: var(--r-lg); font-size: 13px; }
+  .demo code { font-family: var(--mono); font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>SponTrack UI Mockups</h1>
+  <p class="intro">Static HTML prototypes for visual sign-off (T3.0). Open <a href="login.html" style="color:var(--brand)">login.html</a> to start the click-through flow, or jump to any screen below.</p>
+
+  <section>
+    <h2>Entry &amp; auth</h2>
+    <div class="links">
+      <a href="login.html">Login <span>4 demo accounts</span></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Role dashboards</h2>
+    <div class="links">
+      <a href="dashboard.html">Requestor dashboard <span>Sarah Chen</span></a>
+      <a href="dashboard-manager.html">Manager dashboard <span>James Okafor</span></a>
+      <a href="dashboard-finance.html">Finance dashboard <span>Priya Mehta</span></a>
+      <a href="dashboard-admin.html">System admin dashboard <span>Alex Rivera</span></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Request detail</h2>
+    <div class="links">
+      <a href="request-detail.html?id=SR-001&amp;role=requestor">Request detail (requestor) <span>SR-001</span></a>
+      <a href="request-detail.html?id=SR-001&amp;role=manager">Request detail (manager approve/reject) <span>SR-001</span></a>
+      <a href="request-detail.html?id=SR-002&amp;role=finance">Request detail (finance approve/reject) <span>SR-002</span></a>
+      <a href="concurrency-conflict.html">Concurrency conflict (409)</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Administration</h2>
+    <div class="links">
+      <a href="admin-all-requests.html">All requests (no drafts)</a>
+      <a href="admin-sponsorship-types.html">Sponsorship type CRUD</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>UI states</h2>
+    <div class="links">
+      <a href="loading-state.html">Loading / skeleton</a>
+      <a href="error-state.html">Error + retry</a>
+    </div>
+  </section>
+
+  <div class="demo">
+    <strong>Demo credentials</strong> (all use password <code>Demo@1234</code>):<br>
+    <code>requestor@spontrack.my</code> · <code>manager@spontrack.my</code> ·
+    <code>finance@spontrack.my</code> · <code>admin@spontrack.my</code>
+  </div>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — Concurrency Conflict (409)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app-shell.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar-brand" href="dashboard-manager.html">
+    <div class="brand-icon" aria-hidden="true">◈</div>
+    <div class="brand-name">Spon<span>Track</span></div>
+  </a>
+  <div class="topbar-center"></div>
+  <div class="topbar-right">
+    <button class="user-chip" aria-label="User menu">
+      <div class="user-avatar">JO</div>
+      <div class="user-meta">
+        <div class="user-name">James Okafor</div>
+        <div class="user-role">Manager</div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<aside class="sidebar" role="navigation">
+  <div class="nav-section">
+    <div class="nav-section-label">Approvals</div>
+    <a class="nav-item active" href="dashboard-manager.html">Dashboard</a>
+  </div>
+  <div class="sidebar-footer">
+    <a class="sidebar-footer-btn" href="login.html">Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb">
+    <a href="dashboard-manager.html">Dashboard</a>
+    <span>/</span>
+    <span>SR-001</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">TechConf 2025 Sponsorship</h1>
+      <p class="page-sub">SR-001 · Sarah Chen · Engineering</p>
+    </div>
+    <div class="header-actions">
+      <span class="badge badge-pending-fin"><span class="badge-dot"></span>Pending Finance</span>
+    </div>
+  </div>
+
+  <div class="banner banner-warning" role="alert">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:2px"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+    <div>
+      <strong>This request was already actioned</strong>
+      Another reviewer approved this request while you were reviewing it (HTTP 409). The status has changed to Pending Finance Review. Please refresh to see the latest state.
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">Request summary</div>
+        <div class="detail-row"><span class="detail-key">Requested amount</span><span class="detail-val mono">RM 5,000</span></div>
+        <div class="detail-row"><span class="detail-key">Purpose</span><span class="detail-val" style="font-weight:400">Brand visibility at regional tech conference with 3,000+ attendees.</span></div>
+      </div>
+
+      <div class="review-actions" style="opacity:0.5;pointer-events:none" aria-disabled="true">
+        <button class="btn btn-success" type="button" disabled>Approve</button>
+        <button class="btn btn-danger" type="button" disabled>Reject</button>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <a class="btn btn-primary" href="request-detail.html?id=SR-001&amp;role=manager">View request</a>
+        <a class="btn" href="dashboard-manager.html">Back to dashboard</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Workflow history</div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-body">
+            <div class="timeline-action">Submitted: Draft → Pending Manager Approval</div>
+            <div class="timeline-meta">Sarah Chen · 1 Jun 2025 09:14</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot success"></div>
+          <div class="timeline-body">
+            <div class="timeline-action">Approved: Pending Manager Approval → Pending Finance Review</div>
+            <div class="timeline-meta">James Okafor · Manager · 1 Jun 2025 10:42</div>
+            <div class="timeline-remarks">Strong alignment with engineering outreach goals.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top:20px;font-size:12px;color:var(--text-hint)">
+    UI state mockup · Optimistic concurrency (409) · See also:
+    <a href="request-detail.html?id=SR-001&amp;role=manager" style="color:var(--brand)">normal review state</a>
+  </p>
+</main>
+
+<footer class="footer"><div class="footer-left">© 2025 SponTrack · Concurrency conflict mockup</div></footer>
+</body>
+</html>

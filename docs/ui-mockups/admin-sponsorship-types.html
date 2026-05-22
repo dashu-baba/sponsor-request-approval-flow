@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — Sponsorship Types</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app-shell.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar-brand" href="dashboard-admin.html">
+    <div class="brand-icon" aria-hidden="true">◈</div>
+    <div class="brand-name">Spon<span>Track</span></div>
+  </a>
+  <div class="topbar-center"></div>
+  <div class="topbar-right">
+    <button class="user-chip" aria-label="User menu">
+      <div class="user-avatar">AR</div>
+      <div class="user-meta">
+        <div class="user-name">Alex Rivera</div>
+        <div class="user-role">System Admin</div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<aside class="sidebar" role="navigation">
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item" href="dashboard-admin.html">Dashboard</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Administration</div>
+    <a class="nav-item" href="admin-all-requests.html">All Requests</a>
+    <a class="nav-item active" href="admin-sponsorship-types.html">Sponsorship Types</a>
+  </div>
+  <div class="sidebar-footer">
+    <a class="sidebar-footer-btn" href="login.html">Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Sponsorship types</h1>
+      <p class="page-sub">Manage lookup values used when creating requests</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" type="button" onclick="openModal('modal-type')">+ Add type</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Description</th><th>Active requests</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-title">Conference</td>
+          <td>Industry conferences and trade shows</td>
+          <td>12</td>
+          <td class="action-cell">
+            <button class="btn btn-sm" type="button" onclick="openModal('modal-type')">Edit</button>
+            <button class="btn btn-sm" type="button" style="color:var(--danger)" onclick="openModal('modal-delete-blocked')">Delete</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-title">Summit</td>
+          <td>Executive and leadership summits</td>
+          <td>4</td>
+          <td class="action-cell">
+            <button class="btn btn-sm" type="button">Edit</button>
+            <button class="btn btn-sm" type="button" style="color:var(--danger)" onclick="openModal('modal-delete-blocked')">Delete</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-title">Exhibition</td>
+          <td>Exhibition booth and showcase events</td>
+          <td>2</td>
+          <td class="action-cell">
+            <button class="btn btn-sm" type="button">Edit</button>
+            <button class="btn btn-sm" type="button" style="color:var(--danger)" onclick="openModal('modal-delete-blocked')">Delete</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-title">Community</td>
+          <td>Community meetups and grassroots events</td>
+          <td>6</td>
+          <td class="action-cell">
+            <button class="btn btn-sm" type="button">Edit</button>
+            <button class="btn btn-sm" type="button" style="color:var(--danger)" onclick="openModal('modal-delete-blocked')">Delete</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-title">Internal Event</td>
+          <td>Company-hosted internal events</td>
+          <td>3</td>
+          <td class="action-cell">
+            <button class="btn btn-sm" type="button">Edit</button>
+            <button class="btn btn-sm" type="button" style="color:var(--danger)" onclick="openModal('modal-delete-blocked')">Delete</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-title">Webinar Series</td>
+          <td>Virtual webinar sponsorships</td>
+          <td>0</td>
+          <td class="action-cell">
+            <button class="btn btn-sm" type="button">Edit</button>
+            <button class="btn btn-sm" type="button" style="color:var(--danger)" onclick="openModal('modal-delete')">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-type" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Add sponsorship type</div>
+        <div class="modal-sub">Used in the request create/edit form</div>
+      </div>
+      <button class="modal-close" type="button" onclick="closeModal('modal-type')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="type-name">Name <span class="req">*</span></label>
+      <input class="form-input" id="type-name" type="text" placeholder="e.g. Workshop" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="type-desc">Description</label>
+      <textarea class="form-input" id="type-desc" placeholder="Brief description…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" type="button" onclick="closeModal('modal-type')">Cancel</button>
+      <button class="btn btn-primary" type="button" onclick="closeModal('modal-type')">Save type</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-delete" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Delete type?</div>
+        <div class="modal-sub">Webinar Series will be permanently removed.</div>
+      </div>
+      <button class="modal-close" type="button" onclick="closeModal('modal-delete')" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" type="button" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn btn-danger" type="button" onclick="closeModal('modal-delete')">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-delete-blocked" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Cannot delete type</div>
+        <div class="modal-sub">This type is referenced by active requests.</div>
+      </div>
+      <button class="modal-close" type="button" onclick="closeModal('modal-delete-blocked')" aria-label="Close">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6">Conference is used by 12 requests. Remove or reassign those requests before deleting this type.</p>
+    <div class="modal-footer">
+      <button class="btn btn-primary" type="button" onclick="closeModal('modal-delete-blocked')">Understood</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(function(m) {
+  m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

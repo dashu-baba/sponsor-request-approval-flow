@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — Request Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app-shell.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar-brand" href="dashboard.html" id="brand-link">
+    <div class="brand-icon" aria-hidden="true">◈</div>
+    <div class="brand-name">Spon<span>Track</span></div>
+  </a>
+  <div class="topbar-center"></div>
+  <div class="topbar-right">
+    <button class="user-chip" aria-label="User menu">
+      <div class="user-avatar" id="user-avatar">SC</div>
+      <div class="user-meta">
+        <div class="user-name" id="user-name">Sarah Chen</div>
+        <div class="user-role" id="user-role">Requestor</div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<aside class="sidebar" role="navigation" aria-label="Main navigation">
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" href="dashboard.html" id="nav-dashboard">Dashboard</a>
+  </div>
+  <div class="sidebar-footer">
+    <a class="sidebar-footer-btn" href="login.html">Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="breadcrumb">
+    <a href="dashboard.html" id="back-link">My Requests</a>
+    <span>/</span>
+    <span id="req-id-label">SR-001</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" id="req-title">TechConf 2025 Sponsorship</h1>
+      <p class="page-sub" id="req-sub">SR-001 · Submitted 1 Jun 2025</p>
+    </div>
+    <div class="header-actions">
+      <span class="badge badge-pending-mgr" id="req-badge"><span class="badge-dot"></span>Pending Manager</span>
+      <a class="btn btn-sm" href="dashboard.html" id="back-btn">← Back to list</a>
+    </div>
+  </div>
+
+  <div class="review-actions" id="approval-actions" hidden>
+    <button class="btn btn-success" type="button" id="btn-approve">Approve</button>
+    <button class="btn btn-danger" type="button" id="btn-reject">Reject</button>
+  </div>
+
+  <div class="detail-grid">
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">Request details</div>
+        <div class="detail-row"><span class="detail-key">Requestor</span><span class="detail-val" id="val-requestor">Sarah Chen</span></div>
+        <div class="detail-row"><span class="detail-key">Department</span><span class="detail-val" id="val-dept">Engineering</span></div>
+        <div class="detail-row"><span class="detail-key">Sponsorship type</span><span class="detail-val" id="val-type">Conference</span></div>
+        <div class="detail-row"><span class="detail-key">Event / organisation</span><span class="detail-val" id="val-org">TechConf Asia</span></div>
+        <div class="detail-row"><span class="detail-key">Event date</span><span class="detail-val" id="val-date">15 Aug 2025</span></div>
+        <div class="detail-row"><span class="detail-key">Requested amount</span><span class="detail-val mono" id="val-amount">RM 5,000</span></div>
+        <div class="detail-row"><span class="detail-key">Purpose</span><span class="detail-val" style="font-weight:400" id="val-purpose">—</span></div>
+        <div class="detail-row"><span class="detail-key">Expected benefit</span><span class="detail-val" style="font-weight:400" id="val-benefit">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="attach-section-head">
+          <div class="card-title" style="margin-bottom:0">Supporting documents</div>
+          <span class="attach-hint" id="attach-hint">Optional · PDF, DOC, DOCX, PNG, JPG · max 10 MB per file</span>
+        </div>
+
+        <label class="upload-zone" id="upload-zone" for="file-input">
+          <div class="upload-zone-title">Upload supporting documents</div>
+          <div class="upload-zone-sub">Drag and drop files here, or click to browse · multiple files allowed</div>
+          <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" />
+        </label>
+
+        <div class="attach-list" id="attach-list" aria-live="polite"></div>
+        <p class="attach-empty" id="attach-empty" hidden>No supporting documents yet.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Workflow history</div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-approve" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Approve request</div>
+        <div class="modal-sub">Optional remarks will be recorded in the audit trail.</div>
+      </div>
+      <button class="modal-close" type="button" data-close="modal-approve" aria-label="Close">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="approve-remarks">Remarks (optional)</label>
+      <textarea class="form-input" id="approve-remarks" placeholder="Add any notes for the audit trail…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" type="button" data-close="modal-approve">Cancel</button>
+      <button class="btn btn-success" type="button" id="confirm-approve">Confirm approval</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reject" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Reject request</div>
+        <div class="modal-sub">Remarks are required when rejecting a request.</div>
+      </div>
+      <button class="modal-close" type="button" data-close="modal-reject" aria-label="Close">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="reject-remarks">Remarks <span class="req">*</span></label>
+      <textarea class="form-input" id="reject-remarks" placeholder="Explain why this request is being rejected…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" type="button" data-close="modal-reject">Cancel</button>
+      <button class="btn btn-danger" type="button" id="confirm-reject">Confirm rejection</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span></div>
+
+<footer class="footer" role="contentinfo">
+  <div class="footer-left">© 2025 SponTrack · Internal Use Only · v1.0.0</div>
+</footer>
+
+<script src="request-detail.js"></script>
+</body>
+</html>

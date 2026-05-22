@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SponTrack — Error State</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app-shell.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar-brand" href="dashboard.html">
+    <div class="brand-icon" aria-hidden="true">◈</div>
+    <div class="brand-name">Spon<span>Track</span></div>
+  </a>
+  <div class="topbar-center"></div>
+  <div class="topbar-right">
+    <button class="user-chip" aria-label="User menu">
+      <div class="user-avatar">SC</div>
+      <div class="user-meta">
+        <div class="user-name">Sarah Chen</div>
+        <div class="user-role">Requestor</div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<aside class="sidebar" role="navigation">
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" href="dashboard.html">Dashboard</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Requests</div>
+    <a class="nav-item" href="dashboard.html">My Requests</a>
+  </div>
+  <div class="sidebar-footer">
+    <a class="sidebar-footer-btn" href="login.html">Sign out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">My requests</h1>
+      <p class="page-sub">Unable to load your requests right now.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" type="button" onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+
+  <div class="banner banner-danger" role="alert">
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:2px"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
+    <div>
+      <strong>Failed to load requests</strong>
+      The server returned an unexpected error (HTTP 500). Please try again or contact support if the problem persists.
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="empty-state">
+      <div class="empty-icon" style="background:var(--danger-bg);color:var(--danger)">
+        <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
+      </div>
+      <p style="font-size:15px;font-weight:500;margin-bottom:6px">Something went wrong</p>
+      <p style="font-size:13px;color:var(--text-hint);margin-bottom:16px">We couldn't retrieve your requests. Check your connection and try again.</p>
+      <button class="btn btn-primary" type="button" onclick="location.href='dashboard.html'">Retry</button>
+    </div>
+  </div>
+
+  <p style="margin-top:20px;font-size:12px;color:var(--text-hint)">
+    UI state mockup · See also: <a href="loading-state.html" style="color:var(--brand)">loading state</a> ·
+    <a href="dashboard.html" style="color:var(--brand)">success state</a>
+  </p>
+</main>
+
+<footer class="footer"><div class="footer-left">© 2025 SponTrack · Error state mockup</div></footer>
+</body>
+</html>

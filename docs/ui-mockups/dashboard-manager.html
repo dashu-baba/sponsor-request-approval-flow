@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SponTrack — Dashboard</title>
+<title>SponTrack — Manager Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -445,10 +445,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
       <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
     </button>
     <button class="user-chip" onclick="toggleUserMenu()" aria-label="User menu">
-      <div class="user-avatar" id="topbar-avatar">SC</div>
+      <div class="user-avatar" id="topbar-avatar">JO</div>
       <div class="user-meta">
-        <div class="user-name" id="topbar-name">Sarah Chen</div>
-        <div class="user-role" id="topbar-role">Requestor</div>
+        <div class="user-name" id="topbar-name">James Okafor</div>
+        <div class="user-role" id="topbar-role">Manager</div>
       </div>
       <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" style="color:var(--text-hint);margin-left:2px" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
     </button>
@@ -459,36 +459,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 <aside class="sidebar" role="navigation" aria-label="Main navigation">
   <div class="nav-section">
     <div class="nav-section-label">Overview</div>
-    <a class="nav-item active" onclick="setPage('dashboard')" href="#">
+    <a class="nav-item active" href="dashboard-manager.html">
       <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
       Dashboard
-    </a>
-  </div>
-
-  <div class="nav-section">
-    <div class="nav-section-label">Requests</div>
-    <a class="nav-item" onclick="filterByStatus(''); setPage('my-requests')" href="#">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
-      My Requests
-      <span class="nav-badge" id="badge-all">6</span>
-    </a>
-    <a class="nav-item" onclick="filterByStatus('Draft')" href="#">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
-      Drafts
-      <span class="nav-badge" id="badge-draft" style="background:var(--gray-text)">1</span>
-    </a>
-    <a class="nav-item" onclick="filterByStatus('Pending Manager Approval')" href="#">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
-      Pending Approval
-      <span class="nav-badge" id="badge-pending">1</span>
-    </a>
-    <a class="nav-item" onclick="filterByStatus('Approved')" href="#">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
-      Approved
-    </a>
-    <a class="nav-item" onclick="filterByStatus('Rejected')" href="#">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
-      Rejected
     </a>
   </div>
 
@@ -514,14 +487,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   <div class="page-header">
     <div>
       <h1 class="page-title" id="page-title">Dashboard</h1>
-      <p class="page-sub" id="page-sub">Welcome back, Sarah. Here's an overview of your sponsorship requests.</p>
+      <p class="page-sub" id="page-sub">Welcome back, James. Here's an overview of sponsorship requests in your queue.</p>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" onclick="openNewRequest()">
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/></svg>
-        New Request
-      </button>
-    </div>
+    <div class="header-actions"></div>
   </div>
 
   <!-- METRIC CARDS -->
@@ -712,6 +680,49 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
+
+<!-- ─── APPROVE MODAL ─── -->
+<div class="modal-overlay" id="modal-approve" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Approve request</div>
+        <div class="modal-sub" id="approve-sub">Optional remarks will be recorded in the audit trail.</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-approve')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="approve-remarks">Remarks (optional)</label>
+      <textarea class="form-input" id="approve-remarks" placeholder="Add any notes for the audit trail…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-approve')">Cancel</button>
+      <button class="btn btn-success" onclick="confirmApprove()">Confirm approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── REJECT MODAL ─── -->
+<div class="modal-overlay" id="modal-reject" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Reject request</div>
+        <div class="modal-sub" id="reject-sub">Remarks are required when rejecting a request.</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-reject')" aria-label="Close">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="reject-remarks">Remarks <span class="req">*</span></label>
+      <textarea class="form-input" id="reject-remarks" placeholder="Explain why this request is being rejected…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-reject')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmReject()">Confirm rejection</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── TOAST ─── -->
 <div class="toast" id="toast" role="status" aria-live="polite">
   <svg id="toast-icon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"></svg>
@@ -721,12 +732,12 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 <script>
 /* ── DATA ── */
 let REQUESTS = [
-  { id:'SR-001', title:'TechConf 2025 Sponsorship',   dept:'Engineering',  type:'Conference',    org:'TechConf Asia',    date:'2025-08-15', amount:5000,  status:'Pending Manager Approval', submitted:'2025-06-01', purpose:'Brand visibility at regional tech conference with 3,000+ attendees.' },
-  { id:'SR-002', title:'StartupBD Summit',             dept:'Business Dev', type:'Summit',        org:'BD Alliance',      date:'2025-09-20', amount:12000, status:'Pending Finance Review',   submitted:'2025-05-20', purpose:'Sponsor regional startup summit to establish BD partnerships.' },
-  { id:'SR-003', title:'Women in Tech Forum',          dept:'HR',           type:'Community',     org:'WiT Malaysia',     date:'2025-07-30', amount:3500,  status:'Approved',                 submitted:'2025-05-10', purpose:'Support diversity and inclusion initiatives.' },
-  { id:'SR-004', title:'APAC FinTech Expo',            dept:'Finance',      type:'Exhibition',    org:'FinTech APAC',     date:'2025-10-05', amount:25000, status:'Rejected',                 submitted:'2025-05-18', purpose:'Showcase fintech capabilities to regional market.' },
-  { id:'SR-005', title:'Internal Hackathon 2025',      dept:'Engineering',  type:'Internal Event',org:'SponTrack Eng',    date:'2025-07-10', amount:2000,  status:'Draft',                    submitted:'',           purpose:'Fund internal innovation hackathon.' },
-  { id:'SR-006', title:'Cybersec Summit 2025',         dept:'IT',           type:'Conference',    org:'CyberAlliance',    date:'2025-11-01', amount:8500,  status:'Cancelled',                submitted:'2025-05-25', purpose:'Sponsor cybersecurity summit for brand awareness.' },
+  { id:'SR-001', title:'TechConf 2025 Sponsorship',   requestor:'Sarah Chen', dept:'Engineering',  type:'Conference',    org:'TechConf Asia',    date:'2025-08-15', amount:5000,  status:'Pending Manager Approval', submitted:'2025-06-01', purpose:'Brand visibility at regional tech conference with 3,000+ attendees.' },
+  { id:'SR-002', title:'StartupBD Summit',             requestor:'Sarah Chen', dept:'Business Dev', type:'Summit',        org:'BD Alliance',      date:'2025-09-20', amount:12000, status:'Pending Finance Review',   submitted:'2025-05-20', purpose:'Sponsor regional startup summit to establish BD partnerships.' },
+  { id:'SR-003', title:'Women in Tech Forum',          requestor:'Sarah Chen', dept:'HR',           type:'Community',     org:'WiT Malaysia',     date:'2025-07-30', amount:3500,  status:'Approved',                 submitted:'2025-05-10', purpose:'Support diversity and inclusion initiatives.' },
+  { id:'SR-004', title:'APAC FinTech Expo',            requestor:'Sarah Chen', dept:'Finance',      type:'Exhibition',    org:'FinTech APAC',     date:'2025-10-05', amount:25000, status:'Rejected',                 submitted:'2025-05-18', purpose:'Showcase fintech capabilities to regional market.' },
+  { id:'SR-005', title:'Internal Hackathon 2025',      requestor:'Sarah Chen', dept:'Engineering',  type:'Internal Event',org:'SponTrack Eng',    date:'2025-07-10', amount:2000,  status:'Draft',                    submitted:'',           purpose:'Fund internal innovation hackathon.' },
+  { id:'SR-006', title:'Cybersec Summit 2025',         requestor:'Sarah Chen', dept:'IT',           type:'Conference',    org:'CyberAlliance',    date:'2025-11-01', amount:8500,  status:'Cancelled',                submitted:'2025-05-25', purpose:'Sponsor cybersecurity summit for brand awareness.' },
 ];
 
 let currentView = 'list';
@@ -761,9 +772,8 @@ function updateMetrics() {
   document.getElementById('m-approved').textContent = all.filter(r=>r.status==='Approved').length;
   document.getElementById('m-rejected').textContent = all.filter(r=>r.status==='Rejected').length;
 
-  document.getElementById('badge-all').textContent     = all.length;
-  document.getElementById('badge-draft').textContent   = all.filter(r=>r.status==='Draft').length;
-  document.getElementById('badge-pending').textContent = pend.length;
+  const badgePending = document.getElementById('badge-pending');
+  if (badgePending) badgePending.textContent = pend.length;
 }
 
 /* ── FILTERS ── */
@@ -824,8 +834,7 @@ function renderRequests() {
   el.innerHTML = currentView === 'list' ? renderList() : renderGrid();
 }
 
-function canCancel(r)  { return ['Draft','Pending Manager Approval'].includes(r.status); }
-function canEdit(r)    { return r.status === 'Draft'; }
+function canReview(r) { return r.status === 'Pending Manager Approval'; }
 
 function renderList() {
   const rows = filtered.map(r => `
@@ -835,6 +844,7 @@ function renderList() {
         <div class="td-title">${r.title}</div>
         <div class="td-sub">${r.org}</div>
       </td>
+      <td>${r.requestor || 'Sarah Chen'}</td>
       <td>${r.dept}</td>
       <td>${r.type}</td>
       <td><span class="td-amount">${fmtAmt(r.amount)}</span></td>
@@ -842,18 +852,11 @@ function renderList() {
       <td>${badge(r.status)}</td>
       <td>
         <div class="action-cell">
-          ${canEdit(r) ? `<button class="btn btn-sm" onclick="openEdit('${r.id}')" title="Edit">
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
-            Edit
-          </button>` : ''}
-          ${canCancel(r) ? `<button class="btn btn-sm btn-outline-danger" onclick="openCancel('${r.id}')" title="Cancel">
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>
-            Cancel
-          </button>` : ''}
-          <button class="btn btn-sm" onclick="viewDetail('${r.id}')" title="View details">
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
-            View
-          </button>
+          ${canReview(r) ? `
+          <button class="btn btn-sm btn-success" onclick="openApproveModal('${r.id}')">Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="openRejectModal('${r.id}')">Reject</button>
+        ` : ''}
+          <button class="btn btn-sm" onclick="viewDetail('${r.id}')" title="View details">View</button>
         </div>
       </td>
     </tr>`).join('');
@@ -864,7 +867,7 @@ function renderList() {
         <table>
           <thead>
             <tr>
-              <th>ID</th><th>Title</th><th>Department</th><th>Type</th>
+              <th>ID</th><th>Title</th><th>Requestor</th><th>Department</th><th>Type</th>
               <th>Amount</th><th>Event Date</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
@@ -913,8 +916,11 @@ function renderGrid() {
       <div class="grid-card-footer">
         <span class="grid-amount">${fmtAmt(r.amount)}</span>
         <div class="grid-actions" onclick="event.stopPropagation()">
-          ${canEdit(r) ? `<button class="btn btn-sm" onclick="openEdit('${r.id}')">Edit</button>` : ''}
-          ${canCancel(r) ? `<button class="btn btn-sm btn-outline-danger" onclick="openCancel('${r.id}')">Cancel</button>` : ''}
+          ${canReview(r) ? `
+          <button class="btn btn-sm btn-success" onclick="openApproveModal('${r.id}')">Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="openRejectModal('${r.id}')">Reject</button>
+        ` : ''}
+          <button class="btn btn-sm" onclick="viewDetail('${r.id}')">View</button>
         </div>
       </div>
     </div>`).join('');
@@ -963,8 +969,49 @@ function confirmCancel() {
   cancelTargetId = null;
 }
 
+
+let actionTargetId = null;
+
+function openApproveModal(id) {
+  actionTargetId = id;
+  const r = REQUESTS.find(x => x.id === id);
+  document.getElementById('approve-sub').textContent = r ? 'Approve "' + r.title + '" — optional remarks will be recorded.' : 'Optional remarks will be recorded in the audit trail.';
+  document.getElementById('approve-remarks').value = '';
+  openModal('modal-approve');
+}
+
+function openRejectModal(id) {
+  actionTargetId = id;
+  const r = REQUESTS.find(x => x.id === id);
+  document.getElementById('reject-sub').textContent = r ? 'Reject "' + r.title + '" — remarks are required.' : 'Remarks are required when rejecting a request.';
+  document.getElementById('reject-remarks').value = '';
+  openModal('modal-reject');
+}
+
+function confirmApprove() {
+  const r = REQUESTS.find(x => x.id === actionTargetId);
+  if (r) r.status = 'Pending Finance Review';
+  closeModal('modal-approve');
+  updateMetrics();
+  applyFilters();
+  showToast('Request approved successfully.', 'success');
+  actionTargetId = null;
+}
+
+function confirmReject() {
+  const remarks = document.getElementById('reject-remarks').value.trim();
+  if (!remarks) { showToast('Remarks are required when rejecting.', 'danger'); return; }
+  const r = REQUESTS.find(x => x.id === actionTargetId);
+  if (r) r.status = 'Rejected';
+  closeModal('modal-reject');
+  updateMetrics();
+  applyFilters();
+  showToast('Request rejected.', 'danger');
+  actionTargetId = null;
+}
+
 function viewDetail(id) {
-  window.location.href = 'request-detail.html?id=' + encodeURIComponent(id) + '&role=requestor';
+  window.location.href = 'request-detail.html?id=' + encodeURIComponent(id) + '&role=manager';
 }
 
 /* ── MODAL ── */
