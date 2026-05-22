@@ -10,9 +10,24 @@ public static class AttachmentEndpoints
     public static RouteGroupBuilder MapAttachmentEndpoints(this RouteGroupBuilder requests)
     {
         requests.MapPost("/{id:long}/attachments", UploadAsync)
-            .DisableAntiforgery();
-        requests.MapGet("/{id:long}/attachments", ListAsync);
-        requests.MapGet("/{id:long}/attachments/{attachmentId:long}", DownloadAsync);
+            .DisableAntiforgery()
+            .WithSummary("Upload an attachment to a request")
+            .WithDescription("Multipart upload; max size enforced by server configuration.")
+            .Produces<AttachmentDto>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        requests.MapGet("/{id:long}/attachments", ListAsync)
+            .WithSummary("List attachments for a request")
+            .Produces<IReadOnlyList<AttachmentDto>>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        requests.MapGet("/{id:long}/attachments/{attachmentId:long}", DownloadAsync)
+            .WithSummary("Download an attachment")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return requests;
     }

@@ -11,17 +11,42 @@ public static class AuthEndpoints
     {
         var auth = app.MapGroup("/auth").WithTags("Auth");
 
-        auth.MapPost("/login", LoginAsync);
-        auth.MapPost("/refresh", RefreshAsync);
-        auth.MapPost("/logout", LogoutAsync);
+        auth.MapPost("/login", LoginAsync)
+            .WithSummary("Sign in with email and password")
+            .WithDescription("Returns a JWT access token and sets an httpOnly refresh token cookie.")
+            .Produces<LoginResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+        auth.MapPost("/refresh", RefreshAsync)
+            .WithSummary("Refresh the access token")
+            .WithDescription("Uses the httpOnly refresh token cookie to issue a new access token.")
+            .Produces<LoginResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+        auth.MapPost("/logout", LogoutAsync)
+            .WithSummary("Sign out")
+            .WithDescription("Revokes the refresh token cookie when present.")
+            .Produces(StatusCodes.Status204NoContent);
 
         var me = app.MapGroup("/me")
             .RequireAuthorization()
             .WithTags("Auth");
 
-        me.MapGet("", GetMeAsync);
-        me.MapPut("/profile", UpdateProfileAsync);
-        me.MapPut("/password", ChangePasswordAsync);
+        me.MapGet("", GetMeAsync)
+            .WithSummary("Get the current user profile")
+            .Produces<UserProfileResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+        me.MapPut("/profile", UpdateProfileAsync)
+            .WithSummary("Update the current user profile")
+            .Produces<UserProfileResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+        me.MapPut("/password", ChangePasswordAsync)
+            .WithSummary("Change the current user password")
+            .WithDescription("Rotates the refresh token cookie after a successful password change.")
+            .Produces<LoginResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         return app;
     }

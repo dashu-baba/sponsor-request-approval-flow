@@ -8,7 +8,12 @@ public static class SystemEndpoints
     {
         app.MapGet("/system/ping", () => Results.NoContent())
             .RequireAuthorization(AuthorizationPolicies.SystemAdmin)
-            .WithTags("System");
+            .WithTags("System")
+            .WithSummary("System admin ping")
+            .WithDescription("No-op endpoint reserved for system administration checks.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         return app;
     }

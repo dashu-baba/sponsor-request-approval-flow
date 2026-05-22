@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Features;
+using Scalar.AspNetCore;
 using SponsorshipApproval.Api.Endpoints;
 using SponsorshipApproval.Api.Infrastructure;
+using SponsorshipApproval.Api.Infrastructure.OpenApi;
 using SponsorshipApproval.Application.Attachments;
 using SponsorshipApproval.Infrastructure;
 using SponsorshipApproval.Infrastructure.Persistence;
@@ -30,20 +32,33 @@ builder.Services.AddHealthChecks();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.IsDevelopment());
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddOperationTransformer<AuthorizeSecurityOperationTransformer>();
+});
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-}
+    options
+        .WithTitle("Sponsorship Approval API")
+        .WithOpenApiRoutePattern("/openapi/{documentName}.json")
+        .AddPreferredSecuritySchemes("Bearer")
+        .AddHttpAuthentication("Bearer", _ => { });
+});
 
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health")
+    .WithTags("System")
+    .WithSummary("Health check")
+    .WithDescription("Returns 200 when the API process is running.");
+
 app.MapAuthEndpoints();
 app.MapRequestEndpoints();
 app.MapSponsorshipTypeEndpoints();
