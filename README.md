@@ -127,7 +127,8 @@ On first start the API applies EF migrations and seeds demo data automatically.
   `http` profile in `backend/src/Api/Properties/launchSettings.json`.
 - For auto-restart on code changes: `dotnet watch run --project src/Api --launch-profile http`
   (same env vars must still be set).
-- Sanity check: `curl http://localhost:5256/health`
+- Sanity check: `curl http://localhost:5256/health/ready` (JSON with `postgres` + `minio` status)
+- Liveness: `curl http://localhost:5256/health/live`
 - API docs (Scalar UI): http://localhost:5256/scalar/v1
 - OpenAPI document: http://localhost:5256/openapi/v1.json
 
@@ -190,7 +191,7 @@ docker compose stop db minio api nginx
 docker compose start db minio    # start only what you need
 ```
 
-Smoke checks: `curl http://localhost/health`
+Smoke checks: `curl --fail http://localhost/api/health/ready` (readiness) or `curl --fail http://localhost/api/health/live` (liveness). `/health` and `/health/ready` verify dependencies; `/health/live` checks the API process only.
 
 > **Note:** Compose uses internal Docker network hostnames (`db`, `minio`). The debug workflow
 > above uses `localhost` ports instead so you can run the API and frontend natively.

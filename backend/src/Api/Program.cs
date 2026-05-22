@@ -6,6 +6,7 @@ using SponsorshipApproval.Api.Infrastructure;
 using SponsorshipApproval.Api.Infrastructure.OpenApi;
 using SponsorshipApproval.Application.Attachments;
 using SponsorshipApproval.Infrastructure;
+using SponsorshipApproval.Infrastructure.Health;
 using SponsorshipApproval.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,10 +29,10 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartHeadersLengthLimit = 16 * 1024;
 });
 
-builder.Services.AddHealthChecks();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.IsDevelopment());
+builder.Services.AddApplicationHealthChecks();
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
@@ -54,11 +55,7 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health")
-    .WithTags("System")
-    .WithSummary("Health check")
-    .WithDescription("Returns 200 when the API process is running.");
-
+app.MapHealthEndpoints();
 app.MapAuthEndpoints();
 app.MapRequestEndpoints();
 app.MapSponsorshipTypeEndpoints();

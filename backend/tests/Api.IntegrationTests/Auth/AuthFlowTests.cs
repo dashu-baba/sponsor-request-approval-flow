@@ -122,24 +122,15 @@ public sealed class AuthFlowTests(PostgresWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task System_ping_should_return_403_for_requestor_and_204_for_system_admin()
+    public async Task System_ping_should_be_public_and_return_204()
     {
-        await CreateUserAsync("requestor2@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
-        await CreateUserAsync("admin@test.local", "Password1!", Roles.SystemAdmin).ConfigureAwait(true);
+        using var client = factory.CreateClient();
 
-        using var requestorClient = await CreateAuthenticatedClientAsync("requestor2@test.local", "Password1!")
-            .ConfigureAwait(true);
-        using var requestorResponse = await requestorClient
+        using var response = await client
             .GetAsync("/system/ping", TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
-        requestorResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        using var adminClient = await CreateAuthenticatedClientAsync("admin@test.local", "Password1!")
-            .ConfigureAwait(true);
-        using var adminResponse = await adminClient
-            .GetAsync("/system/ping", TestContext.Current.CancellationToken)
-            .ConfigureAwait(true);
-        adminResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     [Fact]
