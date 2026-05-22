@@ -76,7 +76,9 @@ export function LoginPage() {
 
         <div className="rounded-[16px] border border-white/10 bg-surface p-8 text-text-primary shadow-[0_8px_40px_rgba(26,24,48,0.2),0_2px_8px_rgba(26,24,48,0.12)]">
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Welcome back</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-text-primary">
+              Welcome back
+            </h2>
             <p className="mt-1 text-sm text-text-secondary">Sign in to continue to SponTrack</p>
           </div>
 
