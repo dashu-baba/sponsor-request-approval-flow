@@ -23,6 +23,7 @@ export default defineConfig([
     rules: {
       'prettier/prettier': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
+      'react-refresh/only-export-components': ['error', { allowConstantExport: true }],
     },
   },
 ])
