@@ -24,16 +24,15 @@ WORKDIR /app
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && addgroup --system --gid 10001 appgroup \
-    && adduser --system --uid 10001 --ingroup appgroup appuser
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-USER appuser
+# Run as the non-root user that the .NET base image already provides (UID 1654).
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "SponsorshipApproval.Api.dll"]
 

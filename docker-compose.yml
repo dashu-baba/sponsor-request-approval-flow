@@ -24,7 +24,8 @@ services:
     volumes:
       - minio-data:/data
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:9000/minio/health/live"]
+      # The minio image ships no curl/wget; bash + /dev/tcp gives a dependency-free liveness probe.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9000"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -82,12 +83,15 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ >/dev/null"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
     networks:
+      # nginx is the only public-facing service: `edge` gives it host connectivity to publish
+      # port 80, while `app-internal` lets it reach the API. db/minio/api stay internal-only.
+      - edge
       - app-internal
 
 volumes:
@@ -95,5 +99,8 @@ volumes:
   minio-data:
 
 networks:
+  # Public edge network (has a host bridge) — only nginx attaches here to publish port 80.
+  edge:
+  # Back-of-house network with no outbound internet access; db/minio/api/migrator live here.
   app-internal:
     internal: true
