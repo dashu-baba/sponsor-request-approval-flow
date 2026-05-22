@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input'
 import { CancelRequestModal } from '@/features/requests/CancelRequestModal'
 import { RequestFormModal } from '@/features/requests/RequestFormModal'
 import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
+import { RequestsTable } from '@/features/requests/RequestsTable'
 import { getDashboardHeading, type DashboardStatusFilter } from '@/features/auth/role-nav'
 import { ApiError } from '@/lib/api/api-error'
 import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
@@ -474,59 +475,18 @@ export function RequestorDashboard() {
         />
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-border bg-page text-[11px] font-semibold tracking-wide text-text-hint uppercase">
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Title</th>
-                  <th className="px-4 py-3">Department</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Event Date</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="border-b border-border transition-colors last:border-b-0 hover:bg-[#FAFAFE]"
-                  >
-                    <td className="px-4 py-3.5 font-mono text-[11.5px] text-text-hint">
-                      {formatRequestId(request.id)}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <Link
-                        to={`/requests/${request.id}`}
-                        className="block font-medium text-text-primary hover:text-brand"
-                      >
-                        {request.title}
-                      </Link>
-                      <p className="mt-0.5 text-[11.5px] text-text-hint">{request.eventName}</p>
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px]">{request.department}</td>
-                    <td className="px-4 py-3.5 text-[13px]">{request.sponsorshipTypeName}</td>
-                    <td className="px-4 py-3.5 font-mono text-[13px] font-medium">
-                      {formatCurrency(request.requestedAmount)}
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px]">{formatDate(request.eventDate)}</td>
-                    <td className="px-4 py-3.5">
-                      <RequestStatusBadge status={request.status} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <RequestRowActions
-                        request={request}
-                        onEdit={openEditModal}
-                        onCancel={setCancellingRequest}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <RequestsTable
+            requests={filteredItems}
+            showRequestor={false}
+            detailHref={(request) => `/requests/${request.id}`}
+            renderActions={(request) => (
+              <RequestRowActions
+                request={request}
+                onEdit={openEditModal}
+                onCancel={setCancellingRequest}
+              />
+            )}
+          />
           <PaginationFooter
             page={page}
             totalPages={totalPages}
