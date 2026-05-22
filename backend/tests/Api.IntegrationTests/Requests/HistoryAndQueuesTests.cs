@@ -106,6 +106,8 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
         using var admClient = await AuthenticatedClientAsync(admEmail);
         using var resp = await admClient.GetAsync($"/requests/{draft.Id}/history", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var history = await resp.Content.ReadFromJsonAsync<IReadOnlyList<WorkflowHistoryDto>>(TestContext.Current.CancellationToken);
+        history.Should().HaveCount(1);
     }
 
     [Fact]

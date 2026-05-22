@@ -32,8 +32,7 @@ public static class RequestEndpoints
 
         // Workflow transition routes
         var workflowGroup = app.MapGroup("/requests")
-            .WithTags("Requests")
-            .RequireAuthorization();
+            .WithTags("Requests");
 
         workflowGroup.MapPost("/{id:guid}/submit", SubmitAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
         workflowGroup.MapPost("/{id:guid}/cancel", CancelAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
