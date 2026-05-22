@@ -65,6 +65,11 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 | T4.3 | Deployment finalize (compose/nginx/Let's Encrypt/env templates) + live bring-up runbook | T4.2 | `chore/T4.3-deploy` | ⬜ |
 | T4.4 | Docs finalization (README setup guide, architecture explanation, test logins, live-URLs section) | T4.3 | `docs/T4.4-final-docs` | ⬜ |
 
+### Epic 5 — Account self-service
+| ID | Title | Depends on | Branch | Status |
+|----|-------|-----------|--------|--------|
+| T5.1 | Profile (display name + department) + password change (current-password re-auth, security-stamp access-token invalidation, refresh-token revoke, current device stays signed in) | T1.2, T3.1 | `feat/T5.1-account-self-service` | ⬜ |
+
 ---
 
 ## Task Card Template
