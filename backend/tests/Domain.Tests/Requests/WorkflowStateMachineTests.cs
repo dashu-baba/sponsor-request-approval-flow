@@ -138,19 +138,37 @@ public sealed class WorkflowStateMachineTests
     }
 
     [Theory]
-    [InlineData(RequestStatus.Approved, WorkflowAction.Approve, "FinanceAdmin")]
-    [InlineData(RequestStatus.Draft, WorkflowAction.Approve, "Manager")]
-    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Submit, "Requestor")]
-    [InlineData(RequestStatus.Cancelled, WorkflowAction.Cancel, "Requestor")]
+    [InlineData(RequestStatus.Approved, WorkflowAction.Approve, "FinanceAdmin", ExpectedTransitionFailure.InvalidState)]
+    [InlineData(RequestStatus.Draft, WorkflowAction.Approve, "Manager", ExpectedTransitionFailure.InvalidState)]
+    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Submit, "Requestor", ExpectedTransitionFailure.InvalidState)]
+    [InlineData(RequestStatus.Cancelled, WorkflowAction.Cancel, "Requestor", ExpectedTransitionFailure.InvalidState)]
+    [InlineData(RequestStatus.Draft, WorkflowAction.Cancel, "Manager", ExpectedTransitionFailure.WrongRole)]
+    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Approve, "FinanceAdmin", ExpectedTransitionFailure.WrongRole)]
     public void Invalid_transition_pairs_should_throw(
         RequestStatus from,
         WorkflowAction action,
-        string actorRole)
+        string actorRole,
+        ExpectedTransitionFailure expectedFailure)
     {
         var request = new SponsorshipRequest { Status = from, RequestorId = "actor-1" };
         var act = () => WorkflowStateMachine.Transition(request, action, actorRole, actorId: "actor-1");
 
-        var exception = act.Should().Throw<Exception>().Which;
-        (exception is InvalidOperationException or UnauthorizedAccessException).Should().BeTrue();
+        switch (expectedFailure)
+        {
+            case ExpectedTransitionFailure.InvalidState:
+                act.Should().Throw<InvalidOperationException>();
+                break;
+            case ExpectedTransitionFailure.WrongRole:
+                act.Should().Throw<UnauthorizedAccessException>();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(expectedFailure), expectedFailure, null);
+        }
+    }
+
+    public enum ExpectedTransitionFailure
+    {
+        InvalidState,
+        WrongRole,
     }
 }
