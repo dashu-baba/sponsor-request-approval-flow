@@ -54,6 +54,7 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Default", _postgres!.GetConnectionString());
+        builder.UseSetting("SEED_DEMO_DATA", "true");
         TestConfiguration.ApplyJwtSettings(builder);
         TestConfiguration.ApplyMinioSettings(builder, _minio!);
     }

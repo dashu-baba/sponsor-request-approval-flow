@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SponsorshipApproval.Application.Common.Storage;
 using SponsorshipApproval.Infrastructure.Identity;
@@ -25,8 +26,23 @@ public static class DatabaseInitializer
 
     public static async Task SeedDatabaseAsync(this IServiceProvider services)
     {
+        // Roles are always required — auth breaks without them.
         await services.SeedIdentityRolesAsync().ConfigureAwait(false);
-        await services.SeedIdentityUsersAsync().ConfigureAwait(false);
-        await services.SeedApplicationDataAsync().ConfigureAwait(false);
+
+        // Demo users and sample data are only seeded in development/test environments.
+        // Set SEED_DEMO_DATA=true in .env to enable.
+        using var scope = services.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var seedDemoData = config.GetValue<bool>("SEED_DEMO_DATA");
+
+        if (seedDemoData)
+        {
+            await services.SeedIdentityUsersAsync().ConfigureAwait(false);
+            await services.SeedApplicationDataAsync().ConfigureAwait(false);
+            return;
+        }
+
+        // Production: create one admin user from Bootstrap__ env vars if no users exist yet.
+        await services.BootstrapAdminAsync().ConfigureAwait(false);
     }
 }

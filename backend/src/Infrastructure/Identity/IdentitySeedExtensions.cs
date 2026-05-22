@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Infrastructure.Persistence.Seeding;
 
@@ -24,6 +27,53 @@ public static class IdentitySeedExtensions
                 }
             }
         }
+    }
+
+    public static async Task BootstrapAdminAsync(this IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationUser>>();
+
+        var email = config["Bootstrap__AdminEmail"];
+        var password = config["Bootstrap__AdminPassword"];
+        var displayName = config["Bootstrap__AdminDisplayName"] ?? "Admin";
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            return;
+        }
+
+        // Only bootstrap if no users exist yet — never overwrites an existing user.
+        if (await userManager.Users.AnyAsync().ConfigureAwait(false))
+        {
+            return;
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            DisplayName = displayName,
+            EmailConfirmed = true,
+        };
+
+        var createResult = await userManager.CreateAsync(user, password).ConfigureAwait(false);
+        if (!createResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Failed to bootstrap admin user: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+        }
+
+        var roleResult = await userManager.AddToRoleAsync(user, Roles.SystemAdmin).ConfigureAwait(false);
+        if (!roleResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Failed to assign SystemAdmin role to bootstrap user: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+        }
+
+        logger.LogInformation("Bootstrap admin user created: {Email}", email);
     }
 
     public static async Task SeedIdentityUsersAsync(this IServiceProvider services)
