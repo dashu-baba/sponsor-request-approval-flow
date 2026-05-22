@@ -15,15 +15,16 @@ import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states/query-states'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { listAdminRequests, listSponsorshipTypes } from '@/features/admin/api/admin-api'
-import { formatDate, formatMoney, formatStatus, getErrorMessage } from '@/features/admin/format'
+import { getErrorMessage } from '@/features/admin/format'
 import type { RequestListItem, RequestStatus } from '@/features/admin/types'
-import { requestIdMatchesQuery } from '@/lib/format'
+import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
+import { formatCurrency, formatDate, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
+import { requestStatusLabels } from '@/lib/request-status'
 
 const pageSize = 10
 const clientFilterPageSize = 100
@@ -239,7 +240,7 @@ export function AdminRequestsPage() {
                   <option value="">All submitted</option>
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
-                      {formatStatus(option)}
+                      {requestStatusLabels[option]}
                     </option>
                   ))}
                 </select>
@@ -370,38 +371,49 @@ function MetricCard({
 function RequestListTable({ requests }: { requests: RequestListItem[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[780px] border-collapse text-left text-[13px]">
+      <table className="w-full min-w-[860px] border-collapse text-left">
         <thead>
-          <tr className="border-b border-border text-text-secondary">
-            <th className="py-3 pr-4 font-medium">Request</th>
-            <th className="py-3 pr-4 font-medium">Status</th>
-            <th className="py-3 pr-4 font-medium">Event</th>
-            <th className="py-3 pr-4 font-medium">Type</th>
-            <th className="py-3 pr-4 text-right font-medium">Amount</th>
-            <th className="py-3 pl-4 text-right font-medium">History</th>
+          <tr className="border-b border-border bg-page text-[11px] font-semibold tracking-wide text-text-hint uppercase">
+            <th className="px-4 py-3">ID</th>
+            <th className="px-4 py-3">Title</th>
+            <th className="px-4 py-3">Requestor</th>
+            <th className="px-4 py-3">Department</th>
+            <th className="px-4 py-3">Type</th>
+            <th className="px-4 py-3">Amount</th>
+            <th className="px-4 py-3">Event Date</th>
+            <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           {requests.map((request) => (
-            <tr key={request.id} className="border-b border-border last:border-0">
-              <td className="py-3 pr-4">
-                <div className="font-medium text-text-primary">{request.title}</div>
-                <div className="text-xs text-text-secondary">
-                  Created {formatDate(request.createdAt)}
-                </div>
+            <tr
+              key={request.id}
+              className="border-b border-border transition-colors last:border-b-0 hover:bg-[#FAFAFE]"
+            >
+              <td className="px-4 py-3.5 font-mono text-[11.5px] text-text-hint">
+                {formatRequestId(request.id)}
               </td>
-              <td className="py-3 pr-4">
-                <Badge>{formatStatus(request.status)}</Badge>
+              <td className="px-4 py-3.5">
+                <Link
+                  to={`/dashboard/requests/${request.id}`}
+                  className="block font-medium text-text-primary hover:text-brand"
+                >
+                  {request.title}
+                </Link>
+                <p className="mt-0.5 text-[11.5px] text-text-hint">{request.eventName}</p>
               </td>
-              <td className="py-3 pr-4">
-                <div>{request.eventName}</div>
-                <div className="text-xs text-text-secondary">{formatDate(request.eventDate)}</div>
+              <td className="px-4 py-3.5 text-[13px]">{request.requestorName}</td>
+              <td className="px-4 py-3.5 text-[13px]">{request.department}</td>
+              <td className="px-4 py-3.5 text-[13px]">{request.sponsorshipTypeName}</td>
+              <td className="px-4 py-3.5 font-mono text-[13px] font-medium">
+                {formatCurrency(request.requestedAmount)}
               </td>
-              <td className="py-3 pr-4">{request.sponsorshipTypeName}</td>
-              <td className="py-3 pr-4 text-right font-medium">
-                {formatMoney(request.requestedAmount)}
+              <td className="px-4 py-3.5 text-[13px]">{formatDate(request.eventDate)}</td>
+              <td className="px-4 py-3.5">
+                <RequestStatusBadge status={request.status} />
               </td>
-              <td className="py-3 pl-4 text-right">
+              <td className="px-4 py-3.5">
                 <Button asChild variant="outline" size="sm">
                   <Link to={`/dashboard/requests/${request.id}`}>
                     <Eye className="h-4 w-4" aria-hidden="true" />
@@ -426,12 +438,20 @@ function RequestGrid({ requests }: { requests: RequestListItem[] }) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="font-medium text-text-primary">{request.title}</div>
-                <div className="mt-1 text-xs text-text-secondary">{request.eventName}</div>
+                <div className="mt-1 text-xs text-text-secondary">
+                  {formatRequestId(request.id)} · {request.eventName}
+                </div>
               </div>
-              <Badge>{formatStatus(request.status)}</Badge>
+              <RequestStatusBadge status={request.status} />
             </div>
 
             <div className="space-y-2 text-xs">
+              <div className="flex justify-between gap-3">
+                <span className="text-text-hint">Requestor</span>
+                <span className="font-medium text-text-primary">
+                  {request.requestorName} · {request.department}
+                </span>
+              </div>
               <div className="flex justify-between gap-3">
                 <span className="text-text-hint">Type</span>
                 <span className="font-medium text-text-primary">{request.sponsorshipTypeName}</span>
@@ -452,7 +472,7 @@ function RequestGrid({ requests }: { requests: RequestListItem[] }) {
 
             <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
               <div className="font-semibold text-text-primary">
-                {formatMoney(request.requestedAmount)}
+                {formatCurrency(request.requestedAmount)}
               </div>
               <Button asChild variant="outline" size="sm">
                 <Link to={`/dashboard/requests/${request.id}`}>

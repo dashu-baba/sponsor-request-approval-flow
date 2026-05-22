@@ -20,6 +20,8 @@ export interface PagedResult<T> {
 export interface RequestListItem {
   id: number
   title: string
+  requestorName: string
+  department: string
   status: RequestStatus
   eventName: string
   eventDate: string
@@ -29,9 +31,7 @@ export interface RequestListItem {
 }
 
 export interface RequestDetail extends RequestListItem {
-  requestorName: string
   requestorId: string
-  department: string
   sponsorshipTypeId: number
   purpose: string
   expectedBenefit: string | null
