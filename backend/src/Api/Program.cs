@@ -39,6 +39,7 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapAuthEndpoints();
 app.MapRequestEndpoints();
+app.MapSponsorshipTypeEndpoints();
 app.MapSystemEndpoints();
 
 await app.Services.MigrateAndSeedAsync().ConfigureAwait(false);
