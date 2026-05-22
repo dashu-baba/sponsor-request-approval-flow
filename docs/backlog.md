@@ -30,3 +30,4 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | B-019 | 💡 | Split loading on admin detail page (detail vs history) | T3.4 review Nice: single loading gate waits for both queries. | T3.4 polish or T3.2 pattern reuse. |
 | B-020 | 💡 | Move `getErrorMessage` to `@/lib/api/api-error` | T3.4 review Nice: mixes presentation helpers with error parsing. | Shared API error helper pass. |
 | B-021 | 💡 | Backend `activeRequestCount` on sponsorship-type list DTO | T3.4 resolve: UI derives counts client-side from submitted requests (max 100); accurate server count deferred. | Backend/API polish if dataset grows. |
+| B-022 | 🔶 | Server-side search/status/type filters on approver dashboard list | T3.3 final-review Should deferred: client-side filter + `setPage(1)` on change; pagination totals still ignore active filters until API supports query params. | T4.1 API polish or approver list grows beyond one page. |
