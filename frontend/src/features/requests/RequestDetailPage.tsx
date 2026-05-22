@@ -229,7 +229,11 @@ export function RequestDetailPage() {
           </CardHeader>
           <CardContent>
             {historyQuery.isError ? (
-              <p className="text-[13px] text-text-secondary">Unable to load workflow history.</p>
+              <ErrorState
+                title="Unable to load workflow history"
+                message="We could not load the workflow history for this request."
+                onRetry={() => void historyQuery.refetch()}
+              />
             ) : (
               <RequestHistoryTimeline entries={historyQuery.data ?? []} />
             )}

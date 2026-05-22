@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApproverDashboard } from '@/features/approvals/ApproverDashboard'
-import { Roles } from '@/lib/roles'
+import { ApiError } from '@/lib/api/api-error'
+import { Roles, type Role } from '@/lib/roles'
 import type { PagedRequests, RequestSummary } from '@/lib/schemas/requests'
 
 const getRequestSummaryMock = vi.fn<() => Promise<RequestSummary>>()
@@ -13,6 +14,10 @@ const listRequestsMock =
   vi.fn<(params?: { page?: number; pageSize?: number }) => Promise<PagedRequests>>()
 const approveRequestMock = vi.fn()
 const rejectRequestMock = vi.fn()
+const toastWarningMock = vi.fn()
+const toastErrorMock = vi.fn()
+
+let currentRole: Role = Roles.Manager
 
 vi.mock('@/lib/api/requests-api', () => ({
   getRequestSummary: () => getRequestSummaryMock(),
@@ -23,12 +28,20 @@ vi.mock('@/lib/api/requests-api', () => ({
 
 vi.mock('@/features/auth/use-auth', () => ({
   useCurrentUser: () => ({
-    id: 'manager-1',
-    email: 'manager@demo.local',
+    id: 'reviewer-1',
+    email: 'reviewer@demo.local',
     displayName: 'James Okafor',
     department: 'Engineering',
-    role: Roles.Manager,
+    role: currentRole,
   }),
+}))
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: (...args: unknown[]) => toastErrorMock(...args),
+    warning: (...args: unknown[]) => toastWarningMock(...args),
+  },
 }))
 
 function createTestQueryClient() {
@@ -42,13 +55,15 @@ function createTestQueryClient() {
 
 function renderDashboard() {
   const queryClient = createTestQueryClient()
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <ApproverDashboard />
       </MemoryRouter>
     </QueryClientProvider>,
   )
+
+  return { queryClient, ...view }
 }
 
 const summaryFixture: RequestSummary = {
@@ -61,7 +76,7 @@ const summaryFixture: RequestSummary = {
   cancelled: 0,
 }
 
-const queueFixture: PagedRequests = {
+const managerQueueFixture: PagedRequests = {
   page: 1,
   pageSize: 20,
   totalCount: 3,
@@ -105,17 +120,43 @@ const queueFixture: PagedRequests = {
   ],
 }
 
+const financeQueueFixture: PagedRequests = {
+  page: 1,
+  pageSize: 20,
+  totalCount: 1,
+  items: [
+    {
+      id: '44444444-4444-4444-4444-444444444444',
+      title: 'Annual Gala Sponsorship',
+      requestorName: 'Alex Rivera',
+      department: 'Marketing',
+      status: 'PendingFinanceReview',
+      eventName: 'Company Gala',
+      eventDate: '2025-10-01T00:00:00Z',
+      requestedAmount: 12000,
+      sponsorshipTypeName: 'Event',
+      createdAt: '2025-06-10T09:00:00Z',
+    },
+  ],
+}
+
 describe('ApproverDashboard', () => {
+  beforeEach(() => {
+    currentRole = Roles.Manager
+  })
+
   afterEach(() => {
     getRequestSummaryMock.mockReset()
     listRequestsMock.mockReset()
     approveRequestMock.mockReset()
     rejectRequestMock.mockReset()
+    toastWarningMock.mockReset()
+    toastErrorMock.mockReset()
   })
 
   it('renders the approval queue without draft rows', async () => {
     getRequestSummaryMock.mockResolvedValueOnce(summaryFixture)
-    listRequestsMock.mockResolvedValueOnce(queueFixture)
+    listRequestsMock.mockResolvedValueOnce(managerQueueFixture)
 
     renderDashboard()
 
@@ -126,9 +167,22 @@ describe('ApproverDashboard', () => {
     expect(screen.getByText('Pending review')).toBeInTheDocument()
   })
 
+  it('renders finance queue with actionable pending finance rows', async () => {
+    currentRole = Roles.FinanceAdmin
+    getRequestSummaryMock.mockResolvedValueOnce(summaryFixture)
+    listRequestsMock.mockResolvedValueOnce(financeQueueFixture)
+
+    renderDashboard()
+
+    expect(await screen.findByText('Annual Gala Sponsorship')).toBeInTheDocument()
+    expect(screen.getByText('Alex Rivera')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^approve$/i }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: /^reject$/i }).length).toBeGreaterThan(0)
+  })
+
   it('requires remarks when rejecting via modal', async () => {
     getRequestSummaryMock.mockResolvedValueOnce(summaryFixture)
-    listRequestsMock.mockResolvedValueOnce(queueFixture)
+    listRequestsMock.mockResolvedValueOnce(managerQueueFixture)
     const user = userEvent.setup()
 
     renderDashboard()
@@ -148,7 +202,7 @@ describe('ApproverDashboard', () => {
 
   it('submits reject when remarks are provided', async () => {
     getRequestSummaryMock.mockResolvedValue(summaryFixture)
-    listRequestsMock.mockResolvedValue(queueFixture)
+    listRequestsMock.mockResolvedValue(managerQueueFixture)
     rejectRequestMock.mockResolvedValueOnce({})
     const user = userEvent.setup()
 
@@ -166,6 +220,69 @@ describe('ApproverDashboard', () => {
         '11111111-1111-1111-1111-111111111111',
         'Budget constraints for this quarter.',
       )
+    })
+  })
+
+  it('submits approve from the dashboard modal', async () => {
+    getRequestSummaryMock.mockResolvedValue(summaryFixture)
+    listRequestsMock.mockResolvedValue(managerQueueFixture)
+    approveRequestMock.mockResolvedValueOnce({ id: '11111111-1111-1111-1111-111111111111' })
+    const user = userEvent.setup()
+
+    renderDashboard()
+
+    await screen.findByText('TechConf 2025 Sponsorship')
+    const approveButtons = screen.getAllByRole('button', { name: /^approve$/i })
+    await user.click(approveButtons[0])
+    await user.click(screen.getByRole('button', { name: /confirm approval/i }))
+
+    await waitFor(() => {
+      expect(approveRequestMock).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', '')
+    })
+  })
+
+  it('shows warning toast and refetches when approve returns 409', async () => {
+    getRequestSummaryMock.mockResolvedValue(summaryFixture)
+    listRequestsMock.mockResolvedValue(managerQueueFixture)
+    approveRequestMock.mockRejectedValueOnce(
+      new ApiError(409, 'Request was already updated by another user.'),
+    )
+    const user = userEvent.setup()
+
+    renderDashboard()
+
+    await screen.findByText('TechConf 2025 Sponsorship')
+    const approveButtons = screen.getAllByRole('button', { name: /^approve$/i })
+    await user.click(approveButtons[0])
+    await user.click(screen.getByRole('button', { name: /confirm approval/i }))
+
+    await waitFor(() => {
+      expect(toastWarningMock).toHaveBeenCalledWith(
+        'This request was already updated. Refreshing list…',
+      )
+      expect(listRequestsMock.mock.calls.length).toBeGreaterThan(1)
+    })
+  })
+
+  it('shows error toast and refetches when reject returns 403', async () => {
+    getRequestSummaryMock.mockResolvedValue(summaryFixture)
+    listRequestsMock.mockResolvedValue(managerQueueFixture)
+    rejectRequestMock.mockRejectedValueOnce(new ApiError(403, 'Forbidden'))
+    const user = userEvent.setup()
+
+    renderDashboard()
+
+    await screen.findByText('TechConf 2025 Sponsorship')
+    const rejectButtons = screen.getAllByRole('button', { name: /^reject$/i })
+    await user.click(rejectButtons[0])
+    await user.type(screen.getByLabelText(/remarks/i), 'Not permitted.')
+    await user.click(screen.getByRole('button', { name: /confirm rejection/i }))
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'You no longer have permission to action this request.',
+      )
+      expect(listRequestsMock.mock.calls.length).toBeGreaterThan(1)
     })
   })
 })

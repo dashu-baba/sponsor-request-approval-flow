@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { ApproveRejectModal, type ApprovalAction } from '@/features/approvals/ApproveRejectModal'
 import { PageHeader } from '@/components/PageHeader'
@@ -96,6 +97,48 @@ function MetricCard({
         <p className="text-xs text-text-secondary">{label}</p>
       </CardContent>
     </Card>
+  )
+}
+
+function PaginationFooter({
+  page,
+  totalPages,
+  totalCount,
+  onPageChange,
+}: {
+  page: number
+  totalPages: number
+  totalCount: number
+  onPageChange: (page: number) => void
+}) {
+  return (
+    <div className="flex items-center justify-between border-t border-border px-4 py-3.5 text-xs text-text-secondary">
+      <span>
+        Showing page {page} of {totalPages} ({totalCount} total)
+      </span>
+      <div className="flex gap-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          disabled={page <= 1}
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          aria-label="Previous page"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          aria-label="Next page"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -189,6 +232,8 @@ export function ApproverDashboard() {
       return (
         item.title.toLowerCase().includes(query) ||
         item.eventName.toLowerCase().includes(query) ||
+        item.requestorName.toLowerCase().includes(query) ||
+        item.department.toLowerCase().includes(query) ||
         item.id.toLowerCase().includes(query) ||
         formatRequestId(item.id).toLowerCase().includes(query)
       )
@@ -287,7 +332,10 @@ export function ApproverDashboard() {
           <Input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(1)
+            }}
             placeholder="Search requests by title, organisation, or ID…"
             className="bg-page pl-9"
           />
@@ -297,7 +345,10 @@ export function ApproverDashboard() {
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as StatusFilterValue)}
+              onChange={(event) => {
+                setStatusFilter(event.target.value as StatusFilterValue)
+                setPage(1)
+              }}
               className="h-9 rounded-[8px] border border-border bg-surface px-2.5 text-xs text-text-primary"
               aria-label="Filter by status"
             >
@@ -309,7 +360,10 @@ export function ApproverDashboard() {
             </select>
             <select
               value={typeFilter}
-              onChange={(event) => setTypeFilter(event.target.value)}
+              onChange={(event) => {
+                setTypeFilter(event.target.value)
+                setPage(1)
+              }}
               className="h-9 rounded-[8px] border border-border bg-surface px-2.5 text-xs text-text-primary"
               aria-label="Filter by sponsorship type"
             >
@@ -322,7 +376,7 @@ export function ApproverDashboard() {
             </select>
             <span className="text-xs text-text-hint">
               {filteredItems.length !== (paged?.items.length ?? 0)
-                ? `${filteredItems.length} of ${paged?.items.length ?? 0} on this page`
+                ? `${filteredItems.length} of ${paged?.items.length ?? 0} on this page (filters apply to current page)`
                 : `${paged?.totalCount ?? 0} requests`}
             </span>
           </div>
@@ -424,97 +478,84 @@ export function ApproverDashboard() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between border-t border-border px-4 py-3.5 text-xs text-text-secondary">
-            <span>
-              Showing page {page} of {totalPages} ({paged?.totalCount ?? 0} total)
-            </span>
-            <div className="flex gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={page <= 1}
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={page >= totalPages}
-                onClick={() => setPage((current) => current + 1)}
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <PaginationFooter
+            page={page}
+            totalPages={totalPages}
+            totalCount={paged?.totalCount ?? 0}
+            onPageChange={setPage}
+          />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredItems.map((request) => (
-            <Card
-              key={request.id}
-              className="transition-all hover:-translate-y-px hover:border-brand-mid hover:shadow-[0_4px_20px_rgba(74,63,200,0.1)]"
-            >
-              <CardContent className="flex h-full flex-col gap-3.5 p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <Link
-                      to={`/requests/${request.id}`}
-                      className="text-sm font-medium text-text-primary hover:text-brand"
-                    >
-                      {request.title}
-                    </Link>
-                    <p className="mt-0.5 text-xs text-text-secondary">
-                      {formatRequestId(request.id)} · {request.department}
-                    </p>
+        <Card className="overflow-hidden">
+          <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredItems.map((request) => (
+              <Card
+                key={request.id}
+                className="transition-all hover:-translate-y-px hover:border-brand-mid hover:shadow-[0_4px_20px_rgba(74,63,200,0.1)]"
+              >
+                <CardContent className="flex h-full flex-col gap-3.5 p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <Link
+                        to={`/requests/${request.id}`}
+                        className="text-sm font-medium text-text-primary hover:text-brand"
+                      >
+                        {request.title}
+                      </Link>
+                      <p className="mt-0.5 text-xs text-text-secondary">
+                        {formatRequestId(request.id)} · {request.department}
+                      </p>
+                    </div>
+                    <RequestStatusBadge status={request.status} />
                   </div>
-                  <RequestStatusBadge status={request.status} />
-                </div>
 
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-text-hint">Type</span>
-                    <span className="font-medium text-text-primary">
-                      {request.sponsorshipTypeName}
-                    </span>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-text-hint">Type</span>
+                      <span className="font-medium text-text-primary">
+                        {request.sponsorshipTypeName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-text-hint">Organisation</span>
+                      <span className="max-w-[160px] truncate text-right font-medium text-text-primary">
+                        {request.eventName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-text-hint">Requestor</span>
+                      <span className="font-medium text-text-primary">{request.requestorName}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-text-hint">Event date</span>
+                      <span className="font-medium text-text-primary">
+                        {formatDate(request.eventDate)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-text-hint">Organisation</span>
-                    <span className="max-w-[160px] truncate text-right font-medium text-text-primary">
-                      {request.eventName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-text-hint">Requestor</span>
-                    <span className="font-medium text-text-primary">{request.requestorName}</span>
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <span className="text-text-hint">Event date</span>
-                    <span className="font-medium text-text-primary">
-                      {formatDate(request.eventDate)}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
-                  <span className="font-mono text-[15px] font-semibold text-text-primary">
-                    {formatCurrency(request.requestedAmount)}
-                  </span>
-                  <RequestRowActions
-                    request={request}
-                    role={user.role}
-                    onApprove={(item) => openModal(item, 'approve')}
-                    onReject={(item) => openModal(item, 'reject')}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
+                    <span className="font-mono text-[15px] font-semibold text-text-primary">
+                      {formatCurrency(request.requestedAmount)}
+                    </span>
+                    <RequestRowActions
+                      request={request}
+                      role={user.role}
+                      onApprove={(item) => openModal(item, 'approve')}
+                      onReject={(item) => openModal(item, 'reject')}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <PaginationFooter
+            page={page}
+            totalPages={totalPages}
+            totalCount={paged?.totalCount ?? 0}
+            onPageChange={setPage}
+          />
+        </Card>
       )}
 
       {pendingModal ? (
@@ -527,6 +568,16 @@ export function ApproverDashboard() {
           requestId={pendingModal.requestId}
           requestTitle={pendingModal.requestTitle}
           onSuccess={() => {
+            void summaryQuery.refetch()
+            void listQuery.refetch()
+          }}
+          onConflict409={() => {
+            toast.warning('This request was already updated. Refreshing list…')
+            void summaryQuery.refetch()
+            void listQuery.refetch()
+          }}
+          onForbidden403={() => {
+            toast.error('You no longer have permission to action this request.')
             void summaryQuery.refetch()
             void listQuery.refetch()
           }}

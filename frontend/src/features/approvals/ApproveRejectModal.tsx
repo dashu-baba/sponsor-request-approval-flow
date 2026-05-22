@@ -70,12 +70,23 @@ export function ApproveRejectModal({
       if (error instanceof ApiError) {
         if (error.status === 409) {
           handleOpenChange(false)
-          onConflict409?.()
+          if (onConflict409) {
+            onConflict409()
+          } else {
+            toast.warning(
+              error.message ||
+                'This request was already updated. Refresh the list to see the latest state.',
+            )
+          }
           return
         }
         if (error.status === 403) {
           handleOpenChange(false)
-          onForbidden403?.()
+          if (onForbidden403) {
+            onForbidden403()
+          } else {
+            toast.error(error.message || 'You no longer have permission to action this request.')
+          }
           return
         }
       }

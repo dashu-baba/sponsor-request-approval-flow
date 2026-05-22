@@ -8,10 +8,20 @@ import { ApiError } from '@/lib/api/api-error'
 
 const approveRequestMock = vi.fn()
 const rejectRequestMock = vi.fn()
+const toastWarningMock = vi.fn()
+const toastErrorMock = vi.fn()
 
 vi.mock('@/lib/api/requests-api', () => ({
   approveRequest: (...args: unknown[]) => approveRequestMock(...args),
   rejectRequest: (...args: unknown[]) => rejectRequestMock(...args),
+}))
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: (...args: unknown[]) => toastErrorMock(...args),
+    warning: (...args: unknown[]) => toastWarningMock(...args),
+  },
 }))
 
 function createTestQueryClient() {
@@ -56,6 +66,8 @@ describe('ApproveRejectModal', () => {
   afterEach(() => {
     approveRequestMock.mockReset()
     rejectRequestMock.mockReset()
+    toastWarningMock.mockReset()
+    toastErrorMock.mockReset()
   })
 
   it('shows validation when reject remarks are empty', async () => {
@@ -99,6 +111,22 @@ describe('ApproveRejectModal', () => {
 
     await waitFor(() => {
       expect(onForbidden403).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('shows fallback warning toast when approve returns 409 without callback', async () => {
+    approveRequestMock.mockRejectedValueOnce(
+      new ApiError(409, 'Request was already updated by another user.'),
+    )
+    const user = userEvent.setup()
+
+    const { onOpenChange } = renderModal('approve')
+
+    await user.click(screen.getByRole('button', { name: /confirm approval/i }))
+
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false)
+      expect(toastWarningMock).toHaveBeenCalledWith('Request was already updated by another user.')
     })
   })
 
