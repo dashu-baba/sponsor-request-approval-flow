@@ -5,6 +5,7 @@ using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.Requests.Models;
 using SponsorshipApproval.Application.Requests.Queries;
 using SponsorshipApproval.Infrastructure.Persistence;
+using SponsorshipApproval.Infrastructure.Requests;
 
 namespace SponsorshipApproval.Infrastructure.Requests.Handlers;
 
@@ -13,26 +14,23 @@ public sealed class GetRequestByIdQueryHandler(AppDbContext dbContext, ICurrentU
 {
     public async Task<RequestDetailDto> Handle(GetRequestByIdQuery query, CancellationToken cancellationToken)
     {
-        var requestorId = await dbContext.SponsorshipRequests
+        var meta = await dbContext.SponsorshipRequests
             .AsNoTracking()
-            .Where(request => request.Id == query.Id)
-            .Select(request => request.RequestorId)
+            .Where(r => r.Id == query.Id)
+            .Select(r => new { r.RequestorId, r.Status })
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        if (requestorId is null)
+        if (meta is null)
         {
             throw new NotFoundException("Request was not found.");
         }
 
-        if (!string.Equals(requestorId, currentUser.UserId, StringComparison.Ordinal))
-        {
-            throw new ForbiddenException("You do not have access to this request.");
-        }
+        RequestVisibilityChecker.EnsureCanAccess(meta.RequestorId, meta.Status, currentUser);
 
         var detail = await dbContext.SponsorshipRequests
             .AsNoTracking()
-            .Where(request => request.Id == query.Id)
+            .Where(r => r.Id == query.Id)
             .SelectDetailDto()
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
