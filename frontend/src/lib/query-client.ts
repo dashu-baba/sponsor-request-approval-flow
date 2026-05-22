@@ -17,9 +17,9 @@ export const queryKeys = {
     all: ['requests'] as const,
     summary: ['requests', 'summary'] as const,
     list: (page: number, pageSize: number) => ['requests', 'list', page, pageSize] as const,
-    detail: (id: string) => ['requests', 'detail', id] as const,
-    history: (id: string) => ['requests', 'history', id] as const,
-    attachments: (id: string) => ['requests', 'attachments', id] as const,
+    detail: (id: string | number) => ['requests', 'detail', String(id)] as const,
+    history: (id: string | number) => ['requests', 'history', String(id)] as const,
+    attachments: (id: string | number) => ['requests', 'attachments', String(id)] as const,
   },
   sponsorshipTypes: {
     list: ['sponsorship-types', 'list'] as const,

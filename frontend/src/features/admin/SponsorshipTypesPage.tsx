@@ -77,7 +77,7 @@ export function SponsorshipTypesPage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, values }: { id: string; values: SponsorshipTypeMutation }) =>
+    mutationFn: ({ id, values }: { id: number; values: SponsorshipTypeMutation }) =>
       updateSponsorshipType(id, values),
     onSuccess: () => {
       setMutationError(null)
@@ -89,7 +89,7 @@ export function SponsorshipTypesPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteSponsorshipType(id),
+    mutationFn: (id: number) => deleteSponsorshipType(id),
     onSuccess: (_data, id) => {
       setMutationError(null)
       const deletedName = deletingType?.name ?? 'Sponsorship type'
