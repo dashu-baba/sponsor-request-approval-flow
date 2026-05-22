@@ -17,3 +17,5 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | B-006 | 💡 | Add `## Implementation Tasks` h2 before Task 1 in `docs/superpowers/plans/2026-05-22-domain-efcore.md` | T1.1 CodeRabbit nitpick: heading hierarchy skips h2. | Next edit of that plan doc. |
 | B-007 | 💡 | Refresh token reuse detection — revoke all active refresh tokens for user on revoked-token reuse | T1.2 review: common rotation hardening; MVP works without it. | Security hardening pass or auth incident. |
 | B-008 | 💡 | Rate limiting on `/auth/login` and `/auth/refresh` | T1.2 review: security §15; not required for assessment MVP. | Before production exposure or abuse observed. |
+| B-009 | 💡 | Assert `WorkflowHistory` field content in integration tests (FromStatus/ToStatus/ActorId/Remarks) | T2.2 final-review Nice: row-count assertions pass but audit semantics untested. | T2.5 history endpoint work or next test hardening pass. |
+| B-010 | 💡 | Update stale comment on workflow endpoint group in `RequestEndpoints.cs` | T2.2 final-review nit: comment still says "any authenticated user" after role policies added. | Next touch of `RequestEndpoints.cs`. |
