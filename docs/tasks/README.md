@@ -60,7 +60,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 ### Epic 4 — Cross-cutting & Delivery
 | ID | Title | Depends on | Branch | Status |
 |----|-------|-----------|--------|--------|
-| T4.1 | OpenAPI + Scalar docs, problem-details polish, pagination/filtering on lists | T2.5 | `feat/T4.1-api-docs-polish` | ⬜ |
+| T4.1 | OpenAPI + Scalar docs, problem-details polish, pagination/filtering on lists | T2.5 | `feat/T4.1-api-docs-polish` | 🟡 step 1 ✅ (#22); step 4 health ✅ (#25); steps 2–3 + logging ⬜ |
 | T4.2 | Testing pass to HLD bar (fill unit/integration gaps; CI coverage) | T3.4, T4.1 | `test/T4.2-test-hardening` | ⬜ |
 | T4.3 | Deployment finalize (compose/nginx/Let's Encrypt/env templates) + live bring-up runbook | T4.2 | `chore/T4.3-deploy` | ⬜ |
 | T4.4 | Docs finalization (README setup guide, architecture explanation, test logins, live-URLs section) | T4.3 | `docs/T4.4-final-docs` | ⬜ |
@@ -71,7 +71,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 |----|-------|-----------|--------|--------|
 | T5.1 | Profile (display name + department) + password change (current-password re-auth, security-stamp access-token invalidation, refresh-token revoke, current device stays signed in) | T1.2, T3.1 | `feat/T5.1-account-self-service` | ✅ |
 | T5.2 | Admin user management — SystemAdmin user list + create user (one role, admin-set initial password; edit/role-change/deactivate deferred) (B6) | T1.2, T3.4 | `feat/T5.2-admin-user-management` | ⬜ |
-| T5.3 | Admin audit — SystemAdmin-only `audit_events` trail for mutating actions; isolated from `WorkflowHistory` / D1 (D2) | T2.1, T2.3, T2.4, T5.1, T5.2 | `feat/T5.3-admin-audit` | ⬜ |
+| T5.3 | Admin audit — SystemAdmin-only `audit_events` trail for mutating actions; isolated from `WorkflowHistory` / D1 (D2) | T2.1, T2.3, T2.4, T5.1, T5.2 | `feat/T5.3-admin-audit` | ✅ |
 
 ---
 

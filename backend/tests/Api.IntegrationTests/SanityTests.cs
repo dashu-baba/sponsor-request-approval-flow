@@ -19,5 +19,6 @@ public sealed class SanityTests(PostgresWebApplicationFactory factory)
             .ConfigureAwait(true);
 
         response.IsSuccessStatusCode.Should().BeTrue();
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
     }
 }

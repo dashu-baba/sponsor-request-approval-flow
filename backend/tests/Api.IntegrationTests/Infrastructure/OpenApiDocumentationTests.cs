@@ -36,6 +36,20 @@ public sealed class OpenApiDocumentationTests(PostgresWebApplicationFactory fact
     }
 
     [Fact]
+    public async Task OpenApi_document_should_include_health_endpoints_without_bearer_auth()
+    {
+        using var document = await LoadOpenApiDocumentAsync().ConfigureAwait(true);
+        var paths = document.RootElement.GetProperty("paths");
+
+        foreach (var path in new[] { "/health/live", "/health/ready", "/health", "/system/ping" })
+        {
+            paths.TryGetProperty(path, out var pathItem).Should().BeTrue($"expected OpenAPI path {path}");
+            pathItem.TryGetProperty("get", out var operation).Should().BeTrue();
+            OperationRequiresBearer(paths, path, "get").Should().BeFalse();
+        }
+    }
+
+    [Fact]
     public async Task Scalar_ui_should_be_reachable()
     {
         using var client = factory.CreateClient();
