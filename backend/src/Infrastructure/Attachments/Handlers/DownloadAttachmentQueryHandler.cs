@@ -2,11 +2,11 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Attachments.Models;
 using SponsorshipApproval.Application.Attachments.Queries;
+using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.Common.Storage;
 using SponsorshipApproval.Infrastructure.Persistence;
-using SponsorshipApproval.Infrastructure.Requests;
 
 namespace SponsorshipApproval.Infrastructure.Attachments.Handlers;
 
@@ -30,7 +30,15 @@ public sealed class DownloadAttachmentQueryHandler(
             throw new NotFoundException("Request was not found.");
         }
 
-        RequestMutationHelper.EnsureOwner(request, currentUser.UserId);
+        var isOwner = string.Equals(request.RequestorId, currentUser.UserId, StringComparison.Ordinal);
+        var isReviewer = currentUser.Roles.Contains(Roles.Manager)
+            || currentUser.Roles.Contains(Roles.FinanceAdmin)
+            || currentUser.Roles.Contains(Roles.SystemAdmin);
+
+        if (!isOwner && !isReviewer)
+        {
+            throw new ForbiddenException("You do not have access to this request.");
+        }
 
         var attachment = await dbContext.Attachments
             .AsNoTracking()
