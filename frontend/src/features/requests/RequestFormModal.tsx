@@ -251,7 +251,7 @@ function RequestFormBody({
         </div>
 
         <div className="min-w-0 space-y-1.5 sm:col-span-2">
-          <Label htmlFor="request-amount">Requested amount (RM)</Label>
+          <Label htmlFor="request-amount">Requested amount ($)</Label>
           <Input
             id="request-amount"
             type="number"

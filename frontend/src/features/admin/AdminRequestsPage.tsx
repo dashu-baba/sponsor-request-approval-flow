@@ -15,13 +15,18 @@ import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states/query-states'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { listAdminRequests, listSponsorshipTypes } from '@/features/admin/api/admin-api'
-import { formatDate, formatMoney, formatStatus, getErrorMessage } from '@/features/admin/format'
+import { formatStatus, getErrorMessage } from '@/features/admin/format'
 import type { RequestListItem, RequestStatus } from '@/features/admin/types'
+import {
+  PaginationFooter,
+  RequestDashboardGrid,
+  RequestDashboardTable,
+  type DashboardRequestRow,
+} from '@/features/requests/RequestDashboardViews'
 import { requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 
@@ -45,7 +50,34 @@ function matchesSearch(request: RequestListItem, search: string): boolean {
   return (
     request.title.toLowerCase().includes(query) ||
     request.eventName.toLowerCase().includes(query) ||
+    request.requestorName.toLowerCase().includes(query) ||
+    request.department.toLowerCase().includes(query) ||
     requestIdMatchesQuery(request.id, search)
+  )
+}
+
+function toDashboardRow(request: RequestListItem): DashboardRequestRow {
+  return {
+    id: request.id,
+    title: request.title,
+    eventName: request.eventName,
+    requestorName: request.requestorName,
+    department: request.department,
+    sponsorshipTypeName: request.sponsorshipTypeName,
+    requestedAmount: request.requestedAmount,
+    eventDate: request.eventDate,
+    status: request.status,
+  }
+}
+
+function AdminRequestActions({ requestId }: { requestId: number }) {
+  return (
+    <Button type="button" variant="outline" size="sm" asChild>
+      <Link to={`/dashboard/requests/${requestId}`}>
+        <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+        View
+      </Link>
+    </Button>
   )
 }
 
@@ -308,33 +340,29 @@ export function AdminRequestsPage() {
               title="No submitted requests"
               description="Requests appear here after requestors submit them."
             />
-          ) : viewMode === 'list' ? (
-            <RequestListTable requests={paginatedItems} />
           ) : (
-            <RequestGrid requests={paginatedItems} />
+            <>
+              {viewMode === 'list' ? (
+                <RequestDashboardTable
+                  items={paginatedItems.map(toDashboardRow)}
+                  getDetailPath={(id) => `/dashboard/requests/${id}`}
+                  renderActions={(request) => <AdminRequestActions requestId={request.id} />}
+                />
+              ) : (
+                <RequestDashboardGrid
+                  items={paginatedItems.map(toDashboardRow)}
+                  getDetailPath={(id) => `/dashboard/requests/${id}`}
+                  renderActions={(request) => <AdminRequestActions requestId={request.id} />}
+                />
+              )}
+              <PaginationFooter
+                page={page}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                onPageChange={setPage}
+              />
+            </>
           )}
-
-          <div className="flex items-center justify-between border-t border-border pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              disabled={page <= 1}
-            >
-              Previous page
-            </Button>
-            <span className="text-[13px] text-text-secondary">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setPage((current) => current + 1)}
-              disabled={page >= totalPages}
-            >
-              Next page
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
@@ -364,106 +392,5 @@ function MetricCard({
         <div className="text-xs text-text-secondary">{label}</div>
       </CardContent>
     </Card>
-  )
-}
-
-function RequestListTable({ requests }: { requests: RequestListItem[] }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[780px] border-collapse text-left text-[13px]">
-        <thead>
-          <tr className="border-b border-border text-text-secondary">
-            <th className="py-3 pr-4 font-medium">Request</th>
-            <th className="py-3 pr-4 font-medium">Status</th>
-            <th className="py-3 pr-4 font-medium">Event</th>
-            <th className="py-3 pr-4 font-medium">Type</th>
-            <th className="py-3 pr-4 text-right font-medium">Amount</th>
-            <th className="py-3 pl-4 text-right font-medium">History</th>
-          </tr>
-        </thead>
-        <tbody>
-          {requests.map((request) => (
-            <tr key={request.id} className="border-b border-border last:border-0">
-              <td className="py-3 pr-4">
-                <div className="font-medium text-text-primary">{request.title}</div>
-                <div className="text-xs text-text-secondary">
-                  Created {formatDate(request.createdAt)}
-                </div>
-              </td>
-              <td className="py-3 pr-4">
-                <Badge>{formatStatus(request.status)}</Badge>
-              </td>
-              <td className="py-3 pr-4">
-                <div>{request.eventName}</div>
-                <div className="text-xs text-text-secondary">{formatDate(request.eventDate)}</div>
-              </td>
-              <td className="py-3 pr-4">{request.sponsorshipTypeName}</td>
-              <td className="py-3 pr-4 text-right font-medium">
-                {formatMoney(request.requestedAmount)}
-              </td>
-              <td className="py-3 pl-4 text-right">
-                <Button asChild variant="outline" size="sm">
-                  <Link to={`/dashboard/requests/${request.id}`}>
-                    <Eye className="h-4 w-4" aria-hidden="true" />
-                    View
-                  </Link>
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function RequestGrid({ requests }: { requests: RequestListItem[] }) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {requests.map((request) => (
-        <Card key={request.id} className="h-full">
-          <CardContent className="flex h-full flex-col gap-4 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="font-medium text-text-primary">{request.title}</div>
-                <div className="mt-1 text-xs text-text-secondary">{request.eventName}</div>
-              </div>
-              <Badge>{formatStatus(request.status)}</Badge>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between gap-3">
-                <span className="text-text-hint">Type</span>
-                <span className="font-medium text-text-primary">{request.sponsorshipTypeName}</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-text-hint">Event date</span>
-                <span className="font-medium text-text-primary">
-                  {formatDate(request.eventDate)}
-                </span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-text-hint">Created</span>
-                <span className="font-medium text-text-primary">
-                  {formatDate(request.createdAt)}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-              <div className="font-semibold text-text-primary">
-                {formatMoney(request.requestedAmount)}
-              </div>
-              <Button asChild variant="outline" size="sm">
-                <Link to={`/dashboard/requests/${request.id}`}>
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                  View
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
   )
 }

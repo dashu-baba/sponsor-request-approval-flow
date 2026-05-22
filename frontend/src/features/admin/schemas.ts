@@ -15,6 +15,8 @@ const requestStatusSchema = z.enum([
 export const requestListItemSchema = z.object({
   id: entityIdSchema,
   title: z.string().min(1),
+  requestorName: z.string().min(1),
+  department: z.string().min(1),
   status: requestStatusSchema,
   eventName: z.string().min(1),
   eventDate: z.string().min(1),
@@ -24,9 +26,7 @@ export const requestListItemSchema = z.object({
 })
 
 export const requestDetailSchema = requestListItemSchema.extend({
-  requestorName: z.string().min(1),
   requestorId: z.string().min(1),
-  department: z.string().min(1),
   sponsorshipTypeId: entityIdSchema,
   purpose: z.string().min(1),
   expectedBenefit: z.string().nullable(),

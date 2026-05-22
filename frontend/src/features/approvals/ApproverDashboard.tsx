@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
   FileText,
   LayoutGrid,
@@ -15,17 +13,20 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { ApproveRejectModal, type ApprovalAction } from '@/features/approvals/ApproveRejectModal'
+import {
+  RequestDashboardResults,
+  type DashboardRequestRow,
+} from '@/features/requests/RequestDashboardViews'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '@/components/states/query-states'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
 import { useCurrentUser } from '@/features/auth/use-auth'
 import { getDashboardHeading } from '@/features/auth/role-nav'
 import { ApiError } from '@/lib/api/api-error'
 import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
-import { formatCurrency, formatDate, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
+import { requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 import { canApproveRequest, getPendingReviewCount } from '@/lib/request-status'
 import { Roles, type Role } from '@/lib/roles'
@@ -100,46 +101,18 @@ function MetricCard({
   )
 }
 
-function PaginationFooter({
-  page,
-  totalPages,
-  totalCount,
-  onPageChange,
-}: {
-  page: number
-  totalPages: number
-  totalCount: number
-  onPageChange: (page: number) => void
-}) {
-  return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-3.5 text-xs text-text-secondary">
-      <span>
-        Showing page {page} of {totalPages} ({totalCount} total)
-      </span>
-      <div className="flex gap-1">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          disabled={page <= 1}
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          aria-label="Previous page"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-          aria-label="Next page"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
+function toDashboardRow(request: RequestListItem): DashboardRequestRow {
+  return {
+    id: request.id,
+    title: request.title,
+    eventName: request.eventName,
+    department: request.department,
+    requestorName: request.requestorName,
+    sponsorshipTypeName: request.sponsorshipTypeName,
+    requestedAmount: request.requestedAmount,
+    eventDate: request.eventDate,
+    status: request.status,
+  }
 }
 
 function RequestRowActions({
@@ -418,143 +391,29 @@ export function ApproverDashboard() {
           title="No requests found"
           description="Try adjusting your filters or search terms."
         />
-      ) : viewMode === 'list' ? (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-border bg-page text-[11px] font-semibold tracking-wide text-text-hint uppercase">
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Title</th>
-                  <th className="px-4 py-3">Requestor</th>
-                  <th className="px-4 py-3">Department</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Event Date</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="border-b border-border transition-colors last:border-b-0 hover:bg-[#FAFAFE]"
-                  >
-                    <td className="px-4 py-3.5 font-mono text-[11.5px] text-text-hint">
-                      {formatRequestId(request.id)}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <Link
-                        to={`/requests/${request.id}`}
-                        className="block font-medium text-text-primary hover:text-brand"
-                      >
-                        {request.title}
-                      </Link>
-                      <p className="mt-0.5 text-[11.5px] text-text-hint">{request.eventName}</p>
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px]">{request.requestorName}</td>
-                    <td className="px-4 py-3.5 text-[13px]">{request.department}</td>
-                    <td className="px-4 py-3.5 text-[13px]">{request.sponsorshipTypeName}</td>
-                    <td className="px-4 py-3.5 font-mono text-[13px] font-medium">
-                      {formatCurrency(request.requestedAmount)}
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px]">{formatDate(request.eventDate)}</td>
-                    <td className="px-4 py-3.5">
-                      <RequestStatusBadge status={request.status} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <RequestRowActions
-                        request={request}
-                        role={user.role}
-                        onApprove={(item) => openModal(item, 'approve')}
-                        onReject={(item) => openModal(item, 'reject')}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <PaginationFooter
-            page={page}
-            totalPages={totalPages}
-            totalCount={paged?.totalCount ?? 0}
-            onPageChange={setPage}
-          />
-        </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredItems.map((request) => (
-              <Card
-                key={request.id}
-                className="transition-all hover:-translate-y-px hover:border-brand-mid hover:shadow-[0_4px_20px_rgba(74,63,200,0.1)]"
-              >
-                <CardContent className="flex h-full flex-col gap-3.5 p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <Link
-                        to={`/requests/${request.id}`}
-                        className="text-sm font-medium text-text-primary hover:text-brand"
-                      >
-                        {request.title}
-                      </Link>
-                      <p className="mt-0.5 text-xs text-text-secondary">
-                        {formatRequestId(request.id)} · {request.department}
-                      </p>
-                    </div>
-                    <RequestStatusBadge status={request.status} />
-                  </div>
+        <RequestDashboardResults
+          items={filteredItems.map(toDashboardRow)}
+          viewMode={viewMode}
+          getDetailPath={(id) => `/requests/${id}`}
+          renderActions={(row) => {
+            const request = filteredItems.find((item) => item.id === row.id)
+            if (!request) return null
 
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between gap-2">
-                      <span className="text-text-hint">Type</span>
-                      <span className="font-medium text-text-primary">
-                        {request.sponsorshipTypeName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <span className="text-text-hint">Organisation</span>
-                      <span className="max-w-[160px] truncate text-right font-medium text-text-primary">
-                        {request.eventName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <span className="text-text-hint">Requestor</span>
-                      <span className="font-medium text-text-primary">{request.requestorName}</span>
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <span className="text-text-hint">Event date</span>
-                      <span className="font-medium text-text-primary">
-                        {formatDate(request.eventDate)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
-                    <span className="font-mono text-[15px] font-semibold text-text-primary">
-                      {formatCurrency(request.requestedAmount)}
-                    </span>
-                    <RequestRowActions
-                      request={request}
-                      role={user.role}
-                      onApprove={(item) => openModal(item, 'approve')}
-                      onReject={(item) => openModal(item, 'reject')}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <PaginationFooter
-            page={page}
-            totalPages={totalPages}
-            totalCount={paged?.totalCount ?? 0}
-            onPageChange={setPage}
-          />
-        </Card>
+            return (
+              <RequestRowActions
+                request={request}
+                role={user.role}
+                onApprove={(item) => openModal(item, 'approve')}
+                onReject={(item) => openModal(item, 'reject')}
+              />
+            )
+          }}
+          page={page}
+          totalPages={totalPages}
+          totalCount={paged?.totalCount ?? 0}
+          onPageChange={setPage}
+        />
       )}
 
       {pendingModal ? (

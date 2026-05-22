@@ -35,6 +35,8 @@ const sampleRequests = [
   {
     id: 1,
     title: 'Tech Summit Booth',
+    requestorName: 'Rina Ahmed',
+    department: 'Marketing',
     status: 'PendingManagerApproval' as const,
     eventName: 'Tech Summit',
     eventDate: '2026-08-15',
@@ -45,6 +47,8 @@ const sampleRequests = [
   {
     id: 2,
     title: 'Community Workshop',
+    requestorName: 'Alex Chen',
+    department: 'Community Relations',
     status: 'Approved' as const,
     eventName: 'Community Outreach',
     eventDate: '2026-09-02',
@@ -98,6 +102,8 @@ describe('AdminRequestsPage', () => {
             {
               id: 3,
               title: 'Finance Expo',
+              requestorName: 'Sam Patel',
+              department: 'Finance',
               status: 'PendingFinanceReview',
               eventName: 'Finance Conference',
               eventDate: '2026-10-11',
