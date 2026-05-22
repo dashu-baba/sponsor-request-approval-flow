@@ -60,6 +60,7 @@ docs/        specs, design, workflow, best-practice rulebooks, task backlog
 
 ## Documentation
 - [Architecture (as-built, with diagrams)](docs/architecture.md) — start here for how the system works
+- [Production deployment guide](docs/deployment.md) — infrastructure, CI/CD pipeline, AWS setup, runbook
 - [Requirements brief](docs/requirements/NET%20Senior%20Developer%20Tech%20Assessment.md)
 - [Business requirements — clarifications & assumptions](docs/requirements-clarifications.md)
 - [High-level design & rationale](docs/high-level-design.md)
