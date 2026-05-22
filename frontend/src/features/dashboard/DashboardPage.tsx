@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { LoadingState } from '@/components/states/query-states'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ApproverDashboard } from '@/features/approvals/ApproverDashboard'
 import { useCurrentUser } from '@/features/auth/use-auth'
 import {
   getDashboardHeading,
@@ -33,21 +34,10 @@ function parseStatusFilter(value: string | null): DashboardStatusFilter {
   return 'overview'
 }
 
-export function DashboardPage() {
+function RequestorDashboardPlaceholder() {
   const user = useCurrentUser()
   const [searchParams] = useSearchParams()
   const statusFilter = parseStatusFilter(searchParams.get('status'))
-
-  if (user.role === Roles.SystemAdmin) {
-    return (
-      <Suspense
-        fallback={<LoadingState title="Loading submitted requests" metricCount={4} tableRows={8} />}
-      >
-        <AdminRequestsPage />
-      </Suspense>
-    )
-  }
-
   const heading = getDashboardHeading(user.role, statusFilter)
   const metricCount = getDashboardMetricCount(user.role)
 
@@ -73,14 +63,32 @@ export function DashboardPage() {
         <CardContent className="space-y-3 p-8 text-center">
           <h2 className="text-base font-semibold">Request list placeholder</h2>
           <p className="text-[13px] text-text-secondary">
-            {user.role === Roles.Requestor
-              ? statusFilter === 'overview' || statusFilter === 'all'
-                ? 'Your dashboard request table will render here in T3.2.'
-                : `Filtered by status: ${statusFilter}. Same dashboard view — sidebar sets ?status= for T3.2.`
-              : 'Submitted requests for your role will render here in T3.2–T3.3.'}
+            {statusFilter === 'overview' || statusFilter === 'all'
+              ? 'Your dashboard request table will render here in T3.2.'
+              : `Filtered by status: ${statusFilter}. Same dashboard view — sidebar sets ?status= for T3.2.`}
           </p>
         </CardContent>
       </Card>
     </div>
   )
+}
+
+export function DashboardPage() {
+  const user = useCurrentUser()
+
+  if (user.role === Roles.Manager || user.role === Roles.FinanceAdmin) {
+    return <ApproverDashboard />
+  }
+
+  if (user.role === Roles.SystemAdmin) {
+    return (
+      <Suspense
+        fallback={<LoadingState title="Loading submitted requests" metricCount={4} tableRows={8} />}
+      >
+        <AdminRequestsPage />
+      </Suspense>
+    )
+  }
+
+  return <RequestorDashboardPlaceholder />
 }

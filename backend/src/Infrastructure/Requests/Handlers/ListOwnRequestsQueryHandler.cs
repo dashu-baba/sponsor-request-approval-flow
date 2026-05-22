@@ -27,6 +27,8 @@ public sealed class ListOwnRequestsQueryHandler(AppDbContext dbContext, ICurrent
             .Select(request => new RequestListItemDto(
                 request.Id,
                 request.Title,
+                request.RequestorName,
+                request.Department,
                 request.Status,
                 request.EventName,
                 request.EventDate,

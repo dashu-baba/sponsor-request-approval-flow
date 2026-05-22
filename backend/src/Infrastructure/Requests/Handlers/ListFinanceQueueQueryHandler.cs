@@ -29,6 +29,8 @@ public sealed class ListFinanceQueueQueryHandler(AppDbContext dbContext)
             .Select(r => new RequestListItemDto(
                 r.Id,
                 r.Title,
+                r.RequestorName,
+                r.Department,
                 r.Status,
                 r.EventName,
                 r.EventDate,

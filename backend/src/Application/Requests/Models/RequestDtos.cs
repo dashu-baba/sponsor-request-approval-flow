@@ -23,6 +23,8 @@ public sealed record RequestDetailDto(
 public sealed record RequestListItemDto(
     Guid Id,
     string Title,
+    string RequestorName,
+    string Department,
     RequestStatus Status,
     string EventName,
     DateOnly EventDate,

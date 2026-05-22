@@ -10,6 +10,7 @@ import { adminOnly } from '@/features/auth/route-policy'
 import { GuestRoute, ProtectedRoute, RoleRedirect } from '@/features/auth/ProtectedRoute'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { UiStatesDemoPage } from '@/features/dev/UiStatesDemoPage'
+import { RequestDetailPage } from '@/features/requests/RequestDetailPage'
 
 const adminRequestDetailPage = lazy(() =>
   import('@/features/admin/AdminRequestDetailPage').then((module) => ({
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
+          { path: 'requests/:id', element: <RequestDetailPage /> },
           {
             path: 'dashboard/requests/:id',
             element: lazyPage(createElement(adminRequestDetailPage)),
