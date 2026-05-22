@@ -2,7 +2,12 @@ namespace SponsorshipApproval.Application.Auth;
 
 public interface IJwtTokenService
 {
-    string CreateAccessToken(string userId, string email, string displayName, string role);
+    string CreateAccessToken(
+        string userId,
+        string email,
+        string displayName,
+        string role,
+        string securityStamp);
 
     DateTimeOffset GetAccessTokenExpiry();
 

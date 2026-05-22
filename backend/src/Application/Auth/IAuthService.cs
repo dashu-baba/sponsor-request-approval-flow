@@ -18,4 +18,14 @@ public interface IAuthService
     Task<UserProfileResponse?> GetProfileAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default);
+
+    Task<UpdateProfileResult> UpdateProfileAsync(
+        ClaimsPrincipal principal,
+        UpdateProfileRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<ChangePasswordResult> ChangePasswordAsync(
+        ClaimsPrincipal principal,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default);
 }

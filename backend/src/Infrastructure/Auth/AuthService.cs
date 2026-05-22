@@ -105,15 +105,7 @@ public sealed class AuthService(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return null;
-        }
-
-        var user = await userManager.FindByIdAsync(userId).ConfigureAwait(false);
+        var user = await FindUserFromPrincipalAsync(principal, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
             return null;
@@ -125,13 +117,164 @@ public sealed class AuthService(
             return null;
         }
 
-        return new UserProfileResponse(
+        return MapProfile(user, role);
+    }
+
+    public async Task<UpdateProfileResult> UpdateProfileAsync(
+        ClaimsPrincipal principal,
+        UpdateProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindUserFromPrincipalAsync(principal, cancellationToken).ConfigureAwait(false);
+        if (user is null)
+        {
+            return UpdateProfileResult.Failed(UpdateProfileFailureReason.UserNotFound);
+        }
+
+        user.DisplayName = request.DisplayName.Trim();
+        user.Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim();
+
+        var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
+        if (!updateResult.Succeeded)
+        {
+            var errors = updateResult.Errors.Select(error => error.Description).ToArray();
+            return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
+        }
+
+        var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
+        if (role is null)
+        {
+            return UpdateProfileResult.Failed(UpdateProfileFailureReason.UnexpectedFailure);
+        }
+
+        return UpdateProfileResult.Success(MapProfile(user, role));
+    }
+
+    public async Task<ChangePasswordResult> ChangePasswordAsync(
+        ClaimsPrincipal principal,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindUserFromPrincipalAsync(principal, cancellationToken).ConfigureAwait(false);
+        if (user is null)
+        {
+            return ChangePasswordResult.Failed(ChangePasswordFailureReason.UserNotFound);
+        }
+
+        var changeResult = await userManager
+            .ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword)
+            .ConfigureAwait(false);
+
+        if (!changeResult.Succeeded)
+        {
+            if (changeResult.Errors.Any(error => error.Code == "PasswordMismatch"))
+            {
+                return ChangePasswordResult.Failed(ChangePasswordFailureReason.WrongCurrentPassword);
+            }
+
+            var policyErrors = changeResult.Errors.Select(error => error.Description).ToArray();
+            return ChangePasswordResult.Failed(ChangePasswordFailureReason.PolicyViolation, policyErrors);
+        }
+
+        var issued = await RevokeAllRefreshTokensAndIssueAsync(user, cancellationToken).ConfigureAwait(false);
+        if (issued.Succeeded)
+        {
+            return ChangePasswordResult.Success(
+                issued.Response!,
+                issued.RawRefreshToken!,
+                issued.RefreshTokenExpiresAt!.Value);
+        }
+
+        return ChangePasswordResult.Failed(ChangePasswordFailureReason.SessionRefreshFailed);
+    }
+
+    private async Task<(bool Succeeded, LoginResponse? Response, string? RawRefreshToken, DateTimeOffset? RefreshTokenExpiresAt)> RevokeAllRefreshTokensAndIssueAsync(
+        ApplicationUser user,
+        CancellationToken cancellationToken)
+    {
+        var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
+        if (role is null)
+        {
+            return (false, null, null, null);
+        }
+
+        var reloadedUser = await userManager.FindByIdAsync(user.Id).ConfigureAwait(false);
+        if (reloadedUser is null)
+        {
+            return (false, null, null, null);
+        }
+
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        try
+        {
+            var now = DateTimeOffset.UtcNow;
+            var activeTokens = await dbContext.RefreshTokens
+                .Where(token => token.UserId == user.Id && token.RevokedAt == null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var token in activeTokens)
+            {
+                token.RevokedAt = now;
+            }
+
+            var accessTokenExpiresAt = jwtTokenService.GetAccessTokenExpiry();
+            var accessToken = jwtTokenService.CreateAccessToken(
+                reloadedUser.Id,
+                reloadedUser.Email ?? string.Empty,
+                reloadedUser.DisplayName,
+                role,
+                reloadedUser.SecurityStamp ?? string.Empty);
+
+            var (rawRefreshToken, refreshTokenHash) = jwtTokenService.CreateRefreshToken();
+            var refreshTokenExpiresAt = jwtTokenService.GetRefreshTokenExpiry();
+
+            dbContext.RefreshTokens.Add(new RefreshToken
+            {
+                UserId = reloadedUser.Id,
+                TokenHash = refreshTokenHash,
+                CreatedAt = DateTimeOffset.UtcNow,
+                ExpiresAt = refreshTokenExpiresAt,
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+            var response = new LoginResponse(accessToken, accessTokenExpiresAt, "Bearer");
+            return (true, response, rawRefreshToken, refreshTokenExpiresAt);
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private async Task<ApplicationUser?> FindUserFromPrincipalAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken)
+    {
+        var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return null;
+        }
+
+        _ = cancellationToken;
+        return await userManager.FindByIdAsync(userId).ConfigureAwait(false);
+    }
+
+    private static UserProfileResponse MapProfile(ApplicationUser user, string role) =>
+        new(
             user.Id,
             user.Email ?? string.Empty,
             user.DisplayName,
             user.Department,
             role);
-    }
 
     private async Task<string?> GetSingleRoleAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
@@ -155,7 +298,8 @@ public sealed class AuthService(
             user.Id,
             user.Email ?? string.Empty,
             user.DisplayName,
-            role);
+            role,
+            user.SecurityStamp ?? string.Empty);
 
         var (rawRefreshToken, refreshTokenHash) = jwtTokenService.CreateRefreshToken();
         var refreshTokenExpiresAt = jwtTokenService.GetRefreshTokenExpiry();

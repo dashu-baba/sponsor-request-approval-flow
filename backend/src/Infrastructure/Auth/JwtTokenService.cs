@@ -12,7 +12,12 @@ public sealed class JwtTokenService(IOptions<JwtOptions> jwtOptions) : IJwtToken
 {
     private readonly JwtOptions _options = jwtOptions.Value;
 
-    public string CreateAccessToken(string userId, string email, string displayName, string role)
+    public string CreateAccessToken(
+        string userId,
+        string email,
+        string displayName,
+        string role,
+        string securityStamp)
     {
         var expiresAt = GetAccessTokenExpiry();
         var credentials = CreateSigningCredentials();
@@ -23,6 +28,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> jwtOptions) : IJwtToken
             new(JwtRegisteredClaimNames.Email, email),
             new(JwtRegisteredClaimNames.Name, displayName),
             new(ClaimTypes.Role, role),
+            new(AuthConstants.SecurityStampClaimType, securityStamp),
         };
 
         var token = new JwtSecurityToken(
