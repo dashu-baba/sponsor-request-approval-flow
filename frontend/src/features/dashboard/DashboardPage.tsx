@@ -38,17 +38,6 @@ function RequestorDashboardPlaceholder() {
   const user = useCurrentUser()
   const [searchParams] = useSearchParams()
   const statusFilter = parseStatusFilter(searchParams.get('status'))
-
-  if (user.role === Roles.SystemAdmin) {
-    return (
-      <Suspense
-        fallback={<LoadingState title="Loading submitted requests" metricCount={4} tableRows={8} />}
-      >
-        <AdminRequestsPage />
-      </Suspense>
-    )
-  }
-
   const heading = getDashboardHeading(user.role, statusFilter)
   const metricCount = getDashboardMetricCount(user.role)
 
@@ -84,45 +73,6 @@ function RequestorDashboardPlaceholder() {
   )
 }
 
-function SystemAdminDashboardPlaceholder() {
-  const heading = getDashboardHeading(Roles.SystemAdmin, 'overview')
-  const metricCount = getDashboardMetricCount(Roles.SystemAdmin)
-
-  return (
-    <div className="space-y-6">
-      <PageHeader title={heading.title} subtitle={heading.subtitle} />
-
-      <Alert variant="info">
-        <AlertTitle>Submitted requests only</AlertTitle>
-        <AlertDescription>Private drafts are visible only to their requestor.</AlertDescription>
-      </Alert>
-
-      <div
-        className={`grid gap-4 sm:grid-cols-2 ${metricCount === 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}
-      >
-        {Array.from({ length: metricCount }).map((_, index) => (
-          <Card key={index}>
-            <CardContent className="space-y-2 p-5">
-              <Skeleton className="h-4 w-24" />
-              <div className="text-[28px] font-semibold text-text-primary">—</div>
-              <p className="text-xs text-text-hint">Metrics arrive in T3.2</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardContent className="space-y-3 p-8 text-center">
-          <h2 className="text-base font-semibold">Request list placeholder</h2>
-          <p className="text-[13px] text-text-secondary">
-            Submitted requests for system administrators will render here in T3.2–T3.3.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
 export function DashboardPage() {
   const user = useCurrentUser()
 
@@ -131,7 +81,13 @@ export function DashboardPage() {
   }
 
   if (user.role === Roles.SystemAdmin) {
-    return <SystemAdminDashboardPlaceholder />
+    return (
+      <Suspense
+        fallback={<LoadingState title="Loading submitted requests" metricCount={4} tableRows={8} />}
+      >
+        <AdminRequestsPage />
+      </Suspense>
+    )
   }
 
   return <RequestorDashboardPlaceholder />
