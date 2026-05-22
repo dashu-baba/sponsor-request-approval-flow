@@ -23,3 +23,4 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | B-012 | 🔶 | Rename `Cross_user_access_should_return_403` in `RequestCrudTests.cs` | T2.5 final-review Should: GET now expects 404 for draft cross-user; PUT still 403 — name is misleading. | Next edit of `RequestCrudTests.cs`. |
 | B-013 | 💡 | Left-join users in `GetRequestHistoryQueryHandler` so missing actor rows still appear | T2.5 final-review Nice: inner join can drop audit entries if user record missing. | Security/audit hardening pass. |
 | B-014 | 💡 | Paginate `GET /requests/{id}/history` for long audit trails | T2.5 final-review Nice: unpaginated list may grow large. | T4.1 API polish or production prep. |
+| B-015 | 💡 | Responsive sidebar collapse/drawer at ≤1024px | T3.1 review Nice: fixed 220px sidebar; `docs/ui-design.md` §2.4 deferred for T3.1 scope. | T3.1 responsive pass or T3.2 UI polish. |

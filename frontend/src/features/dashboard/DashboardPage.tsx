@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 
 import { PageHeader } from '@/components/PageHeader'
-import { QueryStateDemoSection } from '@/components/QueryStatePanel'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -71,8 +70,6 @@ export function DashboardPage() {
           </p>
         </CardContent>
       </Card>
-
-      <QueryStateDemoSection />
     </div>
   )
 }

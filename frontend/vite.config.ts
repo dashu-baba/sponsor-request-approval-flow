@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+const apiTarget = 'http://localhost:5256'
+const apiProxyPaths = ['/auth', '/me', '/health', '/requests', '/sponsorship-types', '/system']
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -12,20 +15,15 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      '/auth': {
-        target: 'http://localhost:5256',
-        changeOrigin: true,
-      },
-      '/me': {
-        target: 'http://localhost:5256',
-        changeOrigin: true,
-      },
-      '/health': {
-        target: 'http://localhost:5256',
-        changeOrigin: true,
-      },
-    },
+    proxy: Object.fromEntries(
+      apiProxyPaths.map((route) => [
+        route,
+        {
+          target: apiTarget,
+          changeOrigin: true,
+        },
+      ]),
+    ),
   },
   test: {
     environment: 'jsdom',

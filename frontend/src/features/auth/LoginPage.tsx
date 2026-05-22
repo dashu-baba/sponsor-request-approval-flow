@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,14 @@ import { ApiError } from '@/lib/api/api-error'
 export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo =
+    typeof location.state === 'object' &&
+    location.state !== null &&
+    'from' in location.state &&
+    typeof location.state.from === 'string'
+      ? location.state.from
+      : '/dashboard'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -24,7 +32,7 @@ export function LoginPage() {
 
     try {
       await login(email.trim(), password)
-      navigate('/dashboard', { replace: true })
+      navigate(redirectTo, { replace: true })
     } catch (caught) {
       if (caught instanceof ApiError) {
         setError(caught.detail ?? caught.message)

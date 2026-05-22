@@ -74,4 +74,25 @@ describe('LoginPage', () => {
       expect(navigateMock).toHaveBeenCalledWith('/dashboard', { replace: true })
     })
   })
+
+  it('navigates to preserved return URL after successful login', async () => {
+    loginMock.mockResolvedValueOnce(undefined)
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: '/login', state: { from: '/admin/sponsorship-types' } }]}
+      >
+        <LoginPage />
+      </MemoryRouter>,
+    )
+
+    await user.type(screen.getByLabelText(/email address/i), 'admin@demo.local')
+    await user.type(screen.getByLabelText(/^password$/i), 'Password1!')
+    await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith('/admin/sponsorship-types', { replace: true })
+    })
+  })
 })

@@ -1,4 +1,5 @@
 import { ApiError, parseProblemResponse } from '@/lib/api/api-error'
+import { notifySessionExpired } from '@/lib/api/session-expired'
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/lib/api/token-store'
 import {
   loginResponseSchema,
@@ -11,6 +12,8 @@ export interface LoginRequest {
   email: string
   password: string
 }
+
+export { setSessionExpiredHandler } from '@/lib/api/session-expired'
 
 let refreshPromise: Promise<LoginResponse | null> | null = null
 
@@ -64,6 +67,7 @@ export async function refreshSession(): Promise<LoginResponse | null> {
 
       if (!response.ok) {
         clearAccessToken()
+        notifySessionExpired()
         return null
       }
 
@@ -73,6 +77,7 @@ export async function refreshSession(): Promise<LoginResponse | null> {
       return parsed
     } catch {
       clearAccessToken()
+      notifySessionExpired()
       return null
     } finally {
       refreshPromise = null
@@ -131,6 +136,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
   const refreshed = await refreshSession()
   if (!refreshed) {
+    notifySessionExpired()
     return response
   }
 

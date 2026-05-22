@@ -1,31 +1,27 @@
+import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { AuthContext, type AuthContextValue, type AuthStatus } from '@/features/auth/auth-context'
-import { ApiError } from '@/lib/api/api-error'
 import * as authApi from '@/lib/api/auth-api'
+import { setSessionExpiredHandler } from '@/lib/api/session-expired'
 import { clearAccessToken } from '@/lib/api/token-store'
-import { queryClient } from '@/lib/query-client'
+import { queryClient, queryKeys } from '@/lib/query-client'
 import type { UserProfile } from '@/lib/schemas/auth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>('loading')
-  const [user, setUser] = useState<UserProfile | null>(null)
+  const [bootstrapComplete, setBootstrapComplete] = useState(false)
+  const [sessionEnabled, setSessionEnabled] = useState(false)
 
-  const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
-    try {
-      const profile = await authApi.getMe()
-      setUser(profile)
-      setStatus('authenticated')
-      return profile
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        setUser(null)
-        setStatus('unauthenticated')
-        return null
-      }
-      throw error
-    }
+  const endSession = useCallback(() => {
+    clearAccessToken()
+    setSessionEnabled(false)
+    queryClient.removeQueries({ queryKey: queryKeys.me })
   }, [])
+
+  useEffect(() => {
+    setSessionExpiredHandler(endSession)
+    return () => setSessionExpiredHandler(null)
+  }, [endSession])
 
   useEffect(() => {
     let cancelled = false
@@ -34,23 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const refreshed = await authApi.refreshSession()
       if (cancelled) return
 
-      if (!refreshed) {
-        setUser(null)
-        setStatus('unauthenticated')
-        return
+      if (refreshed) {
+        setSessionEnabled(true)
+      } else {
+        endSession()
       }
 
-      try {
-        const profile = await authApi.getMe()
-        if (cancelled) return
-        setUser(profile)
-        setStatus('authenticated')
-      } catch {
-        if (cancelled) return
-        clearAccessToken()
-        setUser(null)
-        setStatus('unauthenticated')
-      }
+      setBootstrapComplete(true)
     }
 
     void bootstrap()
@@ -58,22 +44,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [endSession])
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      await authApi.login({ email, password })
-      await refreshProfile()
+  const meQuery = useQuery({
+    queryKey: queryKeys.me,
+    queryFn: async () => {
+      try {
+        return await authApi.getMe()
+      } catch {
+        endSession()
+        throw new Error('Not authenticated')
+      }
     },
-    [refreshProfile],
-  )
+    enabled: bootstrapComplete && sessionEnabled,
+    retry: false,
+  })
+
+  const status = useMemo((): AuthStatus => {
+    if (!bootstrapComplete) return 'loading'
+    if (!sessionEnabled) return 'unauthenticated'
+    if (meQuery.isPending) return 'loading'
+    if (meQuery.isSuccess) return 'authenticated'
+    return 'unauthenticated'
+  }, [bootstrapComplete, sessionEnabled, meQuery.isPending, meQuery.isSuccess])
+
+  const user = meQuery.data ?? null
+
+  const login = useCallback(async (email: string, password: string) => {
+    await authApi.login({ email, password })
+    setSessionEnabled(true)
+    await queryClient.invalidateQueries({ queryKey: queryKeys.me })
+  }, [])
 
   const logout = useCallback(async () => {
     await authApi.logout()
     queryClient.clear()
-    setUser(null)
-    setStatus('unauthenticated')
-  }, [])
+    endSession()
+  }, [endSession])
+
+  const refreshProfile = useCallback(async (): Promise<UserProfile | null> => {
+    if (!sessionEnabled) return null
+
+    try {
+      return await queryClient.fetchQuery({
+        queryKey: queryKeys.me,
+        queryFn: authApi.getMe,
+      })
+    } catch {
+      endSession()
+      return null
+    }
+  }, [endSession, sessionEnabled])
 
   const value = useMemo<AuthContextValue>(
     () => ({

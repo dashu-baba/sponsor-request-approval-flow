@@ -7,6 +7,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { adminOnly } from '@/features/auth/route-policy'
 import { GuestRoute, ProtectedRoute, RoleRedirect } from '@/features/auth/ProtectedRoute'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { UiStatesDemoPage } from '@/features/dev/UiStatesDemoPage'
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
+          { path: 'dev/ui-states', element: <UiStatesDemoPage /> },
           { path: 'profile', element: <ProfileStubPage /> },
           {
             element: <ProtectedRoute allowedRoles={[...adminOnly]} />,
