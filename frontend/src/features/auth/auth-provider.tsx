@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!sessionEnabled) return null
 
     try {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.me })
       return await queryClient.fetchQuery({
         queryKey: queryKeys.me,
         queryFn: authApi.getMe,

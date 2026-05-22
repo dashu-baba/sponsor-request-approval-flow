@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, type FocusEvent } from 'react'
+import { useForm, type UseFormReturn } from 'react-hook-form'
 
 import { PageHeader } from '@/components/PageHeader'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -28,6 +28,24 @@ function getErrorMessage(error: unknown): string {
   }
 
   return error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+}
+
+function registerPasswordField(
+  form: UseFormReturn<ChangePasswordValues>,
+  name: 'newPassword' | 'confirmPassword',
+) {
+  const registration = form.register(name)
+
+  return {
+    ...registration,
+    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      registration.onBlur(event)
+
+      if (name === 'confirmPassword' || form.getValues('confirmPassword')) {
+        void form.trigger('confirmPassword')
+      }
+    },
+  }
 }
 
 export function ProfilePage() {
@@ -87,7 +105,7 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent>
             {profileMutation.isSuccess ? (
-              <Alert className="mb-4">
+              <Alert variant="success" className="mb-4">
                 <AlertTitle>Profile updated</AlertTitle>
                 <AlertDescription>Your profile details were saved successfully.</AlertDescription>
               </Alert>
@@ -171,7 +189,7 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent>
             {passwordMutation.isSuccess ? (
-              <Alert className="mb-4">
+              <Alert variant="success" className="mb-4">
                 <AlertTitle>Password updated</AlertTitle>
                 <AlertDescription>Your password was changed successfully.</AlertDescription>
               </Alert>
@@ -220,7 +238,7 @@ export function ProfilePage() {
                   type="password"
                   autoComplete="new-password"
                   disabled={passwordMutation.isPending}
-                  {...passwordForm.register('newPassword')}
+                  {...registerPasswordField(passwordForm, 'newPassword')}
                 />
                 {passwordForm.formState.errors.newPassword ? (
                   <p className="text-sm text-danger">
@@ -236,7 +254,7 @@ export function ProfilePage() {
                   type="password"
                   autoComplete="new-password"
                   disabled={passwordMutation.isPending}
-                  {...passwordForm.register('confirmPassword')}
+                  {...registerPasswordField(passwordForm, 'confirmPassword')}
                 />
                 {passwordForm.formState.errors.confirmPassword ? (
                   <p className="text-sm text-danger">

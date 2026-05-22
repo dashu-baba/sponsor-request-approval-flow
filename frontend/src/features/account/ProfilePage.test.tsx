@@ -115,6 +115,18 @@ describe('ProfilePage', () => {
     expect(mocks.changePassword).not.toHaveBeenCalled()
   })
 
+  it('shows password mismatch on confirm blur', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(screen.getByLabelText(/^new password$/i), 'Password2!')
+    await user.type(screen.getByLabelText(/confirm new password/i), 'Mismatch2!')
+    await user.tab()
+
+    expect(await screen.findByText(/passwords do not match/i)).toBeInTheDocument()
+    expect(mocks.changePassword).not.toHaveBeenCalled()
+  })
+
   it('changes password on valid submission', async () => {
     const user = userEvent.setup()
     renderPage()
