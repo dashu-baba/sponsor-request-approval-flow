@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SponsorshipApproval.Application.Common.Storage;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence.Seeding;
 
@@ -13,6 +14,13 @@ public static class DatabaseInitializer
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await dbContext.Database.MigrateAsync().ConfigureAwait(false);
         await services.SeedDatabaseAsync().ConfigureAwait(false);
+    }
+
+    public static async Task EnsureObjectStorageAsync(this IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var objectStorage = scope.ServiceProvider.GetRequiredService<IObjectStorage>();
+        await objectStorage.EnsureBucketExistsAsync(CancellationToken.None).ConfigureAwait(false);
     }
 
     public static async Task SeedDatabaseAsync(this IServiceProvider services)

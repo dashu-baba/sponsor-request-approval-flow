@@ -1,13 +1,22 @@
 using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Testcontainers.Minio;
 using Testcontainers.PostgreSql;
 
 namespace SponsorshipApproval.Api.IntegrationTests.Infrastructure;
 
 public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    internal const string MinioUsername = "minioadmin";
+
+    internal const string MinioPassword = "minioadmin123";
+
+    internal const string MinioBucketName = "sponsorship-attachments-test";
+
     private PostgreSqlContainer? _postgres;
+
+    private MinioContainer? _minio;
 
     public async ValueTask InitializeAsync()
     {
@@ -22,7 +31,16 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
                         .UntilCommandIsCompleted("pg_isready -U sponsorship_app -d sponsorship_approval_tests"))
                 .Build();
 
+            _minio = new MinioBuilder("minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1")
+                .WithUsername(MinioUsername)
+                .WithPassword(MinioPassword)
+                .WithWaitStrategy(
+                    Wait.ForUnixContainer()
+                        .UntilExternalTcpPortIsAvailable(9000))
+                .Build();
+
             await _postgres.StartAsync().ConfigureAwait(true);
+            await _minio.StartAsync().ConfigureAwait(true);
         }
         catch (DockerUnavailableException exception)
         {
@@ -34,10 +52,16 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
     {
         builder.UseSetting("ConnectionStrings:Default", _postgres!.GetConnectionString());
         TestConfiguration.ApplyJwtSettings(builder);
+        TestConfiguration.ApplyMinioSettings(builder, _minio!);
     }
 
     public override async ValueTask DisposeAsync()
     {
+        if (_minio is not null)
+        {
+            await _minio.DisposeAsync().ConfigureAwait(true);
+        }
+
         if (_postgres is not null)
         {
             await _postgres.DisposeAsync().ConfigureAwait(true);

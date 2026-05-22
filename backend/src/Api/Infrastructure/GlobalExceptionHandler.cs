@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SponsorshipApproval.Application.Common.Exceptions;
 
@@ -65,6 +66,11 @@ public sealed class GlobalExceptionHandler(IHostEnvironment environment) : IExce
                 StatusCodes.Status409Conflict,
                 "Conflict",
                 conflict.Message,
+                null),
+            BadHttpRequestException badHttpRequest => (
+                badHttpRequest.StatusCode,
+                "Bad request",
+                badHttpRequest.Message,
                 null),
             _ => (
                 StatusCodes.Status500InternalServerError,

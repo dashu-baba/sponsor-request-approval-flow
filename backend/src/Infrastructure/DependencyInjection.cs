@@ -12,6 +12,7 @@ using SponsorshipApproval.Infrastructure.Auth;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence;
 using SponsorshipApproval.Infrastructure.Requests.Handlers;
+using SponsorshipApproval.Infrastructure.Storage;
 
 namespace SponsorshipApproval.Infrastructure;
 
@@ -81,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddMinioObjectStorage(configuration);
 
         return services;
     }
