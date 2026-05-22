@@ -3,12 +3,12 @@ using SponsorshipApproval.Domain.Requests;
 namespace SponsorshipApproval.Application.Requests.Models;
 
 public sealed record RequestDetailDto(
-    Guid Id,
+    long Id,
     string Title,
     string RequestorName,
     string RequestorId,
     string Department,
-    Guid SponsorshipTypeId,
+    long SponsorshipTypeId,
     string SponsorshipTypeName,
     string EventName,
     DateOnly EventDate,
@@ -21,7 +21,7 @@ public sealed record RequestDetailDto(
     DateTimeOffset? UpdatedAt);
 
 public sealed record RequestListItemDto(
-    Guid Id,
+    long Id,
     string Title,
     string RequestorName,
     string Department,

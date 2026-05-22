@@ -4,7 +4,7 @@ using SponsorshipApproval.Application.Attachments.Models;
 namespace SponsorshipApproval.Application.Attachments.Commands;
 
 public sealed record UploadAttachmentCommand(
-    Guid RequestId,
+    long RequestId,
     string FileName,
     string ContentType,
     long SizeBytes,

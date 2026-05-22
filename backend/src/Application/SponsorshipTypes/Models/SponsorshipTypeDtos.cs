@@ -1,7 +1,7 @@
 namespace SponsorshipApproval.Application.SponsorshipTypes.Models;
 
 public sealed record SponsorshipTypeDto(
-    Guid Id,
+    long Id,
     string Name,
     string? Description,
     bool IsActive,

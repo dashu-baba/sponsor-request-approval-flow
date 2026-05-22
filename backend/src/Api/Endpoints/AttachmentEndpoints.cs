@@ -9,16 +9,16 @@ public static class AttachmentEndpoints
 {
     public static RouteGroupBuilder MapAttachmentEndpoints(this RouteGroupBuilder requests)
     {
-        requests.MapPost("/{id:guid}/attachments", UploadAsync)
+        requests.MapPost("/{id:long}/attachments", UploadAsync)
             .DisableAntiforgery();
-        requests.MapGet("/{id:guid}/attachments", ListAsync);
-        requests.MapGet("/{id:guid}/attachments/{attachmentId:guid}", DownloadAsync);
+        requests.MapGet("/{id:long}/attachments", ListAsync);
+        requests.MapGet("/{id:long}/attachments/{attachmentId:long}", DownloadAsync);
 
         return requests;
     }
 
     private static async Task<IResult> UploadAsync(
-        Guid id,
+        long id,
         IFormFile file,
         IMediator mediator,
         CancellationToken cancellationToken)
@@ -45,7 +45,7 @@ public static class AttachmentEndpoints
     }
 
     private static async Task<IResult> ListAsync(
-        Guid id,
+        long id,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
@@ -57,8 +57,8 @@ public static class AttachmentEndpoints
     }
 
     private static async Task<IResult> DownloadAsync(
-        Guid id,
-        Guid attachmentId,
+        long id,
+        long attachmentId,
         HttpContext httpContext,
         IMediator mediator,
         CancellationToken cancellationToken)

@@ -33,7 +33,7 @@ function renderWithProviders(route: string, element: ReactNode) {
 
 const sampleRequests = [
   {
-    id: 'request-1',
+    id: 1,
     title: 'Tech Summit Booth',
     status: 'PendingManagerApproval' as const,
     eventName: 'Tech Summit',
@@ -43,7 +43,7 @@ const sampleRequests = [
     createdAt: '2026-05-21T08:30:00Z',
   },
   {
-    id: 'request-2',
+    id: 2,
     title: 'Community Workshop',
     status: 'Approved' as const,
     eventName: 'Community Outreach',
@@ -59,7 +59,7 @@ describe('AdminRequestsPage', () => {
     vi.resetAllMocks()
     vi.mocked(adminApi.listSponsorshipTypes).mockResolvedValue([
       {
-        id: 'type-1',
+        id: 1,
         name: 'Event Sponsorship',
         description: 'Events',
         isActive: true,
@@ -67,7 +67,7 @@ describe('AdminRequestsPage', () => {
         updatedAt: null,
       },
       {
-        id: 'type-2',
+        id: 2,
         name: 'Community',
         description: 'Community',
         isActive: true,
@@ -96,7 +96,7 @@ describe('AdminRequestsPage', () => {
         return {
           items: [
             {
-              id: 'request-3',
+              id: 3,
               title: 'Finance Expo',
               status: 'PendingFinanceReview',
               eventName: 'Finance Conference',
@@ -191,12 +191,12 @@ describe('AdminRequestDetailPage', () => {
 
   it('shows read-only request details and history without approval controls', async () => {
     vi.mocked(adminApi.getRequestDetail).mockResolvedValue({
-      id: 'request-1',
+      id: 1,
       title: 'Tech Summit Booth',
       requestorName: 'Rina Ahmed',
       requestorId: 'seed-requestor',
       department: 'Marketing',
-      sponsorshipTypeId: 'type-1',
+      sponsorshipTypeId: 1,
       sponsorshipTypeName: 'Event Sponsorship',
       eventName: 'Tech Summit',
       eventDate: '2026-08-15',
@@ -210,7 +210,7 @@ describe('AdminRequestDetailPage', () => {
     })
     vi.mocked(adminApi.getRequestHistory).mockResolvedValue([
       {
-        id: 'history-1',
+        id: 1,
         actorId: 'seed-requestor',
         actorName: 'Rina Ahmed',
         fromStatus: 'Draft',
@@ -219,7 +219,7 @@ describe('AdminRequestDetailPage', () => {
         occurredAt: '2026-05-21T08:35:00Z',
       },
       {
-        id: 'history-2',
+        id: 2,
         actorId: 'seed-manager',
         actorName: 'Manager User',
         fromStatus: 'PendingManagerApproval',
@@ -229,7 +229,7 @@ describe('AdminRequestDetailPage', () => {
       },
     ])
 
-    renderWithProviders('/dashboard/requests/request-1', <AdminRequestDetailPage />)
+    renderWithProviders('/dashboard/requests/1', <AdminRequestDetailPage />)
 
     expect(await screen.findByRole('heading', { name: /tech summit booth/i })).toBeVisible()
     expect(screen.getByText('Rina Ahmed')).toBeVisible()

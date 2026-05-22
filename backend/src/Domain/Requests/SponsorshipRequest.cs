@@ -2,7 +2,7 @@ namespace SponsorshipApproval.Domain.Requests;
 
 public sealed class SponsorshipRequest
 {
-    public Guid Id { get; set; }
+    public long Id { get; set; }
 
     public string Title { get; set; } = string.Empty;
 
@@ -12,7 +12,7 @@ public sealed class SponsorshipRequest
 
     public string Department { get; set; } = string.Empty;
 
-    public Guid SponsorshipTypeId { get; set; }
+    public long SponsorshipTypeId { get; set; }
 
     public SponsorshipType? SponsorshipType { get; set; }
 

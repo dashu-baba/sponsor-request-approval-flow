@@ -16,6 +16,8 @@ public sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachmen
 
         builder.HasKey(attachment => attachment.Id);
 
+        builder.Property(attachment => attachment.Id).UseIdentityByDefaultColumn();
+
         builder.Property(attachment => attachment.ObjectKey).HasMaxLength(1024).IsRequired();
         builder.Property(attachment => attachment.FileName).HasMaxLength(255).IsRequired();
         builder.Property(attachment => attachment.ContentType).HasMaxLength(127).IsRequired();

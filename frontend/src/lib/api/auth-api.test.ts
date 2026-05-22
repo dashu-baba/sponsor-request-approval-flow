@@ -63,6 +63,35 @@ describe('auth-api', () => {
     expect(sessionExpiredMock).toHaveBeenCalledTimes(2)
   })
 
+  it('sets JSON Content-Type on POST bodies', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }))
+
+    const { apiFetch } = await import('@/lib/api/auth-api')
+    await apiFetch('/requests', {
+      method: 'POST',
+      body: JSON.stringify({ title: 'Test' }),
+    })
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
+  })
+
+  it('does not set Content-Type for FormData uploads', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }))
+
+    const { apiFetch } = await import('@/lib/api/auth-api')
+    const formData = new FormData()
+    formData.append('file', new File(['x'], 'test.txt'))
+
+    await apiFetch('/requests/1/attachments', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(new Headers(init.headers).has('Content-Type')).toBe(false)
+  })
+
   it('notifies session expiry when refresh returns invalid payload', async () => {
     setAccessToken('expired-token')
 

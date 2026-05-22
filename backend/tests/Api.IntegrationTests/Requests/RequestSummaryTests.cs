@@ -143,7 +143,7 @@ public sealed class RequestSummaryTests(PostgresWebApplicationFactory factory)
     {
         Title = "Summary integration test request",
         Department = (string?)null,
-        SponsorshipTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+        SponsorshipTypeId = 1L,
         EventName = "Test Event",
         EventDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)).ToString("yyyy-MM-dd"),
         RequestedAmount = 500m,

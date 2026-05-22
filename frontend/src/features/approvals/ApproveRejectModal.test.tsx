@@ -50,7 +50,7 @@ function renderModal(
         open
         onOpenChange={onOpenChange}
         action={action}
-        requestId="11111111-1111-1111-1111-111111111111"
+        requestId={1}
         requestTitle="TechConf 2025 Sponsorship"
         onConflict409={callbacks.onConflict409}
         onForbidden403={callbacks.onForbidden403}
@@ -131,7 +131,7 @@ describe('ApproveRejectModal', () => {
   })
 
   it('invalidates request queries after successful approve', async () => {
-    approveRequestMock.mockResolvedValueOnce({ id: '11111111-1111-1111-1111-111111111111' })
+    approveRequestMock.mockResolvedValueOnce({ id: 1 })
     const onSuccess = vi.fn()
     const user = userEvent.setup()
 
@@ -141,7 +141,7 @@ describe('ApproveRejectModal', () => {
     await user.click(screen.getByRole('button', { name: /confirm approval/i }))
 
     await waitFor(() => {
-      expect(approveRequestMock).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', '')
+      expect(approveRequestMock).toHaveBeenCalledWith(1, '')
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['requests'] })
       expect(onSuccess).toHaveBeenCalledTimes(1)
     })

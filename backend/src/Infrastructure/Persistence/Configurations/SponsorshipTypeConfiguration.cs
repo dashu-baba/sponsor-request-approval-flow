@@ -12,6 +12,8 @@ public sealed class SponsorshipTypeConfiguration : IEntityTypeConfiguration<Spon
 
         builder.HasKey(type => type.Id);
 
+        builder.Property(type => type.Id).UseIdentityByDefaultColumn();
+
         builder.Property(type => type.Name).HasMaxLength(120).IsRequired();
         builder.Property(type => type.Description).HasMaxLength(1000);
         builder.Property(type => type.IsActive).IsRequired();

@@ -2,7 +2,7 @@ namespace SponsorshipApproval.Infrastructure.Identity;
 
 public sealed class RefreshToken
 {
-    public Guid Id { get; set; }
+    public long Id { get; set; }
 
     public string UserId { get; set; } = string.Empty;
 

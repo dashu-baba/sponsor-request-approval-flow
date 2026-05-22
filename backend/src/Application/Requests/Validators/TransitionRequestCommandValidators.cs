@@ -7,7 +7,7 @@ public sealed class SubmitRequestCommandValidator : AbstractValidator<SubmitRequ
 {
     public SubmitRequestCommandValidator()
     {
-        RuleFor(c => c.Id).NotEmpty();
+        RuleFor(c => c.Id).GreaterThan(0);
     }
 }
 
@@ -15,7 +15,7 @@ public sealed class CancelRequestCommandValidator : AbstractValidator<CancelRequ
 {
     public CancelRequestCommandValidator()
     {
-        RuleFor(c => c.Id).NotEmpty();
+        RuleFor(c => c.Id).GreaterThan(0);
     }
 }
 
@@ -23,7 +23,7 @@ public sealed class ApproveRequestCommandValidator : AbstractValidator<ApproveRe
 {
     public ApproveRequestCommandValidator()
     {
-        RuleFor(c => c.Id).NotEmpty();
+        RuleFor(c => c.Id).GreaterThan(0);
     }
 }
 
@@ -31,7 +31,7 @@ public sealed class RejectRequestCommandValidator : AbstractValidator<RejectRequ
 {
     public RejectRequestCommandValidator()
     {
-        RuleFor(c => c.Id).NotEmpty();
+        RuleFor(c => c.Id).GreaterThan(0);
         RuleFor(c => c.Remarks)
             .NotEmpty()
             .WithMessage("Remarks are required when rejecting a request.");

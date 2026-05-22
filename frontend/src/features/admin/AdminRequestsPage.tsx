@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { listAdminRequests, listSponsorshipTypes } from '@/features/admin/api/admin-api'
 import { formatDate, formatMoney, formatStatus, getErrorMessage } from '@/features/admin/format'
 import type { RequestListItem, RequestStatus } from '@/features/admin/types'
+import { requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 
 const pageSize = 10
@@ -44,7 +45,7 @@ function matchesSearch(request: RequestListItem, search: string): boolean {
   return (
     request.title.toLowerCase().includes(query) ||
     request.eventName.toLowerCase().includes(query) ||
-    request.id.toLowerCase().includes(query)
+    requestIdMatchesQuery(request.id, search)
   )
 }
 

@@ -15,8 +15,8 @@ public static class SponsorshipTypeEndpoints
 
         sponsorshipTypes.MapGet("/", ListAsync).RequireAuthorization();
         sponsorshipTypes.MapPost("/", CreateAsync).RequireAuthorization(AuthorizationPolicies.SystemAdmin);
-        sponsorshipTypes.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(AuthorizationPolicies.SystemAdmin);
-        sponsorshipTypes.MapDelete("/{id:guid}", DeleteAsync)
+        sponsorshipTypes.MapPut("/{id:long}", UpdateAsync).RequireAuthorization(AuthorizationPolicies.SystemAdmin);
+        sponsorshipTypes.MapDelete("/{id:long}", DeleteAsync)
             .RequireAuthorization(AuthorizationPolicies.SystemAdmin)
             .WithSummary("Soft-delete a sponsorship type")
             .WithDescription(
@@ -43,7 +43,7 @@ public static class SponsorshipTypeEndpoints
     }
 
     private static async Task<IResult> UpdateAsync(
-        Guid id,
+        long id,
         SponsorshipTypeMutationBody body,
         IMediator mediator,
         CancellationToken cancellationToken)
@@ -53,7 +53,7 @@ public static class SponsorshipTypeEndpoints
     }
 
     private static async Task<IResult> DeleteAsync(
-        Guid id,
+        long id,
         IMediator mediator,
         CancellationToken cancellationToken)
     {

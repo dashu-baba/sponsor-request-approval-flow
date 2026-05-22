@@ -28,7 +28,7 @@ describe('SponsorshipTypesPage', () => {
     vi.resetAllMocks()
     vi.mocked(adminApi.listSponsorshipTypes).mockResolvedValue([
       {
-        id: 'type-1',
+        id: 1,
         name: 'Event Sponsorship',
         description: 'Trade shows and conferences',
         isActive: true,
@@ -39,7 +39,7 @@ describe('SponsorshipTypesPage', () => {
     vi.mocked(adminApi.listAdminRequests).mockResolvedValue({
       items: [
         {
-          id: 'request-1',
+          id: 1,
           title: 'Tech Summit Booth',
           status: 'PendingManagerApproval',
           eventName: 'Tech Summit',
@@ -57,7 +57,7 @@ describe('SponsorshipTypesPage', () => {
 
   it('creates, edits, and soft-deletes sponsorship types via modals', async () => {
     vi.mocked(adminApi.createSponsorshipType).mockResolvedValue({
-      id: 'type-2',
+      id: 2,
       name: 'Community Grant',
       description: 'Local programs',
       isActive: true,
@@ -65,7 +65,7 @@ describe('SponsorshipTypesPage', () => {
       updatedAt: null,
     })
     vi.mocked(adminApi.updateSponsorshipType).mockResolvedValue({
-      id: 'type-1',
+      id: 1,
       name: 'Event Sponsorship Plus',
       description: 'Premium events',
       isActive: true,
@@ -99,7 +99,7 @@ describe('SponsorshipTypesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /save type/i }))
 
     await waitFor(() =>
-      expect(adminApi.updateSponsorshipType).toHaveBeenCalledWith('type-1', {
+      expect(adminApi.updateSponsorshipType).toHaveBeenCalledWith(1, {
         name: 'Event Sponsorship Plus',
         description: 'Premium events',
       }),
@@ -109,7 +109,7 @@ describe('SponsorshipTypesPage', () => {
     expect(screen.getByRole('dialog', { name: /delete sponsorship type/i })).toBeVisible()
     await userEvent.click(screen.getByRole('button', { name: /deactivate type/i }))
 
-    await waitFor(() => expect(adminApi.deleteSponsorshipType).toHaveBeenCalledWith('type-1'))
+    await waitFor(() => expect(adminApi.deleteSponsorshipType).toHaveBeenCalledWith(1))
     expect(
       await screen.findByText(/deactivated because it is referenced by submitted requests/i),
     ).toBeVisible()

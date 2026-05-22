@@ -7,7 +7,7 @@ public sealed class UpdateSponsorshipTypeCommandValidator : AbstractValidator<Up
 {
     public UpdateSponsorshipTypeCommandValidator()
     {
-        RuleFor(command => command.Id).NotEmpty();
+        RuleFor(command => command.Id).GreaterThan(0);
         RuleFor(command => command.Body).SetValidator(new SponsorshipTypeMutationBodyValidator());
     }
 }

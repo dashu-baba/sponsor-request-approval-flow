@@ -11,10 +11,10 @@ import { queryKeys } from '@/lib/query-client'
 import type { Attachment } from '@/lib/schemas/requests'
 
 interface RequestAttachmentsListProps {
-  requestId: string
+  requestId: number
 }
 
-async function downloadAttachment(requestId: string, attachment: Attachment): Promise<void> {
+async function downloadAttachment(requestId: number, attachment: Attachment): Promise<void> {
   const response = await apiFetch(`/requests/${requestId}/attachments/${attachment.id}`)
 
   if (!response.ok) {

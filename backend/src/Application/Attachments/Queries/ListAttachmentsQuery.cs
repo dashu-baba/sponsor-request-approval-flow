@@ -3,4 +3,4 @@ using SponsorshipApproval.Application.Attachments.Models;
 
 namespace SponsorshipApproval.Application.Attachments.Queries;
 
-public sealed record ListAttachmentsQuery(Guid RequestId) : IRequest<IReadOnlyList<AttachmentDto>>;
+public sealed record ListAttachmentsQuery(long RequestId) : IRequest<IReadOnlyList<AttachmentDto>>;

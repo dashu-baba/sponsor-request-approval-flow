@@ -52,32 +52,32 @@ internal static class SeedData
 
     internal static class SponsorshipTypes
     {
-        public static readonly Guid Conference = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
+        public const long Conference = 1;
 
-        public static readonly Guid CommunityEvent = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2");
+        public const long CommunityEvent = 2;
 
-        public static readonly Guid Sports = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3");
+        public const long Sports = 3;
 
-        public static readonly Guid Educational = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4");
+        public const long Educational = 4;
     }
 
     internal static class Requests
     {
-        public static readonly Guid Draft = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1");
+        public const long Draft = 1;
 
-        public static readonly Guid PendingManagerApproval = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
+        public const long PendingManagerApproval = 2;
 
-        public static readonly Guid PendingFinanceReview = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3");
+        public const long PendingFinanceReview = 3;
 
-        public static readonly Guid Approved = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb4");
+        public const long Approved = 4;
 
-        public static readonly Guid Rejected = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb5");
+        public const long Rejected = 5;
 
-        public static readonly Guid Cancelled = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb6");
+        public const long Cancelled = 6;
     }
 
     internal sealed record SeedTransition(
-        Guid HistoryId,
+        long HistoryId,
         RequestStatus FromStatus,
         RequestStatus ToStatus,
         string ActorId,
@@ -89,7 +89,7 @@ internal static class SeedData
         public static IReadOnlyList<SeedTransition> PendingManagerApproval { get; } =
         [
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc1"),
+                1,
                 RequestStatus.Draft,
                 RequestStatus.PendingManagerApproval,
                 Users.Requestor.Id,
@@ -100,14 +100,14 @@ internal static class SeedData
         public static IReadOnlyList<SeedTransition> PendingFinanceReview { get; } =
         [
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc2"),
+                2,
                 RequestStatus.Draft,
                 RequestStatus.PendingManagerApproval,
                 Users.Requestor.Id,
                 "Submitted for manager approval.",
                 TimeSpan.FromMinutes(20)),
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc3"),
+                3,
                 RequestStatus.PendingManagerApproval,
                 RequestStatus.PendingFinanceReview,
                 Users.Manager.Id,
@@ -118,21 +118,21 @@ internal static class SeedData
         public static IReadOnlyList<SeedTransition> Approved { get; } =
         [
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc4"),
+                4,
                 RequestStatus.Draft,
                 RequestStatus.PendingManagerApproval,
                 Users.Requestor.Id,
                 "Submitted for manager approval.",
                 TimeSpan.FromMinutes(40)),
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc5"),
+                5,
                 RequestStatus.PendingManagerApproval,
                 RequestStatus.PendingFinanceReview,
                 Users.Manager.Id,
                 "Approved by manager.",
                 TimeSpan.FromMinutes(50)),
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc6"),
+                6,
                 RequestStatus.PendingFinanceReview,
                 RequestStatus.Approved,
                 Users.FinanceAdmin.Id,
@@ -143,14 +143,14 @@ internal static class SeedData
         public static IReadOnlyList<SeedTransition> Rejected { get; } =
         [
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc7"),
+                7,
                 RequestStatus.Draft,
                 RequestStatus.PendingManagerApproval,
                 Users.Requestor.Id,
                 "Submitted for manager approval.",
                 TimeSpan.FromMinutes(70)),
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc8"),
+                8,
                 RequestStatus.PendingManagerApproval,
                 RequestStatus.Rejected,
                 Users.Manager.Id,
@@ -161,7 +161,7 @@ internal static class SeedData
         public static IReadOnlyList<SeedTransition> Cancelled { get; } =
         [
             new(
-                Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc9"),
+                9,
                 RequestStatus.Draft,
                 RequestStatus.Cancelled,
                 Users.Requestor.Id,

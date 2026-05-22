@@ -124,6 +124,14 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set('Authorization', `Bearer ${token}`)
   }
 
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json')
+  }
+
+  if (init.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+
   let response = await fetch(path, {
     credentials: 'include',
     ...init,

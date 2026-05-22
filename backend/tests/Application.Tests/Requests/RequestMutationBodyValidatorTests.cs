@@ -47,7 +47,7 @@ public sealed class RequestMutationBodyValidatorTests
     {
         var result = await _validator
             .ValidateAsync(
-                CreateValidBody() with { SponsorshipTypeId = Guid.Empty },
+                CreateValidBody() with { SponsorshipTypeId = 0L },
                 TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
@@ -70,7 +70,7 @@ public sealed class RequestMutationBodyValidatorTests
         new(
             Title: "Community booth sponsorship",
             Department: "Engineering",
-            SponsorshipTypeId: Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+            SponsorshipTypeId: 1L,
             EventName: "Tech Community Day",
             EventDate: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
             RequestedAmount: 1500m,

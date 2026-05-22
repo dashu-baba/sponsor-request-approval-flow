@@ -135,7 +135,7 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
         await CreateUserAsync(reqEmail, Roles.Requestor);
 
         using var client = await AuthenticatedClientAsync(reqEmail);
-        using var resp = await client.GetAsync($"/requests/{Guid.NewGuid()}/history", TestContext.Current.CancellationToken);
+        using var resp = await client.GetAsync($"/requests/{999_999L}/history", TestContext.Current.CancellationToken);
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -311,7 +311,7 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
     {
         Title = "History/queue integration test request",
         Department = (string?)null,
-        SponsorshipTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+        SponsorshipTypeId = 1L,
         EventName = "Test Event",
         EventDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)).ToString("yyyy-MM-dd"),
         RequestedAmount = 500m,

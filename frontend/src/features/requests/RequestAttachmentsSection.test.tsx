@@ -30,10 +30,7 @@ function renderSection(allowUpload: boolean) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <RequestAttachmentsSection
-        requestId="11111111-1111-1111-1111-111111111111"
-        allowUpload={allowUpload}
-      />
+      <RequestAttachmentsSection requestId={1} allowUpload={allowUpload} />
     </QueryClientProvider>,
   )
 }
@@ -42,7 +39,7 @@ describe('RequestAttachmentsSection', () => {
   beforeEach(() => {
     listAttachmentsMock.mockResolvedValue([])
     uploadAttachmentMock.mockResolvedValue({
-      id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      id: 1,
       fileName: 'brief.pdf',
       contentType: 'application/pdf',
       sizeBytes: 1024,

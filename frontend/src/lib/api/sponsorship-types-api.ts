@@ -1,9 +1,10 @@
 import { z } from 'zod'
 
 import { apiJson } from '@/lib/api/auth-api'
+import { entityIdSchema } from '@/lib/schemas/requests'
 
 export const sponsorshipTypeSchema = z.object({
-  id: z.string().uuid(),
+  id: entityIdSchema,
   name: z.string(),
   description: z.string().nullable(),
   isActive: z.boolean(),

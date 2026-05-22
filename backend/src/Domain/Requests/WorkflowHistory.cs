@@ -2,9 +2,9 @@ namespace SponsorshipApproval.Domain.Requests;
 
 public sealed class WorkflowHistory
 {
-    public Guid Id { get; set; }
+    public long Id { get; set; }
 
-    public Guid SponsorshipRequestId { get; set; }
+    public long SponsorshipRequestId { get; set; }
 
     public SponsorshipRequest? SponsorshipRequest { get; set; }
 

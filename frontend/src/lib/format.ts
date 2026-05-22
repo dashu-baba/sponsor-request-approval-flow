@@ -20,8 +20,23 @@ export function formatDateTime(value: string): string {
   })
 }
 
-export function formatRequestId(id: string): string {
-  return `SR-${id.slice(0, 8).toUpperCase()}`
+export function formatRequestId(id: number | string): string {
+  return `SR-${String(id).padStart(6, '0')}`
+}
+
+export function requestIdMatchesQuery(id: number, query: string): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+
+  if (formatRequestId(id).toLowerCase().includes(normalized)) {
+    return true
+  }
+
+  if (/^\d+$/.test(normalized)) {
+    return String(id).startsWith(normalized)
+  }
+
+  return false
 }
 
 export function formatFileSize(bytes: number): string {

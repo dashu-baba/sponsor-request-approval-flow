@@ -19,8 +19,8 @@ public static class RequestEndpoints
 
         readGroup.MapGet("/summary", GetSummaryAsync);
         readGroup.MapGet("/", ListAsync);
-        readGroup.MapGet("/{id:guid}", GetByIdAsync);
-        readGroup.MapGet("/{id:guid}/history", GetHistoryAsync);
+        readGroup.MapGet("/{id:long}", GetByIdAsync);
+        readGroup.MapGet("/{id:long}/history", GetHistoryAsync);
         readGroup.MapAttachmentEndpoints();
 
         // Write routes: Requestor only
@@ -29,16 +29,16 @@ public static class RequestEndpoints
             .RequireAuthorization(AuthorizationPolicies.Requestor);
 
         requestorGroup.MapPost("/", CreateAsync);
-        requestorGroup.MapPut("/{id:guid}", UpdateDraftAsync);
+        requestorGroup.MapPut("/{id:long}", UpdateDraftAsync);
 
         // Workflow transition routes
         var workflowGroup = app.MapGroup("/requests")
             .WithTags("Requests");
 
-        workflowGroup.MapPost("/{id:guid}/submit", SubmitAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
-        workflowGroup.MapPost("/{id:guid}/cancel", CancelAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
-        workflowGroup.MapPost("/{id:guid}/approve", ApproveAsync).RequireAuthorization(AuthorizationPolicies.Approver);
-        workflowGroup.MapPost("/{id:guid}/reject", RejectAsync).RequireAuthorization(AuthorizationPolicies.Approver);
+        workflowGroup.MapPost("/{id:long}/submit", SubmitAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
+        workflowGroup.MapPost("/{id:long}/cancel", CancelAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
+        workflowGroup.MapPost("/{id:long}/approve", ApproveAsync).RequireAuthorization(AuthorizationPolicies.Approver);
+        workflowGroup.MapPost("/{id:long}/reject", RejectAsync).RequireAuthorization(AuthorizationPolicies.Approver);
 
         return app;
     }
@@ -88,7 +88,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> GetByIdAsync(
-        Guid id,
+        long id,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
@@ -97,7 +97,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> GetHistoryAsync(
-        Guid id,
+        long id,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
@@ -115,7 +115,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> UpdateDraftAsync(
-        Guid id,
+        long id,
         RequestMutationBody body,
         IMediator mediator,
         CancellationToken cancellationToken)
@@ -127,7 +127,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> SubmitAsync(
-        Guid id,
+        long id,
         IMediator mediator,
         CancellationToken cancellationToken)
     {
@@ -136,7 +136,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> CancelAsync(
-        Guid id,
+        long id,
         TransitionBody body,
         IMediator mediator,
         CancellationToken cancellationToken)
@@ -146,7 +146,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> ApproveAsync(
-        Guid id,
+        long id,
         TransitionBody body,
         IMediator mediator,
         CancellationToken cancellationToken)
@@ -156,7 +156,7 @@ public static class RequestEndpoints
     }
 
     private static async Task<IResult> RejectAsync(
-        Guid id,
+        long id,
         TransitionBody body,
         IMediator mediator,
         CancellationToken cancellationToken)

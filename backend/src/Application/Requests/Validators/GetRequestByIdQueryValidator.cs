@@ -7,6 +7,6 @@ public sealed class GetRequestByIdQueryValidator : AbstractValidator<GetRequestB
 {
     public GetRequestByIdQueryValidator()
     {
-        RuleFor(query => query.Id).NotEmpty();
+        RuleFor(query => query.Id).GreaterThan(0);
     }
 }

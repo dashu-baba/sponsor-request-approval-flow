@@ -27,7 +27,7 @@ import { getDashboardHeading, type DashboardStatusFilter } from '@/features/auth
 import { ApiError } from '@/lib/api/api-error'
 import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
 import { listSponsorshipTypes } from '@/lib/api/sponsorship-types-api'
-import { formatCurrency, formatDate, formatRequestId } from '@/lib/format'
+import { formatCurrency, formatDate, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 import { canCancelRequest, canEditRequest } from '@/lib/request-status'
 import { Roles } from '@/lib/roles'
@@ -213,7 +213,7 @@ export function RequestorDashboard() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
-  const [editingRequestId, setEditingRequestId] = useState<string | undefined>()
+  const [editingRequestId, setEditingRequestId] = useState<number | undefined>()
   const [cancellingRequest, setCancellingRequest] = useState<RequestListItem | null>(null)
 
   function updateStatusFilter(value: StatusFilterValue) {
@@ -263,8 +263,7 @@ export function RequestorDashboard() {
         item.title.toLowerCase().includes(query) ||
         item.eventName.toLowerCase().includes(query) ||
         item.department.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query) ||
-        formatRequestId(item.id).toLowerCase().includes(query)
+        requestIdMatchesQuery(item.id, query)
       )
     })
   }, [listQuery.data?.items, search, statusFilter, typeFilter])

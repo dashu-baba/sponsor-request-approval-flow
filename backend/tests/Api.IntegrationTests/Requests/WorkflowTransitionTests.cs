@@ -336,7 +336,7 @@ public sealed class WorkflowTransitionTests(PostgresWebApplicationFactory factor
     {
         Title = "Workflow integration test request",
         Department = (string?)null,
-        SponsorshipTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+        SponsorshipTypeId = 1L,
         EventName = "Test Event",
         EventDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(60)).ToString("yyyy-MM-dd"),
         RequestedAmount = 1000m,
@@ -375,7 +375,7 @@ public sealed class WorkflowTransitionTests(PostgresWebApplicationFactory factor
         rr.Succeeded.Should().BeTrue(string.Join(", ", rr.Errors.Select(e => e.Description)));
     }
 
-    private async Task AssertHistoryCountAsync(Guid requestId, int expectedCount)
+    private async Task AssertHistoryCountAsync(long requestId, int expectedCount)
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -384,7 +384,7 @@ public sealed class WorkflowTransitionTests(PostgresWebApplicationFactory factor
         count.Should().Be(expectedCount);
     }
 
-    private async Task ReassignRequestorAsync(Guid requestId, string email)
+    private async Task ReassignRequestorAsync(long requestId, string email)
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

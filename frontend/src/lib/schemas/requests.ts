@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// PostgreSQL bigint exceeds Number.MAX_SAFE_INTEGER; IDs stay within JS safe range for this app.
+export const entityIdSchema = z.number().int().positive()
+
 export const requestStatusSchema = z.enum([
   'Draft',
   'PendingManagerApproval',
@@ -12,7 +15,7 @@ export const requestStatusSchema = z.enum([
 export type RequestStatus = z.infer<typeof requestStatusSchema>
 
 export const requestListItemSchema = z.object({
-  id: z.string().uuid(),
+  id: entityIdSchema,
   title: z.string(),
   requestorName: z.string(),
   department: z.string(),
@@ -48,12 +51,12 @@ export const requestSummarySchema = z.object({
 export type RequestSummary = z.infer<typeof requestSummarySchema>
 
 export const requestDetailSchema = z.object({
-  id: z.string().uuid(),
+  id: entityIdSchema,
   title: z.string(),
   requestorName: z.string(),
   requestorId: z.string(),
   department: z.string(),
-  sponsorshipTypeId: z.string().uuid(),
+  sponsorshipTypeId: entityIdSchema,
   sponsorshipTypeName: z.string(),
   eventName: z.string(),
   eventDate: z.string(),
@@ -69,7 +72,7 @@ export const requestDetailSchema = z.object({
 export type RequestDetail = z.infer<typeof requestDetailSchema>
 
 export const workflowHistoryEntrySchema = z.object({
-  id: z.string().uuid(),
+  id: entityIdSchema,
   actorId: z.string(),
   actorName: z.string(),
   fromStatus: requestStatusSchema,
@@ -81,7 +84,7 @@ export const workflowHistoryEntrySchema = z.object({
 export type WorkflowHistoryEntry = z.infer<typeof workflowHistoryEntrySchema>
 
 export const attachmentSchema = z.object({
-  id: z.string().uuid(),
+  id: entityIdSchema,
   fileName: z.string(),
   contentType: z.string(),
   sizeBytes: z.number(),

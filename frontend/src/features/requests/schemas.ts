@@ -17,7 +17,7 @@ export const requestMutationSchema = z.object({
     .min(1, 'Title is required.')
     .max(200, 'Title must be at most 200 characters.'),
   department: z.string().trim().min(1, 'Department is required.').max(120),
-  sponsorshipTypeId: z.string().uuid('Select a sponsorship type.'),
+  sponsorshipTypeId: z.coerce.number().int().positive('Select a sponsorship type.'),
   eventName: z
     .string()
     .trim()

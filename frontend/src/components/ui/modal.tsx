@@ -39,7 +39,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(26,24,48,0.45)] p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[300] flex items-center justify-center overflow-x-hidden bg-[rgba(26,24,48,0.45)] p-3 backdrop-blur-[2px] sm:p-4"
       role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -48,13 +48,13 @@ export function Modal({
       }}
     >
       <div
-        className={`w-full ${maxWidthClassName} rounded-[14px] border border-border bg-surface p-7 shadow-[0_20px_60px_rgba(26,24,48,0.2)]`}
+        className={`flex max-h-[calc(100dvh-1.5rem)] w-full min-w-0 flex-col overflow-hidden rounded-[14px] border border-border bg-surface shadow-[0_20px_60px_rgba(26,24,48,0.2)] ${maxWidthClassName}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-7 sm:py-5">
+          <div className="min-w-0">
             <h2 id="modal-title" className="text-base font-semibold text-text-primary">
               {title}
             </h2>
@@ -62,7 +62,7 @@ export function Modal({
           </div>
           <button
             type="button"
-            className="rounded p-1 text-text-hint transition-colors hover:text-text-primary"
+            className="shrink-0 rounded p-1 text-text-hint transition-colors hover:text-text-primary"
             onClick={onClose}
             aria-label="Close"
           >
@@ -70,9 +70,15 @@ export function Modal({
           </button>
         </div>
 
-        {children}
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-gutter:stable] px-5 py-4 sm:px-7 sm:py-5">
+          {children}
+        </div>
 
-        {footer ? <div className="mt-6 flex justify-end gap-2">{footer}</div> : null}
+        {footer ? (
+          <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   )

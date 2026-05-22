@@ -16,6 +16,8 @@ public sealed class SponsorshipRequestConfiguration : IEntityTypeConfiguration<S
 
         builder.HasKey(request => request.Id);
 
+        builder.Property(request => request.Id).UseIdentityByDefaultColumn();
+
         builder.Property(request => request.Title).HasMaxLength(200).IsRequired();
         builder.Property(request => request.RequestorName).HasMaxLength(200).IsRequired();
         builder.Property(request => request.RequestorId).HasMaxLength(450).IsRequired();

@@ -32,7 +32,7 @@ internal static class RequestMutationHelper
 
     public static async Task<SponsorshipType> GetActiveSponsorshipTypeAsync(
         AppDbContext dbContext,
-        Guid sponsorshipTypeId,
+        long sponsorshipTypeId,
         CancellationToken cancellationToken)
     {
         var sponsorshipType = await dbContext.SponsorshipTypes

@@ -48,7 +48,6 @@
   --color-ring: var(--color-brand-mid);
 
   --sidebar-width: 220px;
-  --topbar-height: 56px;
 }
 
 @layer base {

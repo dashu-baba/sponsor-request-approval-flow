@@ -188,10 +188,12 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SponsorshipApproval.Domain.Requests.Attachment", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("ContentType")
                         .IsRequired()
@@ -224,8 +226,8 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("size_bytes");
 
-                    b.Property<Guid>("SponsorshipRequestId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("SponsorshipRequestId")
+                        .HasColumnType("bigint")
                         .HasColumnName("sponsorship_request_id");
 
                     b.HasKey("Id")
@@ -246,10 +248,12 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SponsorshipApproval.Domain.Requests.SponsorshipRequest", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -308,8 +312,8 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("requestor_name");
 
-                    b.Property<Guid>("SponsorshipTypeId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("SponsorshipTypeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("sponsorship_type_id");
 
                     b.Property<int>("Status")
@@ -360,10 +364,12 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SponsorshipApproval.Domain.Requests.SponsorshipType", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -414,10 +420,12 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SponsorshipApproval.Domain.Requests.WorkflowHistory", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("ActorId")
                         .IsRequired()
@@ -438,8 +446,8 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("remarks");
 
-                    b.Property<Guid>("SponsorshipRequestId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("SponsorshipRequestId")
+                        .HasColumnType("bigint")
                         .HasColumnName("sponsorship_request_id");
 
                     b.Property<int>("ToStatus")
@@ -552,10 +560,12 @@ namespace SponsorshipApproval.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("SponsorshipApproval.Infrastructure.Identity.RefreshToken", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")

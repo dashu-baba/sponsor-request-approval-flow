@@ -3,7 +3,7 @@ using SponsorshipApproval.Application.Common.Storage;
 namespace SponsorshipApproval.Application.Attachments.Models;
 
 public sealed record AttachmentDto(
-    Guid Id,
+    long Id,
     string FileName,
     string ContentType,
     long SizeBytes,
