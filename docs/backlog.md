@@ -19,3 +19,7 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | B-008 | 💡 | Rate limiting on `/auth/login` and `/auth/refresh` | T1.2 review: security §15; not required for assessment MVP. | Before production exposure or abuse observed. |
 | B-009 | 💡 | Assert `WorkflowHistory` field content in integration tests (FromStatus/ToStatus/ActorId/Remarks) | T2.2 final-review Nice: row-count assertions pass but audit semantics untested. | T2.5 history endpoint work or next test hardening pass. |
 | B-010 | 💡 | Update stale comment on workflow endpoint group in `RequestEndpoints.cs` | T2.2 final-review nit: comment still says "any authenticated user" after role policies added. | Next touch of `RequestEndpoints.cs`. |
+| B-011 | 🔶 | Add integration tests for extended `GET /requests/{id}` reviewer/admin visibility | T2.5 final-review Should: manager OK on submitted; unrelated requestor → 403 on submitted (detail path). | T4.2 test hardening or next requests touch. |
+| B-012 | 🔶 | Rename `Cross_user_access_should_return_403` in `RequestCrudTests.cs` | T2.5 final-review Should: GET now expects 404 for draft cross-user; PUT still 403 — name is misleading. | Next edit of `RequestCrudTests.cs`. |
+| B-013 | 💡 | Left-join users in `GetRequestHistoryQueryHandler` so missing actor rows still appear | T2.5 final-review Nice: inner join can drop audit entries if user record missing. | Security/audit hardening pass. |
+| B-014 | 💡 | Paginate `GET /requests/{id}/history` for long audit trails | T2.5 final-review Nice: unpaginated list may grow large. | T4.1 API polish or production prep. |
