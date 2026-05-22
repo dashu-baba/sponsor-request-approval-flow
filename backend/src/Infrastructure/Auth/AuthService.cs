@@ -3,8 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
+using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence;
 
@@ -14,6 +16,8 @@ public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     AppDbContext dbContext,
     IJwtTokenService jwtTokenService,
+    IAuditService auditService,
+    ICurrentUserContext currentUser,
     ILogger<AuthService> logger) : IAuthService
 {
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> LoginAsync(
@@ -32,7 +36,7 @@ public sealed class AuthService(
             return null;
         }
 
-        return await IssueTokensAsync(user, role, cancellationToken).ConfigureAwait(false);
+        return await IssueTokensAsync(user, role, recordLoginAudit: true, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> RefreshAsync(
@@ -70,7 +74,7 @@ public sealed class AuthService(
 
         storedToken.RevokedAt = DateTimeOffset.UtcNow;
 
-        var issued = await IssueTokensAsync(user, role, cancellationToken).ConfigureAwait(false);
+        var issued = await IssueTokensAsync(user, role, recordLoginAudit: false, cancellationToken).ConfigureAwait(false);
         if (issued is null)
         {
             return null;
@@ -100,6 +104,15 @@ public sealed class AuthService(
         }
 
         storedToken.RevokedAt = DateTimeOffset.UtcNow;
+
+        auditService.Record(new AuditRecord(
+            storedToken.UserId,
+            AuditActions.AuthLogout,
+            AuditCategories.Auth,
+            AuditResourceTypes.User,
+            storedToken.UserId,
+            Summary: "Signed out"));
+
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -133,14 +146,42 @@ public sealed class AuthService(
             return UpdateProfileResult.Failed(UpdateProfileFailureReason.UserNotFound);
         }
 
-        user.DisplayName = request.DisplayName.Trim();
-        user.Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim();
+        var changedFields = new List<string>();
+        var trimmedDisplayName = request.DisplayName.Trim();
+        var trimmedDepartment = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim();
+
+        if (!string.Equals(user.DisplayName, trimmedDisplayName, StringComparison.Ordinal))
+        {
+            changedFields.Add(nameof(ApplicationUser.DisplayName));
+        }
+
+        if (!string.Equals(user.Department, trimmedDepartment, StringComparison.Ordinal))
+        {
+            changedFields.Add(nameof(ApplicationUser.Department));
+        }
+
+        user.DisplayName = trimmedDisplayName;
+        user.Department = trimmedDepartment;
 
         var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
         if (!updateResult.Succeeded)
         {
             var errors = updateResult.Errors.Select(error => error.Description).ToArray();
             return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
+        }
+
+        if (changedFields.Count > 0)
+        {
+            auditService.Record(new AuditRecord(
+                user.Id,
+                AuditActions.AuthProfileUpdated,
+                AuditCategories.Auth,
+                AuditResourceTypes.User,
+                user.Id,
+                Summary: $"Updated profile fields: {string.Join(", ", changedFields)}",
+                Metadata: new Dictionary<string, object?> { ["changedFields"] = changedFields.ToArray() }));
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
@@ -256,6 +297,22 @@ public sealed class AuthService(
             return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
         }
 
+        auditService.Record(new AuditRecord(
+            currentUser.UserId,
+            AuditActions.UserCreated,
+            AuditCategories.User,
+            AuditResourceTypes.User,
+            user.Id,
+            Summary: $"Created user {email}",
+            Metadata: new Dictionary<string, object?>
+            {
+                ["email"] = email,
+                ["role"] = request.Role,
+                ["displayName"] = user.DisplayName,
+            }));
+
+        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
         return CreateUserResult.Success(MapSummary(user, request.Role));
     }
 
@@ -310,6 +367,14 @@ public sealed class AuthService(
                 CreatedAt = DateTimeOffset.UtcNow,
                 ExpiresAt = refreshTokenExpiresAt,
             });
+
+            auditService.Record(new AuditRecord(
+                reloadedUser.Id,
+                AuditActions.AuthPasswordChanged,
+                AuditCategories.Auth,
+                AuditResourceTypes.User,
+                reloadedUser.Id,
+                Summary: "Changed password"));
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -373,6 +438,7 @@ public sealed class AuthService(
     private async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> IssueTokensAsync(
         ApplicationUser user,
         string role,
+        bool recordLoginAudit,
         CancellationToken cancellationToken)
     {
         var accessTokenExpiresAt = jwtTokenService.GetAccessTokenExpiry();
@@ -393,6 +459,17 @@ public sealed class AuthService(
             CreatedAt = DateTimeOffset.UtcNow,
             ExpiresAt = refreshTokenExpiresAt,
         });
+
+        if (recordLoginAudit)
+        {
+            auditService.Record(new AuditRecord(
+                user.Id,
+                AuditActions.AuthLogin,
+                AuditCategories.Auth,
+                AuditResourceTypes.User,
+                user.Id,
+                Summary: "Signed in"));
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

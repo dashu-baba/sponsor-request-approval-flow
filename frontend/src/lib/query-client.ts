@@ -27,4 +27,8 @@ export const queryKeys = {
   users: {
     list: ['users', 'list'] as const,
   },
+  audit: {
+    list: (page: number, action: string, category: string, requestId: string) =>
+      ['audit', 'list', page, action, category, requestId] as const,
+  },
 }

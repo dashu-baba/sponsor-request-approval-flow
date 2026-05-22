@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.SponsorshipTypes.Commands;
+using SponsorshipApproval.Application.Tests.TestDoubles;
 using SponsorshipApproval.Domain.Requests;
 using SponsorshipApproval.Infrastructure.Persistence;
 using SponsorshipApproval.Infrastructure.SponsorshipTypes.Handlers;
@@ -55,7 +56,10 @@ public sealed class SponsorshipTypeHandlerTests
         dbContext.SponsorshipRequests.Add(request);
         await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
 
-        var handler = new DeleteSponsorshipTypeCommandHandler(dbContext, new TestCurrentUserContext());
+        var handler = new DeleteSponsorshipTypeCommandHandler(
+            dbContext,
+            new TestCurrentUserContext(),
+            new NoOpAuditService());
 
         await handler
             .Handle(new DeleteSponsorshipTypeCommand(type.Id), TestContext.Current.CancellationToken)

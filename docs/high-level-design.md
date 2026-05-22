@@ -90,7 +90,8 @@ Domain depends on nothing. Application defines interfaces; Infrastructure implem
 | `User` / `Role` | Identity-managed; roles: Requestor, Manager, FinanceAdmin, SystemAdmin. |
 | `SponsorshipRequest` | Title, RequestorName, Department, SponsorshipTypeId, EventName, EventDate, RequestedAmount (`decimal`), Purpose, ExpectedBenefit?, Remarks?, Status, RequestorId, timestamps, **concurrency token** (Postgres `xmin`). |
 | `SponsorshipType` | Lookup; managed by SystemAdmin. |
-| `WorkflowHistory` | RequestId, ActorId, FromStatus, ToStatus, Remarks, OccurredAt (immutable audit). |
+| `WorkflowHistory` | RequestId, ActorId, FromStatus, ToStatus, Remarks, OccurredAt (immutable workflow trail — D1). |
+| `AuditEvent` | OccurredAt, ActorId, Action, Category, ResourceType, ResourceId, Summary, Metadata (jsonb) — SystemAdmin audit (D2); isolated from `WorkflowHistory`. |
 | `Attachment` | RequestId, ObjectKey (MinIO), FileName, ContentType, SizeBytes. |
 
 Amounts use C# `decimal` mapped to Postgres **`numeric(18,2)`** — **never** the Postgres `money`
@@ -153,6 +154,7 @@ Two enforcement layers:
 | POST | `/requests/{id}/submit` · `/cancel` | Requestor (owner) |
 | POST | `/requests/{id}/approve` · `/reject` | Manager / FinanceAdmin (by stage) |
 | GET | `/requests/{id}/history` | owner / reviewer / SystemAdmin |
+| GET | `/audit` | SystemAdmin (paginated admin audit — D2) |
 | POST | `/requests/{id}/attachments` | Requestor (owner) |
 | GET/POST/PUT/DELETE | `/sponsorship-types` | SystemAdmin |
 
@@ -258,7 +260,8 @@ mapping; if the client revises a clarification item, update it here too.
 | C4 | **Event Date must be today or later** at submission. | Validator on submit. |
 | C5 | **Multiple attachments** allowed; common types (pdf/doc/docx/images); per-file cap (e.g. 10 MB); upload optional. | Upload endpoint validation + MinIO. |
 | C6 | **Reviewers cannot edit request field values** — only approve/reject + remarks. | No reviewer edit path; §7 RBAC. |
-| D1 | **Audit = immutable status-transition trail** (actor, from, to, remarks, timestamp); no field-level diffing. | `WorkflowHistory` (§5) appended on every transition (§6). |
+| D1 | **Workflow history = immutable status-transition trail** (actor, from, to, remarks, timestamp); no field-level diffing. | `WorkflowHistory` (§5) appended on every transition (§6). |
+| D2 | **Admin audit = separate SystemAdmin-only trail** for non-workflow mutating actions; isolated from D1; workflow transitions excluded. | `AuditEvent` + `GET /audit` (§8); `IAuditService` in handlers. |
 
 **Out of scope** (confirmed): email/real-time notifications, multi-tenancy / org hierarchy,
 amount-based approval tiers, rework/send-back loops, multi-currency, public self-registration,

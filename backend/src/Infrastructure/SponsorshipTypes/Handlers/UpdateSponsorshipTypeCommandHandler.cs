@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.SponsorshipTypes.Commands;
@@ -8,7 +9,10 @@ using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Infrastructure.SponsorshipTypes.Handlers;
 
-public sealed class UpdateSponsorshipTypeCommandHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+public sealed class UpdateSponsorshipTypeCommandHandler(
+    AppDbContext dbContext,
+    ICurrentUserContext currentUser,
+    IAuditService auditService)
     : IRequestHandler<UpdateSponsorshipTypeCommand, SponsorshipTypeDto>
 {
     public async Task<SponsorshipTypeDto> Handle(
@@ -33,6 +37,15 @@ public sealed class UpdateSponsorshipTypeCommandHandler(AppDbContext dbContext, 
         sponsorshipType.Description = CreateSponsorshipTypeCommandHandler.NormalizeDescription(command.Body.Description);
         sponsorshipType.UpdatedAt = DateTimeOffset.UtcNow;
         sponsorshipType.UpdatedBy = currentUser.UserId;
+
+        auditService.Record(new AuditRecord(
+            currentUser.UserId,
+            AuditActions.SponsorshipTypeUpdated,
+            AuditCategories.SponsorshipType,
+            AuditResourceTypes.SponsorshipType,
+            sponsorshipType.Id.ToString(),
+            Summary: $"Updated sponsorship type {name}",
+            Metadata: new Dictionary<string, object?> { ["name"] = name }));
 
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
