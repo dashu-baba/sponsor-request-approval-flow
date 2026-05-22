@@ -188,6 +188,64 @@ public sealed class AuthService(
         return ChangePasswordResult.Failed(ChangePasswordFailureReason.SessionRefreshFailed);
     }
 
+    public async Task<IReadOnlyList<UserSummaryResponse>> ListUsersAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var summaries = await (
+                from user in dbContext.Users.AsNoTracking()
+                join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
+                join role in dbContext.Roles on userRole.RoleId equals role.Id
+                orderby user.Email
+                select new UserSummaryResponse(
+                    user.Id,
+                    user.Email ?? string.Empty,
+                    user.DisplayName,
+                    user.Department,
+                    role.Name ?? string.Empty))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return summaries;
+    }
+
+    public async Task<CreateUserResult> CreateUserAsync(
+        CreateUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var email = request.Email.Trim();
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            DisplayName = request.DisplayName.Trim(),
+            Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim(),
+            EmailConfirmed = true,
+        };
+
+        var createResult = await userManager.CreateAsync(user, request.InitialPassword).ConfigureAwait(false);
+        if (!createResult.Succeeded)
+        {
+            if (createResult.Errors.Any(error =>
+                    error.Code is "DuplicateUserName" or "DuplicateEmail"))
+            {
+                return CreateUserResult.Failed(CreateUserFailureReason.DuplicateEmail);
+            }
+
+            var policyErrors = createResult.Errors.Select(error => error.Description).ToArray();
+            return CreateUserResult.Failed(CreateUserFailureReason.PolicyViolation, policyErrors);
+        }
+
+        var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
+        if (!roleResult.Succeeded)
+        {
+            await userManager.DeleteAsync(user).ConfigureAwait(false);
+            return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
+        }
+
+        _ = cancellationToken;
+        return CreateUserResult.Success(MapSummary(user, request.Role));
+    }
+
     private async Task<(bool Succeeded, LoginResponse? Response, string? RawRefreshToken, DateTimeOffset? RefreshTokenExpiresAt)> RevokeAllRefreshTokensAndIssueAsync(
         ApplicationUser user,
         CancellationToken cancellationToken)
@@ -268,7 +326,18 @@ public sealed class AuthService(
         return await userManager.FindByIdAsync(userId).ConfigureAwait(false);
     }
 
-    private static UserProfileResponse MapProfile(ApplicationUser user, string role) =>
+    private static UserProfileResponse MapProfile(ApplicationUser user, string role)
+    {
+        var summary = MapSummary(user, role);
+        return new UserProfileResponse(
+            summary.Id,
+            summary.Email,
+            summary.DisplayName,
+            summary.Department,
+            summary.Role);
+    }
+
+    private static UserSummaryResponse MapSummary(ApplicationUser user, string role) =>
         new(
             user.Id,
             user.Email ?? string.Empty,

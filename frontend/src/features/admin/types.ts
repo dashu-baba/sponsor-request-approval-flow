@@ -1,3 +1,7 @@
+import type { z } from 'zod'
+
+import type { createUserSchema, userSummarySchema } from '@/features/admin/schemas'
+
 export type RequestStatus =
   | 'Draft'
   | 'PendingManagerApproval'
@@ -58,3 +62,9 @@ export interface SponsorshipTypeMutation {
   name: string
   description: string | null
 }
+
+export type UserSummary = z.infer<typeof userSummarySchema>
+
+export type CreateUserInput = z.input<typeof createUserSchema>
+
+export type CreateUserValues = z.output<typeof createUserSchema>

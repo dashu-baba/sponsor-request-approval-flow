@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { Roles } from '@/lib/roles'
 import { entityIdSchema } from '@/lib/schemas/requests'
 
 const requestStatusSchema = z.enum([
@@ -69,4 +70,34 @@ export const sponsorshipTypeMutationSchema = z.object({
     .trim()
     .max(500)
     .transform((value) => (value.length > 0 ? value : null)),
+})
+
+const roleSchema = z.enum([Roles.Requestor, Roles.Manager, Roles.FinanceAdmin, Roles.SystemAdmin])
+
+export const userSummarySchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string(),
+  department: z.string().nullable(),
+  role: roleSchema,
+})
+
+export const usersSchema = z.array(userSummarySchema)
+
+export const createUserSchema = z.object({
+  email: z.string().trim().min(1, 'Email is required').email('Enter a valid email address'),
+  displayName: z.string().trim().min(1, 'Display name is required').max(120),
+  department: z
+    .string()
+    .trim()
+    .max(120)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
+  role: roleSchema,
+  initialPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[a-z]/, 'Password must include a lowercase letter')
+    .regex(/[A-Z]/, 'Password must include an uppercase letter')
+    .regex(/\d/, 'Password must include a digit'),
 })
