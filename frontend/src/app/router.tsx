@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import { AppShell } from '@/app/layout/AppShell'
 import { LoadingState } from '@/components/states/query-states'
-import { ProfileStubPage } from '@/features/account/ProfileStubPage'
+import { ProfilePage } from '@/features/account/ProfilePage'
 import { AdminRequestLegacyRedirect } from '@/features/admin/AdminRequestLegacyRedirect'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { adminOnly } from '@/features/auth/route-policy'
@@ -51,7 +51,7 @@ export const router = createBrowserRouter([
             element: lazyPage(createElement(adminRequestDetailPage)),
           },
           { path: 'dev/ui-states', element: <UiStatesDemoPage /> },
-          { path: 'profile', element: <ProfileStubPage /> },
+          { path: 'profile', element: <ProfilePage /> },
           { path: 'admin/requests', element: <Navigate to="/dashboard" replace /> },
           { path: 'admin/requests/:id', element: <AdminRequestLegacyRedirect /> },
           {

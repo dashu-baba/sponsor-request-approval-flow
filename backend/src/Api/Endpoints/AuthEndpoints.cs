@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FluentValidation;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
 
@@ -14,9 +15,13 @@ public static class AuthEndpoints
         auth.MapPost("/refresh", RefreshAsync);
         auth.MapPost("/logout", LogoutAsync);
 
-        app.MapGet("/me", GetMeAsync)
+        var me = app.MapGroup("/me")
             .RequireAuthorization()
             .WithTags("Auth");
+
+        me.MapGet("", GetMeAsync);
+        me.MapPut("/profile", UpdateProfileAsync);
+        me.MapPut("/password", ChangePasswordAsync);
 
         return app;
     }
@@ -104,6 +109,74 @@ public static class AuthEndpoints
         }
 
         return TypedResults.Ok(profile);
+    }
+
+    private static async Task<IResult> UpdateProfileAsync(
+        UpdateProfileRequest request,
+        IValidator<UpdateProfileRequest> validator,
+        IAuthService authService,
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await validator.ValidateAsync(request, cancellationToken).ConfigureAwait(false);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        var profile = await authService.UpdateProfileAsync(user, request, cancellationToken).ConfigureAwait(false);
+        if (profile is null)
+        {
+            return TypedResults.Problem(
+                title: "Unauthorized",
+                detail: "The access token is invalid.",
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
+
+        return TypedResults.Ok(profile);
+    }
+
+    private static async Task<IResult> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        IValidator<ChangePasswordRequest> validator,
+        IAuthService authService,
+        ClaimsPrincipal user,
+        HttpContext httpContext,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await validator.ValidateAsync(request, cancellationToken).ConfigureAwait(false);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        var result = await authService.ChangePasswordAsync(user, request, cancellationToken).ConfigureAwait(false);
+        if (result.Succeeded)
+        {
+            AppendRefreshTokenCookie(
+                httpContext.Response,
+                result.RawRefreshToken!,
+                result.RefreshTokenExpiresAt!.Value,
+                environment);
+            return TypedResults.Ok(result.Response);
+        }
+
+        return result.FailureReason switch
+        {
+            ChangePasswordFailureReason.WrongCurrentPassword => TypedResults.Problem(
+                title: "Invalid password change request",
+                detail: "Current password is incorrect.",
+                statusCode: StatusCodes.Status400BadRequest),
+            ChangePasswordFailureReason.PolicyViolation => TypedResults.Problem(
+                title: "Invalid password change request",
+                detail: string.Join(' ', result.PolicyErrors ?? []),
+                statusCode: StatusCodes.Status400BadRequest),
+            _ => TypedResults.Problem(
+                title: "Unauthorized",
+                detail: "The access token is invalid.",
+                statusCode: StatusCodes.Status401Unauthorized),
+        };
     }
 
     private static void AppendRefreshTokenCookie(

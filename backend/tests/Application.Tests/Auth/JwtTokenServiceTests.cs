@@ -30,7 +30,8 @@ public sealed class JwtTokenServiceTests
             "user-123",
             "user@example.com",
             "Test User",
-            Roles.Manager);
+            Roles.Manager,
+            "test-security-stamp");
 
         token.Should().NotBeNullOrWhiteSpace();
 
@@ -52,6 +53,7 @@ public sealed class JwtTokenServiceTests
         var principal = handler.ValidateToken(token, validationParameters, out _);
         principal.FindFirstValue(ClaimTypes.Role).Should().Be(Roles.Manager);
         principal.FindFirstValue(JwtRegisteredClaimNames.Sub).Should().Be("user-123");
+        principal.FindFirstValue(AuthConstants.SecurityStampClaimType).Should().Be("test-security-stamp");
     }
 
     [Fact]
