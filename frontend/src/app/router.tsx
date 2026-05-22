@@ -22,6 +22,11 @@ const sponsorshipTypesPage = lazy(() =>
     default: module.SponsorshipTypesPage,
   })),
 )
+const usersPage = lazy(() =>
+  import('@/features/admin/UsersPage').then((module) => ({
+    default: module.UsersPage,
+  })),
+)
 
 function lazyPage(page: ReactNode) {
   return (
@@ -60,6 +65,10 @@ export const router = createBrowserRouter([
               {
                 path: 'admin/sponsorship-types',
                 element: lazyPage(createElement(sponsorshipTypesPage)),
+              },
+              {
+                path: 'admin/users',
+                element: lazyPage(createElement(usersPage)),
               },
             ],
           },

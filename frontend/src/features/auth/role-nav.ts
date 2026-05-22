@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Pencil,
   Settings2,
+  Users,
   XCircle,
   type LucideIcon,
 } from 'lucide-react'
@@ -72,7 +73,10 @@ export function getNavSections(role: Role): NavSectionConfig[] {
         overview,
         {
           label: 'Administration',
-          items: [{ label: 'Sponsorship Types', to: '/admin/sponsorship-types', icon: Settings2 }],
+          items: [
+            { label: 'Sponsorship Types', to: '/admin/sponsorship-types', icon: Settings2 },
+            { label: 'Users', to: '/admin/users', icon: Users },
+          ],
         },
       ]
     default:

@@ -24,4 +24,7 @@ export const queryKeys = {
   sponsorshipTypes: {
     list: ['sponsorship-types', 'list'] as const,
   },
+  users: {
+    list: ['users', 'list'] as const,
+  },
 }

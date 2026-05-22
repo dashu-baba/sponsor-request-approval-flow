@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
 using SponsorshipApproval.Infrastructure.Identity;
@@ -12,7 +13,8 @@ namespace SponsorshipApproval.Infrastructure.Auth;
 public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     AppDbContext dbContext,
-    IJwtTokenService jwtTokenService) : IAuthService
+    IJwtTokenService jwtTokenService,
+    ILogger<AuthService> logger) : IAuthService
 {
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> LoginAsync(
         LoginRequest request,
@@ -188,6 +190,75 @@ public sealed class AuthService(
         return ChangePasswordResult.Failed(ChangePasswordFailureReason.SessionRefreshFailed);
     }
 
+    public async Task<IReadOnlyList<UserSummaryResponse>> ListUsersAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var summaries = await dbContext.Users
+            .AsNoTracking()
+            .OrderBy(user => user.Email)
+            .Select(user => new UserSummaryResponse(
+                user.Id,
+                user.Email ?? string.Empty,
+                user.DisplayName,
+                user.Department,
+                (
+                    from userRole in dbContext.UserRoles
+                    where userRole.UserId == user.Id
+                    join role in dbContext.Roles on userRole.RoleId equals role.Id
+                    orderby role.Name
+                    select role.Name ?? string.Empty
+                ).FirstOrDefault() ?? "(none)"))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return summaries;
+    }
+
+    public async Task<CreateUserResult> CreateUserAsync(
+        CreateUserRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var email = request.Email.Trim();
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            DisplayName = request.DisplayName.Trim(),
+            Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim(),
+            EmailConfirmed = true,
+        };
+
+        var createResult = await userManager.CreateAsync(user, request.InitialPassword).ConfigureAwait(false);
+        if (!createResult.Succeeded)
+        {
+            if (createResult.Errors.Any(error =>
+                    error.Code is "DuplicateUserName" or "DuplicateEmail"))
+            {
+                return CreateUserResult.Failed(CreateUserFailureReason.DuplicateEmail);
+            }
+
+            var policyErrors = createResult.Errors.Select(error => error.Description).ToArray();
+            return CreateUserResult.Failed(CreateUserFailureReason.PolicyViolation, policyErrors);
+        }
+
+        var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
+        if (!roleResult.Succeeded)
+        {
+            var deleteResult = await userManager.DeleteAsync(user).ConfigureAwait(false);
+            if (!deleteResult.Succeeded)
+            {
+                logger.LogWarning(
+                    "Failed to delete user {UserId} after role assignment failure: {Errors}",
+                    user.Id,
+                    string.Join(", ", deleteResult.Errors.Select(error => error.Description)));
+            }
+
+            return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
+        }
+
+        return CreateUserResult.Success(MapSummary(user, request.Role));
+    }
+
     private async Task<(bool Succeeded, LoginResponse? Response, string? RawRefreshToken, DateTimeOffset? RefreshTokenExpiresAt)> RevokeAllRefreshTokensAndIssueAsync(
         ApplicationUser user,
         CancellationToken cancellationToken)
@@ -268,7 +339,18 @@ public sealed class AuthService(
         return await userManager.FindByIdAsync(userId).ConfigureAwait(false);
     }
 
-    private static UserProfileResponse MapProfile(ApplicationUser user, string role) =>
+    private static UserProfileResponse MapProfile(ApplicationUser user, string role)
+    {
+        var summary = MapSummary(user, role);
+        return new UserProfileResponse(
+            summary.Id,
+            summary.Email,
+            summary.DisplayName,
+            summary.Department,
+            summary.Role);
+    }
+
+    private static UserSummaryResponse MapSummary(ApplicationUser user, string role) =>
         new(
             user.Id,
             user.Email ?? string.Empty,
