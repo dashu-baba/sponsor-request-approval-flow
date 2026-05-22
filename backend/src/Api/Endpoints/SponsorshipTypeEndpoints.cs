@@ -17,7 +17,10 @@ public static class SponsorshipTypeEndpoints
         sponsorshipTypes.MapGet("/", ListAsync);
         sponsorshipTypes.MapPost("/", CreateAsync);
         sponsorshipTypes.MapPut("/{id:guid}", UpdateAsync);
-        sponsorshipTypes.MapDelete("/{id:guid}", DeleteAsync);
+        sponsorshipTypes.MapDelete("/{id:guid}", DeleteAsync)
+            .WithSummary("Soft-delete a sponsorship type")
+            .WithDescription(
+                "Sets IsActive=false. Referenced requests are preserved; new requests cannot select this type.");
 
         return app;
     }

@@ -20,7 +20,9 @@ public sealed class SponsorshipTypeConfiguration : IEntityTypeConfiguration<Spon
         builder.Property(type => type.UpdatedAt).HasColumnType("timestamp with time zone");
         builder.Property(type => type.UpdatedBy).HasMaxLength(450);
 
-        builder.HasIndex(type => type.Name).IsUnique();
+        builder.HasIndex(type => type.Name)
+            .IsUnique()
+            .HasFilter("is_active = true");
         builder.HasIndex(type => type.IsActive);
     }
 }

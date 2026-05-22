@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SponsorshipApproval.Api.IntegrationTests.Infrastructure;
 using SponsorshipApproval.Application.Auth.Models;
 using SponsorshipApproval.Application.SponsorshipTypes.Models;
+using SponsorshipApproval.Domain.Requests;
 using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Api.IntegrationTests.SponsorshipTypes;
@@ -15,8 +16,6 @@ namespace SponsorshipApproval.Api.IntegrationTests.SponsorshipTypes;
 public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory factory)
     : IClassFixture<PostgresWebApplicationFactory>
 {
-    private static readonly Guid ReferencedConferenceTypeId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1");
-
     [Fact]
     public async Task Admin_can_create_list_update_and_delete_sponsorship_type()
     {
@@ -85,16 +84,30 @@ public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory fact
     }
 
     [Fact]
-    public async Task Non_admin_should_be_forbidden()
+    public async Task Non_admin_should_be_forbidden_for_all_crud_endpoints()
     {
         using var client = await CreateAuthenticatedClientAsync(SeedCredentials.RequestorEmail, SeedCredentials.Password)
             .ConfigureAwait(true);
+        var id = Guid.NewGuid();
+        var body = new SponsorshipTypeMutationBody("Forbidden Type", "A requestor cannot manage types.");
 
-        using var response = await client
+        using var getResponse = await client
             .GetAsync("/sponsorship-types", TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
+        using var postResponse = await client
+            .PostAsJsonAsync("/sponsorship-types", body, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        using var putResponse = await client
+            .PutAsJsonAsync($"/sponsorship-types/{id}", body, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        using var deleteResponse = await client
+            .DeleteAsync($"/sponsorship-types/{id}", TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        getResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        postResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        putResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -135,13 +148,51 @@ public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory fact
     }
 
     [Fact]
+    public async Task Recreate_after_soft_delete_should_succeed_with_same_name()
+    {
+        using var client = await CreateAuthenticatedClientAsync(SeedCredentials.AdminEmail, SeedCredentials.Password)
+            .ConfigureAwait(true);
+        var name = $"Recreate Test Type {Guid.NewGuid():N}";
+        var body = new SponsorshipTypeMutationBody(name, "Original record.");
+
+        using var createResponse = await client
+            .PostAsJsonAsync("/sponsorship-types", body, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content
+            .ReadFromJsonAsync<SponsorshipTypeDto>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        using var deleteResponse = await client
+            .DeleteAsync($"/sponsorship-types/{created!.Id}", TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var recreateResponse = await client
+            .PostAsJsonAsync(
+                "/sponsorship-types",
+                body with { Description = "Replacement active record." },
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        recreateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var recreated = await recreateResponse.Content
+            .ReadFromJsonAsync<SponsorshipTypeDto>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        recreated!.Id.Should().NotBe(created.Id);
+        recreated.Name.Should().Be(name);
+        recreated.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Delete_referenced_type_should_soft_disable_and_preserve_requests()
     {
         using var client = await CreateAuthenticatedClientAsync(SeedCredentials.AdminEmail, SeedCredentials.Password)
             .ConfigureAwait(true);
+        var (typeId, requestId) = await CreateReferencedTypeAsync().ConfigureAwait(true);
 
         using var response = await client
-            .DeleteAsync($"/sponsorship-types/{ReferencedConferenceTypeId}", TestContext.Current.CancellationToken)
+            .DeleteAsync($"/sponsorship-types/{typeId}", TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -150,16 +201,74 @@ public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory fact
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var type = await dbContext.SponsorshipTypes
             .AsNoTracking()
-            .SingleAsync(entity => entity.Id == ReferencedConferenceTypeId, TestContext.Current.CancellationToken)
+            .SingleAsync(entity => entity.Id == typeId, TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
-        var referencingRequests = await dbContext.SponsorshipRequests
-            .CountAsync(
-                request => request.SponsorshipTypeId == ReferencedConferenceTypeId,
-                TestContext.Current.CancellationToken)
+        var referencingRequest = await dbContext.SponsorshipRequests
+            .AsNoTracking()
+            .SingleOrDefaultAsync(request => request.Id == requestId, TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
 
         type.IsActive.Should().BeFalse();
-        referencingRequests.Should().BeGreaterThan(0);
+        referencingRequest.Should().NotBeNull();
+        referencingRequest!.SponsorshipTypeId.Should().Be(typeId);
+    }
+
+    [Fact]
+    public async Task Update_and_delete_unknown_ids_should_return_404()
+    {
+        using var client = await CreateAuthenticatedClientAsync(SeedCredentials.AdminEmail, SeedCredentials.Password)
+            .ConfigureAwait(true);
+        var missingId = Guid.NewGuid();
+
+        using var updateResponse = await client
+            .PutAsJsonAsync(
+                $"/sponsorship-types/{missingId}",
+                new SponsorshipTypeMutationBody("Missing Type", "Missing."),
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        using var deleteResponse = await client
+            .DeleteAsync($"/sponsorship-types/{missingId}", TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        updateResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    private async Task<(Guid TypeId, Guid RequestId)> CreateReferencedTypeAsync()
+    {
+        var typeId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+
+        using var scope = factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        dbContext.SponsorshipTypes.Add(new SponsorshipType
+        {
+            Id = typeId,
+            Name = $"Referenced Test Type {typeId:N}",
+            Description = "Dedicated type for referenced-delete testing.",
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedBy = SeedUserIds.Admin,
+        });
+        dbContext.SponsorshipRequests.Add(new SponsorshipRequest
+        {
+            Id = requestId,
+            Title = "Referenced type test request",
+            RequestorName = "Integration Requestor",
+            RequestorId = SeedUserIds.Requestor,
+            Department = "Engineering",
+            SponsorshipTypeId = typeId,
+            EventName = "Referenced Type Event",
+            EventDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30)),
+            RequestedAmount = 1000m,
+            Purpose = "Verify delete preserves referencing requests.",
+            Status = RequestStatus.Draft,
+            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedBy = SeedUserIds.Requestor,
+        });
+
+        await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+        return (typeId, requestId);
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email, string password)
@@ -186,5 +295,12 @@ public sealed class SponsorshipTypeAdminTests(PostgresWebApplicationFactory fact
         public const string RequestorEmail = "requestor@demo.local";
 
         public const string Password = "Password1!";
+    }
+
+    private static class SeedUserIds
+    {
+        public const string Admin = "seed-admin";
+
+        public const string Requestor = "seed-requestor";
     }
 }
