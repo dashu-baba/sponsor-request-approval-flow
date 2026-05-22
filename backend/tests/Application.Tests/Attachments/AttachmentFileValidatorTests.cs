@@ -18,6 +18,17 @@ public sealed class AttachmentFileValidatorTests
     }
 
     [Fact]
+    public void ValidateAndResolveExtension_should_preserve_validated_jpeg_extension()
+    {
+        var extension = AttachmentFileValidator.ValidateAndResolveExtension(
+            "photo.jpeg",
+            "image/jpeg",
+            1024);
+
+        extension.Should().Be(".jpeg");
+    }
+
+    [Fact]
     public void ValidateAndResolveExtension_should_reject_oversize_files()
     {
         var action = () => AttachmentFileValidator.ValidateAndResolveExtension(

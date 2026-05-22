@@ -109,6 +109,100 @@ public sealed class AttachmentTests(PostgresWebApplicationFactory factory)
     }
 
     [Fact]
+    public async Task Non_owner_list_and_download_should_return_403()
+    {
+        await CreateUserAsync("attachment-list-owner-a@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+        await CreateUserAsync("attachment-list-owner-b@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+
+        using var ownerClient = await CreateAuthenticatedClientAsync("attachment-list-owner-a@test.local", "Password1!")
+            .ConfigureAwait(true);
+        using var otherClient = await CreateAuthenticatedClientAsync("attachment-list-owner-b@test.local", "Password1!")
+            .ConfigureAwait(true);
+
+        var requestId = await CreateDraftRequestAsync(ownerClient).ConfigureAwait(true);
+
+        using var uploadResponse = await UploadPdfAsync(ownerClient, requestId, MinimalPdfBytes, "supporting-doc.pdf")
+            .ConfigureAwait(true);
+        uploadResponse.EnsureSuccessStatusCode();
+
+        var uploaded = await uploadResponse.Content
+            .ReadFromJsonAsync<AttachmentDto>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        using var listResponse = await otherClient
+            .GetAsync($"/requests/{requestId}/attachments", TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        listResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        using var downloadResponse = await otherClient
+            .GetAsync($"/requests/{requestId}/attachments/{uploaded!.Id}", TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        downloadResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Upload_to_non_draft_request_should_return_409()
+    {
+        using var client = await CreateAuthenticatedClientAsync(SeedCredentials.RequestorEmail, SeedCredentials.Password)
+            .ConfigureAwait(true);
+
+        using var uploadResponse = await UploadPdfAsync(
+                client,
+                SeedCredentials.PendingManagerRequestId,
+                MinimalPdfBytes,
+                "late-upload.pdf")
+            .ConfigureAwait(true);
+
+        uploadResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Mismatched_magic_bytes_should_return_400_problem_details()
+    {
+        await CreateUserAsync("attachment-magic@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+
+        using var client = await CreateAuthenticatedClientAsync("attachment-magic@test.local", "Password1!")
+            .ConfigureAwait(true);
+
+        var requestId = await CreateDraftRequestAsync(client).ConfigureAwait(true);
+
+        using var uploadResponse = await UploadPdfAsync(
+                client,
+                requestId,
+                [0x00, 0x01, 0x02, 0x03, 0x04],
+                "fake.pdf")
+            .ConfigureAwait(true);
+
+        uploadResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var problem = await uploadResponse.Content
+            .ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        problem!.Title.Should().Be("Validation failed");
+    }
+
+    [Fact]
+    public async Task Missing_file_field_should_return_400()
+    {
+        await CreateUserAsync("attachment-missing-file@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+
+        using var client = await CreateAuthenticatedClientAsync("attachment-missing-file@test.local", "Password1!")
+            .ConfigureAwait(true);
+
+        var requestId = await CreateDraftRequestAsync(client).ConfigureAwait(true);
+
+        using var response = await client
+            .PostAsync(
+                $"/requests/{requestId}/attachments",
+                new MultipartFormDataContent(),
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Invalid_content_type_should_return_400_problem_details()
     {
         await CreateUserAsync("attachment-invalid@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
@@ -214,5 +308,15 @@ public sealed class AttachmentTests(PostgresWebApplicationFactory factory)
 
         var roleResult = await userManager.AddToRoleAsync(user, role).ConfigureAwait(true);
         roleResult.Succeeded.Should().BeTrue(string.Join(", ", roleResult.Errors.Select(error => error.Description)));
+    }
+
+    private static class SeedCredentials
+    {
+        public const string RequestorEmail = "requestor@demo.local";
+
+        public const string Password = "Password1!";
+
+        public static readonly Guid PendingManagerRequestId =
+            Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2");
     }
 }

@@ -59,7 +59,15 @@ public sealed class MinioObjectStorage(IAmazonS3 s3Client, IOptions<MinioOptions
         return new ObjectStorageObject(
             response.ResponseStream,
             contentType,
-            response.ContentLength);
+            response.ContentLength,
+            response);
+    }
+
+    public async Task DeleteAsync(string objectKey, CancellationToken cancellationToken)
+    {
+        await s3Client
+            .DeleteObjectAsync(_options.BucketName, objectKey, cancellationToken)
+            .ConfigureAwait(false);
     }
 }
 

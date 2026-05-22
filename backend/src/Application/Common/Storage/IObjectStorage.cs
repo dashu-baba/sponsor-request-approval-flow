@@ -11,15 +11,31 @@ public interface IObjectStorage
         CancellationToken cancellationToken);
 
     Task<ObjectStorageObject> GetAsync(string objectKey, CancellationToken cancellationToken);
+
+    Task DeleteAsync(string objectKey, CancellationToken cancellationToken);
 }
 
-public sealed class ObjectStorageObject(Stream content, string contentType, long contentLength) : IDisposable
+public sealed class ObjectStorageObject : IDisposable
 {
-    public Stream Content { get; } = content;
+    private readonly IDisposable? _ownedResource;
 
-    public string ContentType { get; } = contentType;
+    public ObjectStorageObject(
+        Stream content,
+        string contentType,
+        long contentLength,
+        IDisposable? ownedResource = null)
+    {
+        Content = content;
+        ContentType = contentType;
+        ContentLength = contentLength;
+        _ownedResource = ownedResource;
+    }
 
-    public long ContentLength { get; } = contentLength;
+    public Stream Content { get; }
 
-    public void Dispose() => Content.Dispose();
+    public string ContentType { get; }
+
+    public long ContentLength { get; }
+
+    public void Dispose() => _ownedResource?.Dispose();
 }

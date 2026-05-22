@@ -23,7 +23,7 @@ public static class AttachmentEndpoints
         IMediator mediator,
         CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        if (file is null || file.Length == 0)
         {
             return TypedResults.Problem(
                 title: "Validation failed",

@@ -30,6 +30,7 @@ public sealed class UploadAttachmentCommandHandler(
         }
 
         RequestMutationHelper.EnsureOwner(request, currentUser.UserId);
+        RequestMutationHelper.EnsureDraft(request);
 
         var extension = AttachmentFileValidator.ValidateAndResolveExtension(
             command.FileName,
@@ -61,7 +62,16 @@ public sealed class UploadAttachmentCommandHandler(
         };
 
         dbContext.Attachments.Add(attachment);
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await objectStorage.DeleteAsync(objectKey, cancellationToken).ConfigureAwait(false);
+            throw;
+        }
 
         return new AttachmentDto(
             attachment.Id,

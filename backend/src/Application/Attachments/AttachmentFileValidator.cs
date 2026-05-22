@@ -32,7 +32,7 @@ public static class AttachmentFileValidator
             throw CreateValidationException("File extension is not allowed for the declared content type.");
         }
 
-        return allowedExtensions[0];
+        return extension.ToLowerInvariant();
     }
 
     public static async Task ValidateContentSignatureAsync(
