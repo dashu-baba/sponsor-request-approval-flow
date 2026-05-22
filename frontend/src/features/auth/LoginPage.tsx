@@ -47,53 +47,36 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-page">
-      <section className="relative hidden w-[420px] shrink-0 flex-col justify-center gap-12 overflow-hidden bg-brand p-12 text-white lg:flex">
-        <div className="pointer-events-none absolute -top-36 -right-36 h-[420px] w-[420px] rounded-full bg-white/5" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-white/[0.04]" />
-        <div className="pointer-events-none absolute top-1/2 -right-20 h-60 w-60 -translate-y-1/2 rounded-full border border-white/10" />
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-brand px-6 py-12 text-white">
+      <div className="pointer-events-none absolute -top-36 -right-36 h-[420px] w-[420px] rounded-full bg-white/5" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-white/[0.04]" />
+      <div className="pointer-events-none absolute top-1/2 -left-20 h-60 w-60 -translate-y-1/2 rounded-full border border-white/10" />
+      <div className="pointer-events-none absolute right-[10%] bottom-[15%] h-40 w-40 rounded-full border border-white/[0.08]" />
 
-        <div className="relative flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-white/15 text-lg">
-            ◈
-          </div>
-          <div className="text-xl font-semibold tracking-tight">
-            Spon<span className="font-light opacity-60">Track</span>
-          </div>
-        </div>
-
-        <div className="relative">
-          <h1 className="mb-4 text-[32px] leading-tight font-light tracking-tight">
-            <strong className="block font-semibold">Sponsorship requests,</strong>
-            simplified.
-          </h1>
-          <p className="max-w-[300px] text-sm leading-7 text-white/60">
-            Internal sponsorship request &amp; approval workflow for your organisation.
-          </p>
-        </div>
-
-        <p className="relative text-xs text-white/45">
-          Demo: <code className="rounded bg-white/10 px-1.5 py-0.5">requestor@demo.local</code> /{' '}
-          <code className="rounded bg-white/10 px-1.5 py-0.5">Password1!</code>
-        </p>
-      </section>
-
-      <section className="flex flex-1 items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-[420px] rounded-[16px] border border-border bg-surface p-8 shadow-[0_8px_40px_rgba(74,63,200,0.14),0_2px_8px_rgba(74,63,200,0.08)]">
-          <div className="mb-8 lg:hidden">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-brand text-white">
-                ◈
-              </div>
-              <span className="text-lg font-semibold">
-                Spon<span className="text-brand">Track</span>
-              </span>
+      <div className="relative z-10 flex w-full max-w-[420px] flex-col gap-8">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/15 text-xl">
+              ◈
             </div>
-            <p className="text-sm text-text-secondary">Sign in to your account</p>
+            <div className="text-2xl font-semibold tracking-tight">
+              Spon<span className="font-light opacity-60">Track</span>
+            </div>
           </div>
+          <div>
+            <h1 className="text-[28px] leading-tight font-light tracking-tight sm:text-[32px]">
+              <strong className="block font-semibold">Sponsorship requests,</strong>
+              simplified.
+            </h1>
+            <p className="mx-auto mt-3 max-w-[320px] text-sm leading-7 text-white/60">
+              Internal sponsorship request &amp; approval workflow for your organisation.
+            </p>
+          </div>
+        </div>
 
-          <div className="mb-8 hidden lg:block">
-            <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
+        <div className="rounded-[16px] border border-white/10 bg-surface p-8 text-text-primary shadow-[0_8px_40px_rgba(26,24,48,0.2),0_2px_8px_rgba(26,24,48,0.12)]">
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Welcome back</h2>
             <p className="mt-1 text-sm text-text-secondary">Sign in to continue to SponTrack</p>
           </div>
 
@@ -135,12 +118,11 @@ export function LoginPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-text-secondary">
+            <div className="flex items-center text-xs text-text-secondary">
               <label className="flex cursor-not-allowed items-center gap-2 opacity-50">
                 <input type="checkbox" disabled className="rounded border-border" />
                 Remember me
               </label>
-              <span className="cursor-not-allowed opacity-50">Forgot password?</span>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -155,7 +137,7 @@ export function LoginPage() {
             </Button>
           </form>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
