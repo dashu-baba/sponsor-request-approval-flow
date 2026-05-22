@@ -20,8 +20,6 @@ export interface PagedResult<T> {
 export interface RequestListItem {
   id: number
   title: string
-  requestorName: string
-  department: string
   status: RequestStatus
   eventName: string
   eventDate: string
