@@ -34,9 +34,10 @@ public sealed class GetRequestHistoryQueryHandler(AppDbContext dbContext, ICurre
                          || currentUser.Roles.Contains(Roles.FinanceAdmin);
         var isAdmin = currentUser.Roles.Contains(Roles.SystemAdmin);
 
+        // Drafts are invisible to non-owners (B5): return 404 to avoid leaking existence.
         if (request.Status == RequestStatus.Draft && !isOwner)
         {
-            throw new ForbiddenException("You do not have access to this request.");
+            throw new NotFoundException("Request was not found.");
         }
 
         if (!isOwner && !isReviewer && !isAdmin)

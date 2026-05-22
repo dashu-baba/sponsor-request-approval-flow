@@ -143,7 +143,7 @@ public sealed class RequestCrudTests(PostgresWebApplicationFactory factory)
         using var getResponse = await otherClient
             .GetAsync($"/requests/{created!.Id}", TestContext.Current.CancellationToken)
             .ConfigureAwait(true);
-        getResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
         using var putResponse = await otherClient
             .PutAsJsonAsync(

@@ -111,7 +111,7 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task History_draft_is_403_for_non_owner()
+    public async Task History_draft_is_404_for_non_owner()
     {
         var suffix = Guid.NewGuid().ToString("N")[..8];
         var reqEmail = $"req-hist-drft-{suffix}@test.local";
@@ -124,7 +124,7 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
 
         using var mgrClient = await AuthenticatedClientAsync(mgrEmail);
         using var resp = await mgrClient.GetAsync($"/requests/{draft.Id}/history", TestContext.Current.CancellationToken);
-        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
