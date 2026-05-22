@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SponsorshipApproval.Api.IntegrationTests.Infrastructure;
 using SponsorshipApproval.Application.Auth;
@@ -105,6 +106,11 @@ public sealed class UserAdminTests(PostgresWebApplicationFactory factory)
             .ConfigureAwait(true);
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        problem!.Status.Should().Be((int)HttpStatusCode.Conflict);
+        problem.Detail.Should().Contain("email");
     }
 
     [Fact]
@@ -125,6 +131,11 @@ public sealed class UserAdminTests(PostgresWebApplicationFactory factory)
             .ConfigureAwait(true);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await response.Content
+            .ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        problem!.Status.Should().Be((int)HttpStatusCode.BadRequest);
+        problem.Errors.Keys.Should().Contain(key => key.Contains("Role", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -145,6 +156,12 @@ public sealed class UserAdminTests(PostgresWebApplicationFactory factory)
             .ConfigureAwait(true);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await response.Content
+            .ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+        problem!.Status.Should().Be((int)HttpStatusCode.BadRequest);
+        problem.Errors.Keys.Should().Contain(key =>
+            key.Contains("InitialPassword", StringComparison.OrdinalIgnoreCase));
     }
 
     [Theory]

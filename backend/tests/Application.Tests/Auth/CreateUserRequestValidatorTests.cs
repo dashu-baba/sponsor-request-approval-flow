@@ -36,6 +36,7 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.Email));
     }
 
     [Fact]
@@ -48,6 +49,7 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.Email));
     }
 
     [Fact]
@@ -60,6 +62,7 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.DisplayName));
     }
 
     [Fact]
@@ -77,6 +80,7 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.DisplayName));
     }
 
     [Fact]
@@ -94,6 +98,7 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.Department));
     }
 
     [Theory]
@@ -108,6 +113,7 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.Role));
     }
 
     [Theory]
@@ -136,5 +142,6 @@ public sealed class CreateUserRequestValidatorTests
             .ConfigureAwait(true);
 
         result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateUserRequest.InitialPassword));
     }
 }

@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
 using SponsorshipApproval.Infrastructure.Identity;
@@ -12,7 +13,8 @@ namespace SponsorshipApproval.Infrastructure.Auth;
 public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     AppDbContext dbContext,
-    IJwtTokenService jwtTokenService) : IAuthService
+    IJwtTokenService jwtTokenService,
+    ILogger<AuthService> logger) : IAuthService
 {
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> LoginAsync(
         LoginRequest request,
@@ -191,17 +193,21 @@ public sealed class AuthService(
     public async Task<IReadOnlyList<UserSummaryResponse>> ListUsersAsync(
         CancellationToken cancellationToken = default)
     {
-        var summaries = await (
-                from user in dbContext.Users.AsNoTracking()
-                join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-                join role in dbContext.Roles on userRole.RoleId equals role.Id
-                orderby user.Email
-                select new UserSummaryResponse(
-                    user.Id,
-                    user.Email ?? string.Empty,
-                    user.DisplayName,
-                    user.Department,
-                    role.Name ?? string.Empty))
+        var summaries = await dbContext.Users
+            .AsNoTracking()
+            .OrderBy(user => user.Email)
+            .Select(user => new UserSummaryResponse(
+                user.Id,
+                user.Email ?? string.Empty,
+                user.DisplayName,
+                user.Department,
+                (
+                    from userRole in dbContext.UserRoles
+                    where userRole.UserId == user.Id
+                    join role in dbContext.Roles on userRole.RoleId equals role.Id
+                    orderby role.Name
+                    select role.Name ?? string.Empty
+                ).FirstOrDefault() ?? "(none)"))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -238,11 +244,18 @@ public sealed class AuthService(
         var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
         if (!roleResult.Succeeded)
         {
-            await userManager.DeleteAsync(user).ConfigureAwait(false);
+            var deleteResult = await userManager.DeleteAsync(user).ConfigureAwait(false);
+            if (!deleteResult.Succeeded)
+            {
+                logger.LogWarning(
+                    "Failed to delete user {UserId} after role assignment failure: {Errors}",
+                    user.Id,
+                    string.Join(", ", deleteResult.Errors.Select(error => error.Description)));
+            }
+
             return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
         }
 
-        _ = cancellationToken;
         return CreateUserResult.Success(MapSummary(user, request.Role));
     }
 

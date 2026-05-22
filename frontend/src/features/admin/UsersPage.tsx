@@ -31,6 +31,32 @@ const emptyValues: CreateUserInput = {
 
 const roleOptions = Object.values(Roles)
 
+const createUserFieldMap: Record<string, keyof CreateUserInput> = {
+  Email: 'email',
+  DisplayName: 'displayName',
+  Department: 'department',
+  Role: 'role',
+  InitialPassword: 'initialPassword',
+}
+
+function applyCreateUserFieldErrors(
+  form: ReturnType<typeof useForm<CreateUserInput, unknown, CreateUserValues>>,
+  fieldErrors: Record<string, string[]>,
+): boolean {
+  let mapped = false
+
+  for (const [apiField, messages] of Object.entries(fieldErrors)) {
+    const formField = createUserFieldMap[apiField]
+    const message = messages[0]
+    if (formField && message) {
+      form.setError(formField, { message })
+      mapped = true
+    }
+  }
+
+  return mapped
+}
+
 export function UsersPage() {
   const queryClient = useQueryClient()
   const [formModalOpen, setFormModalOpen] = useState(false)
@@ -68,6 +94,10 @@ export function UsersPage() {
       }
 
       if (error.status === 400) {
+        if (error.fieldErrors && applyCreateUserFieldErrors(form, error.fieldErrors)) {
+          return
+        }
+
         form.setError('initialPassword', {
           message: error.detail ?? 'Password does not meet the required policy.',
         })

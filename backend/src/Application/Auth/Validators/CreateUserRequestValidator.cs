@@ -12,6 +12,7 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
             .EmailAddress();
 
         RuleFor(request => request.DisplayName)
+            .Cascade(CascadeMode.Stop)
             .Must(name => !string.IsNullOrWhiteSpace(name))
             .WithMessage("Display name is required.")
             .Must(name => name.Trim().Length <= AuthConstants.DisplayNameMaxLength)

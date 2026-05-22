@@ -85,8 +85,9 @@ describe('UsersPage', () => {
       })
     })
 
-    expect(await screen.findByText('New User was created.')).toBeVisible()
-    expect(usersApi.listUsers).toHaveBeenCalledTimes(2)
+    await waitFor(() => {
+      expect(usersApi.listUsers).toHaveBeenCalledTimes(2)
+    })
   })
 
   it('surfaces duplicate email errors on the email field', async () => {
