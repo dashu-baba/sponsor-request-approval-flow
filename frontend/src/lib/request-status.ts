@@ -40,6 +40,14 @@ export function canApproveRequest(status: RequestStatus, role: Role): boolean {
   return false
 }
 
+export function canEditRequest(status: RequestStatus): boolean {
+  return status === 'Draft'
+}
+
+export function canCancelRequest(status: RequestStatus): boolean {
+  return status === 'Draft' || status === 'PendingManagerApproval'
+}
+
 export function getPendingReviewCount(
   role: Role,
   summary: {
