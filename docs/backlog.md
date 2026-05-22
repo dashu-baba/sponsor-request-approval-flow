@@ -24,3 +24,9 @@ Legend: 💡 nice-to-have · 🔶 deferred should-fix
 | B-013 | 💡 | Left-join users in `GetRequestHistoryQueryHandler` so missing actor rows still appear | T2.5 final-review Nice: inner join can drop audit entries if user record missing. | Security/audit hardening pass. |
 | B-014 | 💡 | Paginate `GET /requests/{id}/history` for long audit trails | T2.5 final-review Nice: unpaginated list may grow large. | T4.1 API polish or production prep. |
 | B-015 | 💡 | Responsive sidebar collapse/drawer at ≤1024px | T3.1 review Nice: fixed 220px sidebar; `docs/ui-design.md` §2.4 deferred for T3.1 scope. | T3.1 responsive pass or T3.2 UI polish. |
+| B-016 | 🔶 | Move admin `format.ts` helpers to shared `src/lib/format/` | T3.4 review Should: likely reused by T3.2/T3.3 request UIs; defer until those pages land. | T3.2/T3.3 implementer. |
+| B-017 | 🔶 | Read-only attachments section on admin request detail | T3.4 review Should: audit trail incomplete without attachments; no frontend attachment pattern yet. | T3.2/T3.3 attachment UI or T3.4 follow-up. |
+| B-018 | 💡 | Sponsorship type `isActive` re-activate/toggle in admin UI | T3.4 review Nice: backend soft-delete only; UI shows badge but no re-enable. | Product decision + API if needed. |
+| B-019 | 💡 | Split loading on admin detail page (detail vs history) | T3.4 review Nice: single loading gate waits for both queries. | T3.4 polish or T3.2 pattern reuse. |
+| B-020 | 💡 | Move `getErrorMessage` to `@/lib/api/api-error` | T3.4 review Nice: mixes presentation helpers with error parsing. | Shared API error helper pass. |
+| B-021 | 💡 | Backend `activeRequestCount` on sponsorship-type list DTO | T3.4 resolve: UI derives counts client-side from submitted requests (max 100); accurate server count deferred. | Backend/API polish if dataset grows. |
