@@ -31,6 +31,7 @@ jobs:
         with:
           context: backend
           file: backend/src/Api/Dockerfile
+          target: runtime
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}/api:${{ github.sha }}
