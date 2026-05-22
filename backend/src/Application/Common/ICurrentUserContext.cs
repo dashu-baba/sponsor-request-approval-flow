@@ -6,5 +6,7 @@ public interface ICurrentUserContext
 
     string DisplayName { get; }
 
+    IReadOnlyList<string> Roles { get; }
+
     Task<string?> GetDepartmentAsync(CancellationToken cancellationToken = default);
 }
