@@ -36,9 +36,9 @@ public static class IdentitySeedExtensions
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationUser>>();
 
-        var email = config["Bootstrap__AdminEmail"];
-        var password = config["Bootstrap__AdminPassword"];
-        var displayName = config["Bootstrap__AdminDisplayName"] ?? "Admin";
+        var email = config["Bootstrap:AdminEmail"];
+        var password = config["Bootstrap:AdminPassword"];
+        var displayName = config["Bootstrap:AdminDisplayName"] ?? "Admin";
 
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
