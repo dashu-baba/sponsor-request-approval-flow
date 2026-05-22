@@ -41,7 +41,9 @@ describe('SponsorshipTypesPage', () => {
         {
           id: 1,
           title: 'Tech Summit Booth',
-          status: 'PendingManagerApproval',
+          status: 'PendingManagerApproval' as const,
+          requestorName: 'Rina Ahmed',
+          department: 'Marketing',
           eventName: 'Tech Summit',
           eventDate: '2026-08-15',
           requestedAmount: 12500,
