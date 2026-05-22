@@ -44,7 +44,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 |----|-------|-----------|--------|--------|
 | T2.1 | Request CRUD + save-draft + edit-only-in-Draft + validators + DTO mapping + ownership RBAC (A1, C1, C3, C4) | T1.3 | `feat/T2.1-request-crud` | ✅ |
 | T2.2 | Workflow state machine + transitions (submit/cancel/approve/reject) + `WorkflowHistory` audit + no-self-approval + remarks-on-reject (A2–A6, B4, D1) | T2.1 | `feat/T2.2-workflow-engine` | ✅ |
-| T2.3 | Sponsorship-type admin CRUD (C2, B3) | T2.1 | `feat/T2.3-sponsorship-types` | ⬜ |
+| T2.3 | Sponsorship-type admin CRUD (C2, B3) | T2.1 | `feat/T2.3-sponsorship-types` | ✅ |
 | T2.4 | Attachments → MinIO (multiple, type/size limits, optional) (C5) | T2.1 | `feat/T2.4-attachments` | ⬜ |
 | T2.5 | Workflow-history endpoint + role-scoped queues/lists (B1, B2, B5) | T2.2 | `feat/T2.5-history-and-queues` | ⬜ |
 
