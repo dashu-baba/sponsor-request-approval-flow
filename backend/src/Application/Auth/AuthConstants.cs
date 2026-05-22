@@ -4,5 +4,5 @@ public static class AuthConstants
 {
     public const string RefreshTokenCookieName = "refresh_token";
 
-    public const string RefreshTokenCookiePath = "/auth";
+    public const string RefreshTokenCookiePath = "/api/auth";
 }

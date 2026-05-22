@@ -46,6 +46,9 @@ describe('auth-api', () => {
     expect(response.status).toBe(200)
     expect(await response.text()).toBe('Healthy')
     expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/health')
+    expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/auth/refresh')
+    expect(fetchMock.mock.calls[2]?.[0]).toBe('/api/health')
     expect(sessionExpiredMock).not.toHaveBeenCalled()
   })
 
@@ -60,6 +63,8 @@ describe('auth-api', () => {
     const response = await apiFetch('/health')
 
     expect(response.status).toBe(401)
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/health')
+    expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/auth/refresh')
     expect(sessionExpiredMock).toHaveBeenCalledTimes(2)
   })
 
@@ -72,7 +77,8 @@ describe('auth-api', () => {
       body: JSON.stringify({ title: 'Test' }),
     })
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/requests')
     expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
   })
 
@@ -88,7 +94,8 @@ describe('auth-api', () => {
       body: formData,
     })
 
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/requests/1/attachments')
     expect(new Headers(init.headers).has('Content-Type')).toBe(false)
   })
 
