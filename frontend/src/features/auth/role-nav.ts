@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Pencil,
   Settings2,
+  ShieldCheck,
   Users,
   XCircle,
   type LucideIcon,
@@ -76,6 +77,7 @@ export function getNavSections(role: Role): NavSectionConfig[] {
           items: [
             { label: 'Sponsorship Types', to: '/admin/sponsorship-types', icon: Settings2 },
             { label: 'Users', to: '/admin/users', icon: Users },
+            { label: 'Audit', to: '/admin/audit', icon: ShieldCheck },
           ],
         },
       ]

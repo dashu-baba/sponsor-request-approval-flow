@@ -135,7 +135,10 @@ cannot alter the requestor's field values.
 ### D1 — What does "audit history" capture?
 The brief requires "audit history" and "workflow history" without defining granularity.
 **Recommended assumption (pending client confirmation):** An immutable trail of every **status transition** (actor, from-status,
-to-status, remarks, timestamp). Field-level change tracking is out of scope.
+to-status, remarks, timestamp). Field-level change tracking is out of scope. This is the **workflow history** feature (`WorkflowHistory`), separate from admin audit (D2).
+
+### D2 — What does the SystemAdmin audit trail capture?
+**Recommended assumption (pending client confirmation):** A separate, SystemAdmin-only **admin audit** store (`audit_events`) for mutating operations outside workflow transitions: request create/update, attachment upload, sponsorship-type CRUD, user creation, and auth events (login, logout, profile/password change). **Strictly isolated** from D1 — no shared table, FK, or merged timeline. Workflow transitions (submit/cancel/approve/reject) are **not** duplicated in admin audit.
 
 ---
 

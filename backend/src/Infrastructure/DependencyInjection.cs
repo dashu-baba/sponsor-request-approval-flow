@@ -5,9 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SponsorshipApproval.Application;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Behaviors;
+using SponsorshipApproval.Infrastructure.Audit;
 using SponsorshipApproval.Infrastructure.Auth;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence;
@@ -80,6 +82,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddMinioObjectStorage(configuration);

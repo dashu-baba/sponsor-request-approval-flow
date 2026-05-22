@@ -38,6 +38,32 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Login page')).toBeInTheDocument()
   })
 
+  it('redirects users outside allowed roles from admin audit route', () => {
+    authState.status = 'authenticated'
+    authState.user = {
+      id: '1',
+      email: 'manager@demo.local',
+      displayName: 'Manager User',
+      department: 'Ops',
+      role: Roles.Manager,
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/admin/audit']}>
+        <Routes>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<ProtectedRoute allowedRoles={[Roles.SystemAdmin]} />}>
+              <Route path="/admin/audit" element={<div>Audit page</div>} />
+            </Route>
+            <Route path="/dashboard" element={<DashboardStub />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Dashboard content')).toBeInTheDocument()
+  })
+
   it('redirects users outside allowed roles', () => {
     authState.status = 'authenticated'
     authState.user = {

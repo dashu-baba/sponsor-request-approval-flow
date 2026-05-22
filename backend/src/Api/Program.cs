@@ -60,6 +60,7 @@ app.MapAuthEndpoints();
 app.MapRequestEndpoints();
 app.MapSponsorshipTypeEndpoints();
 app.MapUserEndpoints();
+app.MapAuditEndpoints();
 app.MapSystemEndpoints();
 
 await app.Services.MigrateAndSeedAsync().ConfigureAwait(false);

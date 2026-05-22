@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SponsorshipApproval.Domain.Audit;
 using SponsorshipApproval.Domain.Requests;
 using SponsorshipApproval.Infrastructure.Identity;
 
@@ -14,6 +15,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SponsorshipType> SponsorshipTypes => Set<SponsorshipType>();
 
     public DbSet<WorkflowHistory> WorkflowHistoryEntries => Set<WorkflowHistory>();
+
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     public DbSet<Attachment> Attachments => Set<Attachment>();
 

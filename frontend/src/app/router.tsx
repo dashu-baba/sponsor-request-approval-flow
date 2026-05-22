@@ -27,6 +27,11 @@ const usersPage = lazy(() =>
     default: module.UsersPage,
   })),
 )
+const auditPage = lazy(() =>
+  import('@/features/admin/AuditPage').then((module) => ({
+    default: module.AuditPage,
+  })),
+)
 
 function lazyPage(page: ReactNode) {
   return (
@@ -69,6 +74,10 @@ export const router = createBrowserRouter([
               {
                 path: 'admin/users',
                 element: lazyPage(createElement(usersPage)),
+              },
+              {
+                path: 'admin/audit',
+                element: lazyPage(createElement(auditPage)),
               },
             ],
           },

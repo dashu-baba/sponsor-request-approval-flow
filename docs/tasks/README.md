@@ -71,6 +71,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 |----|-------|-----------|--------|--------|
 | T5.1 | Profile (display name + department) + password change (current-password re-auth, security-stamp access-token invalidation, refresh-token revoke, current device stays signed in) | T1.2, T3.1 | `feat/T5.1-account-self-service` | ✅ |
 | T5.2 | Admin user management — SystemAdmin user list + create user (one role, admin-set initial password; edit/role-change/deactivate deferred) (B6) | T1.2, T3.4 | `feat/T5.2-admin-user-management` | ⬜ |
+| T5.3 | Admin audit — SystemAdmin-only `audit_events` trail for mutating actions; isolated from `WorkflowHistory` / D1 (D2) | T2.1, T2.3, T2.4, T5.1, T5.2 | `feat/T5.3-admin-audit` | ✅ |
 
 ---
 

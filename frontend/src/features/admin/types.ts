@@ -49,6 +49,19 @@ export interface WorkflowHistoryItem {
   occurredAt: string
 }
 
+export interface AuditEvent {
+  id: number
+  occurredAt: string
+  actorId: string
+  actorDisplayName: string
+  action: string
+  category: string
+  resourceType: string
+  resourceId: string
+  summary: string | null
+  metadata: Record<string, unknown> | null
+}
+
 export interface SponsorshipType {
   id: number
   name: string

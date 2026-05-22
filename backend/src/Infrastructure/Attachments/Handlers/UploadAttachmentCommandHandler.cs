@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Attachments;
 using SponsorshipApproval.Application.Attachments.Commands;
 using SponsorshipApproval.Application.Attachments.Models;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.Common.Storage;
@@ -15,7 +16,8 @@ namespace SponsorshipApproval.Infrastructure.Attachments.Handlers;
 public sealed class UploadAttachmentCommandHandler(
     AppDbContext dbContext,
     ICurrentUserContext currentUser,
-    IObjectStorage objectStorage)
+    IObjectStorage objectStorage,
+    IAuditService auditService)
     : IRequestHandler<UploadAttachmentCommand, AttachmentDto>
 {
     public async Task<AttachmentDto> Handle(UploadAttachmentCommand command, CancellationToken cancellationToken)
@@ -64,7 +66,41 @@ public sealed class UploadAttachmentCommandHandler(
 
         try
         {
-            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            var transaction = await dbContext.Database
+                .BeginTransactionAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                auditService.Record(new AuditRecord(
+                    currentUser.UserId,
+                    AuditActions.AttachmentUploaded,
+                    AuditCategories.Attachment,
+                    AuditResourceTypes.Attachment,
+                    attachment.Id.ToString(),
+                    Summary: $"Uploaded attachment {sanitizedFileName}",
+                    Metadata: new Dictionary<string, object?>
+                    {
+                        ["requestId"] = command.RequestId.ToString(),
+                        ["fileName"] = sanitizedFileName,
+                        ["contentType"] = command.ContentType,
+                        ["sizeBytes"] = command.SizeBytes,
+                    }));
+
+                await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                throw;
+            }
+            finally
+            {
+                await transaction.DisposeAsync().ConfigureAwait(false);
+            }
         }
         catch
         {

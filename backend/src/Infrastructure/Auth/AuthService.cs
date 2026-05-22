@@ -2,9 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
+using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Infrastructure.Identity;
 using SponsorshipApproval.Infrastructure.Persistence;
 
@@ -14,7 +15,8 @@ public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     AppDbContext dbContext,
     IJwtTokenService jwtTokenService,
-    ILogger<AuthService> logger) : IAuthService
+    IAuditService auditService,
+    ICurrentUserContext currentUser) : IAuthService
 {
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> LoginAsync(
         LoginRequest request,
@@ -32,7 +34,7 @@ public sealed class AuthService(
             return null;
         }
 
-        return await IssueTokensAsync(user, role, cancellationToken).ConfigureAwait(false);
+        return await IssueTokensAsync(user, role, recordLoginAudit: true, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> RefreshAsync(
@@ -70,7 +72,7 @@ public sealed class AuthService(
 
         storedToken.RevokedAt = DateTimeOffset.UtcNow;
 
-        var issued = await IssueTokensAsync(user, role, cancellationToken).ConfigureAwait(false);
+        var issued = await IssueTokensAsync(user, role, recordLoginAudit: false, cancellationToken).ConfigureAwait(false);
         if (issued is null)
         {
             return null;
@@ -100,6 +102,15 @@ public sealed class AuthService(
         }
 
         storedToken.RevokedAt = DateTimeOffset.UtcNow;
+
+        auditService.Record(new AuditRecord(
+            storedToken.UserId,
+            AuditActions.AuthLogout,
+            AuditCategories.Auth,
+            AuditResourceTypes.User,
+            storedToken.UserId,
+            Summary: "Signed out"));
+
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -133,23 +144,77 @@ public sealed class AuthService(
             return UpdateProfileResult.Failed(UpdateProfileFailureReason.UserNotFound);
         }
 
-        user.DisplayName = request.DisplayName.Trim();
-        user.Department = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim();
+        var changedFields = new List<string>();
+        var trimmedDisplayName = request.DisplayName.Trim();
+        var trimmedDepartment = string.IsNullOrWhiteSpace(request.Department) ? null : request.Department.Trim();
 
-        var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
-        if (!updateResult.Succeeded)
+        if (!string.Equals(user.DisplayName, trimmedDisplayName, StringComparison.Ordinal))
         {
-            var errors = updateResult.Errors.Select(error => error.Description).ToArray();
-            return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
+            changedFields.Add(nameof(ApplicationUser.DisplayName));
         }
 
-        var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
-        if (role is null)
+        if (!string.Equals(user.Department, trimmedDepartment, StringComparison.Ordinal))
+        {
+            changedFields.Add(nameof(ApplicationUser.Department));
+        }
+
+        user.DisplayName = trimmedDisplayName;
+        user.Department = trimmedDepartment;
+
+        if (changedFields.Count == 0)
+        {
+            var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
+            if (role is null)
+            {
+                return UpdateProfileResult.Failed(UpdateProfileFailureReason.UnexpectedFailure);
+            }
+
+            return UpdateProfileResult.Success(MapProfile(user, role));
+        }
+
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        try
+        {
+            var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
+            if (!updateResult.Succeeded)
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                var errors = updateResult.Errors.Select(error => error.Description).ToArray();
+                return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
+            }
+
+            auditService.Record(new AuditRecord(
+                user.Id,
+                AuditActions.AuthProfileUpdated,
+                AuditCategories.Auth,
+                AuditResourceTypes.User,
+                user.Id,
+                Summary: $"Updated profile fields: {string.Join(", ", changedFields)}",
+                Metadata: new Dictionary<string, object?> { ["changedFields"] = changedFields.ToArray() }));
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
+        }
+
+        var updatedRole = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
+        if (updatedRole is null)
         {
             return UpdateProfileResult.Failed(UpdateProfileFailureReason.UnexpectedFailure);
         }
 
-        return UpdateProfileResult.Success(MapProfile(user, role));
+        return UpdateProfileResult.Success(MapProfile(user, updatedRole));
     }
 
     public async Task<ChangePasswordResult> ChangePasswordAsync(
@@ -228,32 +293,59 @@ public sealed class AuthService(
             EmailConfirmed = true,
         };
 
-        var createResult = await userManager.CreateAsync(user, request.InitialPassword).ConfigureAwait(false);
-        if (!createResult.Succeeded)
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        try
         {
-            if (createResult.Errors.Any(error =>
-                    error.Code is "DuplicateUserName" or "DuplicateEmail"))
+            var createResult = await userManager.CreateAsync(user, request.InitialPassword).ConfigureAwait(false);
+            if (!createResult.Succeeded)
             {
-                return CreateUserResult.Failed(CreateUserFailureReason.DuplicateEmail);
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                if (createResult.Errors.Any(error =>
+                        error.Code is "DuplicateUserName" or "DuplicateEmail"))
+                {
+                    return CreateUserResult.Failed(CreateUserFailureReason.DuplicateEmail);
+                }
+
+                var policyErrors = createResult.Errors.Select(error => error.Description).ToArray();
+                return CreateUserResult.Failed(CreateUserFailureReason.PolicyViolation, policyErrors);
             }
 
-            var policyErrors = createResult.Errors.Select(error => error.Description).ToArray();
-            return CreateUserResult.Failed(CreateUserFailureReason.PolicyViolation, policyErrors);
+            var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
+            if (!roleResult.Succeeded)
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
+            }
+
+            auditService.Record(new AuditRecord(
+                currentUser.UserId,
+                AuditActions.UserCreated,
+                AuditCategories.User,
+                AuditResourceTypes.User,
+                user.Id,
+                Summary: $"Created user {email}",
+                Metadata: new Dictionary<string, object?>
+                {
+                    ["email"] = email,
+                    ["role"] = request.Role,
+                    ["displayName"] = user.DisplayName,
+                }));
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
-
-        var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
-        if (!roleResult.Succeeded)
+        catch
         {
-            var deleteResult = await userManager.DeleteAsync(user).ConfigureAwait(false);
-            if (!deleteResult.Succeeded)
-            {
-                logger.LogWarning(
-                    "Failed to delete user {UserId} after role assignment failure: {Errors}",
-                    user.Id,
-                    string.Join(", ", deleteResult.Errors.Select(error => error.Description)));
-            }
-
-            return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
         }
 
         return CreateUserResult.Success(MapSummary(user, request.Role));
@@ -310,6 +402,14 @@ public sealed class AuthService(
                 CreatedAt = DateTimeOffset.UtcNow,
                 ExpiresAt = refreshTokenExpiresAt,
             });
+
+            auditService.Record(new AuditRecord(
+                reloadedUser.Id,
+                AuditActions.AuthPasswordChanged,
+                AuditCategories.Auth,
+                AuditResourceTypes.User,
+                reloadedUser.Id,
+                Summary: "Changed password"));
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -373,6 +473,7 @@ public sealed class AuthService(
     private async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> IssueTokensAsync(
         ApplicationUser user,
         string role,
+        bool recordLoginAudit,
         CancellationToken cancellationToken)
     {
         var accessTokenExpiresAt = jwtTokenService.GetAccessTokenExpiry();
@@ -393,6 +494,17 @@ public sealed class AuthService(
             CreatedAt = DateTimeOffset.UtcNow,
             ExpiresAt = refreshTokenExpiresAt,
         });
+
+        if (recordLoginAudit)
+        {
+            auditService.Record(new AuditRecord(
+                user.Id,
+                AuditActions.AuthLogin,
+                AuditCategories.Auth,
+                AuditResourceTypes.User,
+                user.Id,
+                Summary: "Signed in"));
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

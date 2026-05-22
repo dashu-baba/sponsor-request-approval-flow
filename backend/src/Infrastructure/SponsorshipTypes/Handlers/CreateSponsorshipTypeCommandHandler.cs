@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.SponsorshipTypes.Commands;
@@ -9,7 +10,10 @@ using SponsorshipApproval.Infrastructure.Persistence;
 
 namespace SponsorshipApproval.Infrastructure.SponsorshipTypes.Handlers;
 
-public sealed class CreateSponsorshipTypeCommandHandler(AppDbContext dbContext, ICurrentUserContext currentUser)
+public sealed class CreateSponsorshipTypeCommandHandler(
+    AppDbContext dbContext,
+    ICurrentUserContext currentUser,
+    IAuditService auditService)
     : IRequestHandler<CreateSponsorshipTypeCommand, SponsorshipTypeDto>
 {
     public async Task<SponsorshipTypeDto> Handle(
@@ -31,7 +35,36 @@ public sealed class CreateSponsorshipTypeCommandHandler(AppDbContext dbContext, 
         };
 
         dbContext.SponsorshipTypes.Add(sponsorshipType);
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            auditService.Record(new AuditRecord(
+                currentUser.UserId,
+                AuditActions.SponsorshipTypeCreated,
+                AuditCategories.SponsorshipType,
+                AuditResourceTypes.SponsorshipType,
+                sponsorshipType.Id.ToString(),
+                Summary: $"Created sponsorship type {name}",
+                Metadata: new Dictionary<string, object?> { ["name"] = name }));
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
+        }
 
         return await dbContext.SponsorshipTypes
             .AsNoTracking()

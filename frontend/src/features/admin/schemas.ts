@@ -44,6 +44,28 @@ export const workflowHistoryItemSchema = z.object({
   occurredAt: z.string().min(1),
 })
 
+export const workflowHistorySchema = z.array(workflowHistoryItemSchema)
+
+export const auditEventSchema = z.object({
+  id: entityIdSchema,
+  occurredAt: z.string().min(1),
+  actorId: z.string().min(1),
+  actorDisplayName: z.string().min(1),
+  action: z.string().min(1),
+  category: z.string().min(1),
+  resourceType: z.string().min(1),
+  resourceId: z.string().min(1),
+  summary: z.string().nullable(),
+  metadata: z.record(z.string(), z.unknown()).nullable(),
+})
+
+export const auditEventsSchema = z.object({
+  items: z.array(auditEventSchema),
+  page: z.number(),
+  pageSize: z.number(),
+  totalCount: z.number(),
+})
+
 export const adminRequestsSchema = z.object({
   items: z.array(requestListItemSchema),
   page: z.number(),
@@ -61,7 +83,6 @@ export const sponsorshipTypeSchema = z.object({
 })
 
 export const sponsorshipTypesSchema = z.array(sponsorshipTypeSchema)
-export const workflowHistorySchema = z.array(workflowHistoryItemSchema)
 
 export const sponsorshipTypeMutationSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters.').max(120),
