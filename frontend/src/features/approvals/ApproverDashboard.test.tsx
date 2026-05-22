@@ -261,6 +261,16 @@ describe('ApproverDashboard', () => {
     })
   })
 
+  it('shows error state when queue fetch fails', async () => {
+    getRequestSummaryMock.mockRejectedValue(new Error('Network error'))
+    listRequestsMock.mockRejectedValue(new Error('Network error'))
+
+    renderDashboard()
+
+    expect(await screen.findByText('Something went wrong')).toBeVisible()
+    expect(screen.getByRole('button', { name: /retry/i })).toBeVisible()
+  })
+
   it('shows error toast and refetches when reject returns 403', async () => {
     getRequestSummaryMock.mockResolvedValue(summaryFixture)
     listRequestsMock.mockResolvedValue(managerQueueFixture)

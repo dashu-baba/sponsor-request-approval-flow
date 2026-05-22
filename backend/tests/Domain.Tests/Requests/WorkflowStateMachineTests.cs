@@ -111,4 +111,46 @@ public sealed class WorkflowStateMachineTests
             request, WorkflowAction.Cancel, "Requestor", actorId: "not-owner");
         act.Should().Throw<UnauthorizedAccessException>();
     }
+
+    [Theory]
+    [InlineData(RequestStatus.Draft, WorkflowAction.Submit, "Requestor", RequestStatus.PendingManagerApproval, true)]
+    [InlineData(RequestStatus.Draft, WorkflowAction.Cancel, "Requestor", RequestStatus.Cancelled, true)]
+    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Cancel, "Requestor", RequestStatus.Cancelled, true)]
+    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Approve, "Manager", RequestStatus.PendingFinanceReview, false)]
+    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Reject, "Manager", RequestStatus.Rejected, false)]
+    [InlineData(RequestStatus.PendingFinanceReview, WorkflowAction.Approve, "FinanceAdmin", RequestStatus.Approved, false)]
+    [InlineData(RequestStatus.PendingFinanceReview, WorkflowAction.Reject, "FinanceAdmin", RequestStatus.Rejected, false)]
+    public void All_valid_transitions_from_state_machine_table(
+        RequestStatus from,
+        WorkflowAction action,
+        string actorRole,
+        RequestStatus expected,
+        bool isOwnerAction)
+    {
+        const string ownerId = "owner-1";
+        const string reviewerId = "reviewer-1";
+        var request = new SponsorshipRequest { Status = from, RequestorId = ownerId };
+        var actorId = isOwnerAction ? ownerId : reviewerId;
+
+        var result = WorkflowStateMachine.Transition(request, action, actorRole, actorId);
+
+        result.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(RequestStatus.Approved, WorkflowAction.Approve, "FinanceAdmin")]
+    [InlineData(RequestStatus.Draft, WorkflowAction.Approve, "Manager")]
+    [InlineData(RequestStatus.PendingManagerApproval, WorkflowAction.Submit, "Requestor")]
+    [InlineData(RequestStatus.Cancelled, WorkflowAction.Cancel, "Requestor")]
+    public void Invalid_transition_pairs_should_throw(
+        RequestStatus from,
+        WorkflowAction action,
+        string actorRole)
+    {
+        var request = new SponsorshipRequest { Status = from, RequestorId = "actor-1" };
+        var act = () => WorkflowStateMachine.Transition(request, action, actorRole, actorId: "actor-1");
+
+        var exception = act.Should().Throw<Exception>().Which;
+        (exception is InvalidOperationException or UnauthorizedAccessException).Should().BeTrue();
+    }
 }

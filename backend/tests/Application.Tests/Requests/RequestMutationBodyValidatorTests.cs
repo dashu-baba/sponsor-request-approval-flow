@@ -1,4 +1,5 @@
 using FluentAssertions;
+using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Requests.Models;
 using SponsorshipApproval.Application.Requests.Validators;
 
@@ -64,6 +65,57 @@ public sealed class RequestMutationBodyValidatorTests
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(error => error.PropertyName == nameof(RequestMutationBody.Title));
+    }
+
+    [Fact]
+    public async Task Requested_amount_above_max_should_fail_validation()
+    {
+        var result = await _validator
+            .ValidateAsync(
+                CreateValidBody() with { RequestedAmount = RequestValidationConstants.MaxRequestedAmount + 1 },
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(RequestMutationBody.RequestedAmount));
+    }
+
+    [Fact]
+    public async Task Event_date_today_should_pass_validation()
+    {
+        var result = await _validator
+            .ValidateAsync(
+                CreateValidBody() with { EventDate = DateOnly.FromDateTime(DateTime.UtcNow) },
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Missing_event_name_should_fail_validation(string eventName)
+    {
+        var result = await _validator
+            .ValidateAsync(CreateValidBody() with { EventName = eventName }, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(RequestMutationBody.EventName));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Missing_purpose_should_fail_validation(string purpose)
+    {
+        var result = await _validator
+            .ValidateAsync(CreateValidBody() with { Purpose = purpose }, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(RequestMutationBody.Purpose));
     }
 
     private static RequestMutationBody CreateValidBody() =>
