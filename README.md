@@ -191,7 +191,7 @@ docker compose stop db minio api nginx
 docker compose start db minio    # start only what you need
 ```
 
-Smoke checks: `curl http://localhost/health`
+Smoke checks: `curl --fail http://localhost/api/health/ready` (readiness) or `curl --fail http://localhost/api/health/live` (liveness). `/health` and `/health/ready` verify dependencies; `/health/live` checks the API process only.
 
 > **Note:** Compose uses internal Docker network hostnames (`db`, `minio`). The debug workflow
 > above uses `localhost` ports instead so you can run the API and frontend natively.

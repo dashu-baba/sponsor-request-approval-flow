@@ -58,9 +58,9 @@ public static class HealthEndpoints
             .ConfigureAwait(false);
 
         var response = HealthReportResponse.FromReport(report);
-        var statusCode = report.Status == HealthStatus.Unhealthy
-            ? StatusCodes.Status503ServiceUnavailable
-            : StatusCodes.Status200OK;
+        var statusCode = report.Status is HealthStatus.Healthy
+            ? StatusCodes.Status200OK
+            : StatusCodes.Status503ServiceUnavailable;
 
         return Results.Json(response, statusCode: statusCode);
     }

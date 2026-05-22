@@ -66,6 +66,32 @@ public sealed class HealthEndpointTests(PostgresWebApplicationFactory factory)
         body.Components.Should().ContainKeys("postgres", "minio");
     }
 
+    [Fact]
+    public async Task Health_ready_should_return_503_when_minio_is_unreachable()
+    {
+        await factory.StopMinioContainerAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+
+        try
+        {
+            using var client = factory.CreateClient();
+
+            using var response = await client
+                .GetAsync("/health/ready", TestContext.Current.CancellationToken)
+                .ConfigureAwait(true);
+
+            response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+
+            var body = await DeserializeAsync(response).ConfigureAwait(true);
+            body.Status.Should().Be("Unhealthy");
+            body.Components["postgres"].Status.Should().Be("Healthy");
+            body.Components["minio"].Status.Should().Be("Unhealthy");
+        }
+        finally
+        {
+            await factory.StartMinioContainerAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+        }
+    }
+
     private static async Task<HealthReportResponse> DeserializeAsync(HttpResponseMessage response)
     {
         await using var stream = await response.Content

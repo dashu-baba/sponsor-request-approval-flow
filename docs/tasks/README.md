@@ -60,7 +60,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 ### Epic 4 — Cross-cutting & Delivery
 | ID | Title | Depends on | Branch | Status |
 |----|-------|-----------|--------|--------|
-| T4.1 | OpenAPI + Scalar docs, problem-details polish, pagination/filtering on lists | T2.5 | `feat/T4.1-api-docs-polish` | 🟡 step 1 ✅ (#22); steps 2–4 ⬜ |
+| T4.1 | OpenAPI + Scalar docs, problem-details polish, pagination/filtering on lists | T2.5 | `feat/T4.1-api-docs-polish` | 🟡 step 1 ✅ (#22); step 4 health ✅ (#25); steps 2–3 + logging ⬜ |
 | T4.2 | Testing pass to HLD bar (fill unit/integration gaps; CI coverage) | T3.4, T4.1 | `test/T4.2-test-hardening` | ⬜ |
 | T4.3 | Deployment finalize (compose/nginx/Let's Encrypt/env templates) + live bring-up runbook | T4.2 | `chore/T4.3-deploy` | ⬜ |
 | T4.4 | Docs finalization (README setup guide, architecture explanation, test logins, live-URLs section) | T4.3 | `docs/T4.4-final-docs` | ⬜ |

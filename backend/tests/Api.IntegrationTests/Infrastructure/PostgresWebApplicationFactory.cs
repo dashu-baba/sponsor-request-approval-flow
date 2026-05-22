@@ -48,6 +48,12 @@ public sealed class PostgresWebApplicationFactory : WebApplicationFactory<Progra
         }
     }
 
+    internal Task StopMinioContainerAsync(CancellationToken cancellationToken = default) =>
+        _minio!.StopAsync(cancellationToken);
+
+    internal Task StartMinioContainerAsync(CancellationToken cancellationToken = default) =>
+        _minio!.StartAsync(cancellationToken);
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Default", _postgres!.GetConnectionString());

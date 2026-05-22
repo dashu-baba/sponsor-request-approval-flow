@@ -61,10 +61,11 @@ In another terminal:
 
 ```bash
 curl --fail http://localhost/
-curl --fail http://localhost/api/health
+curl --fail http://localhost/api/health/ready
+curl --fail http://localhost/api/health/live
 ```
 
-The health checks should return success once `db`, `migrator`, `api`, and `nginx` are healthy.
+`/health` and `/health/ready` verify dependencies (PostgreSQL, MinIO); `/health/live` checks the API process only. The health checks should return success once `db`, `minio`, `migrator`, `api`, and `nginx` are healthy.
 
 ### API auth smoke (through proxy)
 
