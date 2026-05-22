@@ -58,9 +58,7 @@ export function Modal({
             <h2 id="modal-title" className="text-base font-semibold text-text-primary">
               {title}
             </h2>
-            {subtitle ? (
-              <p className="mt-1 text-[13px] text-text-secondary">{subtitle}</p>
-            ) : null}
+            {subtitle ? <p className="mt-1 text-[13px] text-text-secondary">{subtitle}</p> : null}
           </div>
           <button
             type="button"

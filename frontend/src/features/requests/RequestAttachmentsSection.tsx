@@ -22,10 +22,7 @@ interface RequestAttachmentsSectionProps {
   allowUpload?: boolean
 }
 
-async function downloadAttachment(
-  requestId: number,
-  attachment: Attachment,
-): Promise<void> {
+async function downloadAttachment(requestId: number, attachment: Attachment): Promise<void> {
   const response = await apiFetch(`/requests/${requestId}/attachments/${attachment.id}`)
 
   if (!response.ok) {

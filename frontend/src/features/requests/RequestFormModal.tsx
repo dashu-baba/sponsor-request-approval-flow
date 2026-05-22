@@ -282,7 +282,13 @@ function RequestFormBody({
       </form>
 
       <div className="mt-6 flex min-w-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" onClick={onClose} disabled={isBusy} className="w-full sm:w-auto">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          disabled={isBusy}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
         <Button

@@ -27,7 +27,7 @@ import { getDashboardHeading, type DashboardStatusFilter } from '@/features/auth
 import { ApiError } from '@/lib/api/api-error'
 import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
 import { listSponsorshipTypes } from '@/lib/api/sponsorship-types-api'
-import { formatCurrency, formatDate, formatDateTime, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
+import { formatCurrency, formatDate, formatRequestId, requestIdMatchesQuery } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 import { canCancelRequest, canEditRequest } from '@/lib/request-status'
 import { Roles } from '@/lib/roles'
