@@ -35,6 +35,8 @@ public sealed class HealthEndpointTests(PostgresWebApplicationFactory factory)
     [Fact]
     public async Task Health_ready_should_return_postgres_and_minio_components()
     {
+        await factory.EnsureMinioContainerRunningAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+
         using var client = factory.CreateClient();
 
         using var response = await client
@@ -54,6 +56,8 @@ public sealed class HealthEndpointTests(PostgresWebApplicationFactory factory)
     [Fact]
     public async Task Health_alias_should_match_ready_probe()
     {
+        await factory.EnsureMinioContainerRunningAsync(TestContext.Current.CancellationToken).ConfigureAwait(true);
+
         using var client = factory.CreateClient();
 
         using var response = await client
