@@ -139,6 +139,25 @@ public sealed class HistoryAndQueuesTests(PostgresWebApplicationFactory factory)
         resp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task History_unrelated_requestor_gets_403_on_submitted_request()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var ownerEmail = $"req-hist-own2-{suffix}@test.local";
+        var otherEmail = $"req-hist-other-{suffix}@test.local";
+        await CreateUserAsync(ownerEmail, Roles.Requestor);
+        await CreateUserAsync(otherEmail, Roles.Requestor);
+
+        using var ownerClient = await AuthenticatedClientAsync(ownerEmail);
+        var draft = await CreateDraftAsync(ownerClient);
+        (await ownerClient.PostAsJsonAsync($"/requests/{draft.Id}/submit", new { }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        using var otherClient = await AuthenticatedClientAsync(otherEmail);
+        using var resp = await otherClient.GetAsync($"/requests/{draft.Id}/history", TestContext.Current.CancellationToken);
+        resp.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
     // ── Role-scoped list queries ────────────────────────────────────────
 
     [Fact]

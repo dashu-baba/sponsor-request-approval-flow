@@ -1,11 +1,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Common;
 using SponsorshipApproval.Application.Common.Exceptions;
 using SponsorshipApproval.Application.Requests.Models;
 using SponsorshipApproval.Application.Requests.Queries;
-using SponsorshipApproval.Domain.Requests;
 using SponsorshipApproval.Infrastructure.Persistence;
 using SponsorshipApproval.Infrastructure.Requests;
 
@@ -28,21 +26,7 @@ public sealed class GetRequestByIdQueryHandler(AppDbContext dbContext, ICurrentU
             throw new NotFoundException("Request was not found.");
         }
 
-        var isOwner = string.Equals(meta.RequestorId, currentUser.UserId, StringComparison.Ordinal);
-        var isReviewer = currentUser.Roles.Contains(Roles.Manager)
-                         || currentUser.Roles.Contains(Roles.FinanceAdmin);
-        var isAdmin = currentUser.Roles.Contains(Roles.SystemAdmin);
-
-        // Drafts are invisible to non-owners (B5): return 404 to avoid leaking existence.
-        if (meta.Status == RequestStatus.Draft && !isOwner)
-        {
-            throw new NotFoundException("Request was not found.");
-        }
-
-        if (!isOwner && !isReviewer && !isAdmin)
-        {
-            throw new ForbiddenException("You do not have access to this request.");
-        }
+        RequestVisibilityChecker.EnsureCanAccess(meta.RequestorId, meta.Status, currentUser);
 
         var detail = await dbContext.SponsorshipRequests
             .AsNoTracking()
