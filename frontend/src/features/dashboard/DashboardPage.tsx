@@ -1,7 +1,8 @@
+import { lazy, Suspense } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { PageHeader } from '@/components/PageHeader'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { LoadingState } from '@/components/states/query-states'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApproverDashboard } from '@/features/approvals/ApproverDashboard'
@@ -12,6 +13,12 @@ import {
   type DashboardStatusFilter,
 } from '@/features/auth/role-nav'
 import { Roles } from '@/lib/roles'
+
+const AdminRequestsPage = lazy(() =>
+  import('@/features/admin/AdminRequestsPage').then((module) => ({
+    default: module.AdminRequestsPage,
+  })),
+)
 
 function parseStatusFilter(value: string | null): DashboardStatusFilter {
   if (!value) return 'overview'
@@ -31,6 +38,17 @@ function RequestorDashboardPlaceholder() {
   const user = useCurrentUser()
   const [searchParams] = useSearchParams()
   const statusFilter = parseStatusFilter(searchParams.get('status'))
+
+  if (user.role === Roles.SystemAdmin) {
+    return (
+      <Suspense
+        fallback={<LoadingState title="Loading submitted requests" metricCount={4} tableRows={8} />}
+      >
+        <AdminRequestsPage />
+      </Suspense>
+    )
+  }
+
   const heading = getDashboardHeading(user.role, statusFilter)
   const metricCount = getDashboardMetricCount(user.role)
 
