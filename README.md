@@ -12,6 +12,38 @@ Manager Approval → Pending Finance Review → Approved**, with **Rejected** an
 with role-based access (Requestor, Manager, Finance Admin, System Admin) and an immutable audit
 history.
 
+```mermaid
+flowchart LR
+    A([Requestor<br/>submits]) --> B([Manager<br/>reviews])
+    B --> C([Finance<br/>reviews])
+    C --> D([Approved ✅])
+    B -. reject .-> R([Rejected ❌])
+    C -. reject .-> R
+    A -. cancel .-> X([Cancelled])
+    style D fill:#d6f5d6,stroke:#2e7d32
+    style R fill:#fde0e0,stroke:#c62828
+    style X fill:#eeeeee,stroke:#888
+```
+
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    U([Browser]) -->|host :80| N[nginx<br/>SPA + /api proxy]
+    N --> S[React app]
+    N -->|/api| API[ASP.NET Core API]
+    API --> DB[(PostgreSQL)]
+    API --> FS[(MinIO storage)]
+    style N fill:#e3f2fd,stroke:#1565c0
+    style API fill:#fff3e0,stroke:#e65100
+    style DB fill:#f3e5f5,stroke:#6a1b9a
+    style FS fill:#f3e5f5,stroke:#6a1b9a
+```
+
+Clean Architecture backend (Domain ← Application ← Api; Infrastructure implements Application ports),
+a React SPA, and nginx as the single front door. **Full explanation with all flow diagrams (auth,
+request lifecycle, layering, deployment): [`docs/architecture.md`](docs/architecture.md).**
+
 ## Tech stack
 - **Backend:** .NET 10, ASP.NET Core (Clean Architecture + CQRS, MediatR, AutoMapper, EF Core 10)
 - **Database:** PostgreSQL 17 · **Storage:** MinIO (S3-compatible)
@@ -27,9 +59,11 @@ docs/        specs, design, workflow, best-practice rulebooks, task backlog
 ```
 
 ## Documentation
+- [Architecture (as-built, with diagrams)](docs/architecture.md) — start here for how the system works
 - [Requirements brief](docs/requirements/NET%20Senior%20Developer%20Tech%20Assessment.md)
 - [Business requirements — clarifications & assumptions](docs/requirements-clarifications.md)
-- [High-level design & architecture](docs/high-level-design.md)
+- [High-level design & rationale](docs/high-level-design.md)
+- [Deployment runbook](docs/deploy.md) — Docker Compose bring-up + verification
 - [Development workflow](docs/workflow.md)
 - [Task backlog](docs/tasks/README.md) · [Deferred items](docs/backlog.md)
 - [Best-practice rulebooks](docs/best-practices/)
@@ -55,7 +89,8 @@ machine. This gives you:
 
 - Frontend hot reload (Vite) at port **5173**
 - API breakpoints and `dotnet watch` at port **5256**
-- Vite proxy forwarding `/auth`, `/requests`, etc. to the API (see `frontend/vite.config.ts`)
+- Vite proxy forwarding everything under `/api` to the API and stripping the prefix — mirroring nginx
+  in production (see `frontend/vite.config.ts`)
 
 ### Prerequisites
 
@@ -195,6 +230,42 @@ Smoke checks: `curl --fail http://localhost/api/health/ready` (readiness) or `cu
 
 > **Note:** Compose uses internal Docker network hostnames (`db`, `minio`). The debug workflow
 > above uses `localhost` ports instead so you can run the API and frontend natively.
+
+---
+
+## Configuration (environment variables)
+
+The app is configured entirely through environment variables (see [`.env.example`](.env.example)).
+The **canonical, fully-documented reference is [`docs/deploy.md` §3](docs/deploy.md#3-environment--configuration)** —
+the summary below is just the essentials.
+
+| Group | Variables | Notes |
+|-------|-----------|-------|
+| Compose | `COMPOSE_ENV_FILE`, `ASPNETCORE_ENVIRONMENT` | Which env file to load; runtime environment |
+| Database | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` 🔒 | Postgres credentials |
+| Storage | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` 🔒 | MinIO credentials |
+| API → DB | `ConnectionStrings__Default` 🔒 | Embeds the DB password |
+| API → MinIO | `Minio__Endpoint`, `Minio__AccessKey`, `Minio__SecretKey` 🔒, `Minio__BucketName` | Object storage |
+| API → JWT | `Jwt__Issuer`, `Jwt__Audience`, `Jwt__SigningKey` 🔒 (≥ 32 chars), `Jwt__AccessTokenLifetimeMinutes`, `Jwt__RefreshTokenLifetimeDays` | Token issuance |
+
+🔒 = **secret**. `.env.example` ships `change-me-*` placeholders only — **never commit a real `.env`**.
+The `__` in app vars maps to nested .NET config (`Jwt__SigningKey` → `Jwt:SigningKey`).
+
+---
+
+## Live URLs
+
+> **Pending deployment (T4.3).** Once the stack is hosted, the live endpoints go here:
+
+| Surface | URL |
+|---------|-----|
+| Web app | _to be added_ |
+| API | _to be added_ `/api` |
+| API docs (Scalar) | _to be added_ `/scalar/v1` |
+| Repository | https://github.com/dashu-baba/sponsor-request-approval-flow |
+| Deployment notes | [`docs/deploy.md`](docs/deploy.md) |
+
+Locally the equivalents are http://localhost/ (app), http://localhost/api, http://localhost/scalar/v1.
 
 ---
 

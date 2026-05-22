@@ -1,108 +1,193 @@
 # Deployment Runbook
 
-This is the initial Docker Compose walking skeleton. Production TLS, hardening, backups, and real
-migrations are added in later tasks.
+How to run the full stack with Docker Compose, what each service is, the environment it needs, and
+how to verify a deployment is healthy (automated + manual). This path has been brought up and smoke-
+tested end-to-end.
 
-## Prerequisites
+> For local **development** (native API + Vite hot reload), see the root [`README.md`](../README.md).
+> For the architecture behind this topology, see [`architecture.md`](./architecture.md) §2.9.
 
-- Docker Engine with the Compose plugin.
-- Ports `80` available on the host.
-- For local development, no external PostgreSQL or MinIO installation is required.
+---
 
-## Environment Setup
+## 1. Prerequisites
 
-The compose file defaults to `.env.example` so the skeleton can start with:
+- Docker Engine with the Compose plugin (`docker compose version`).
+- Host **port 80** free.
+- No local PostgreSQL or MinIO needed — Compose provides them.
 
-```bash
-docker compose up --build
+## 2. Topology
+
+```mermaid
+flowchart TB
+    Browser([Browser]) -->|"host :80"| NG
+    subgraph edge["edge network (host-facing)"]
+        NG[nginx · serves SPA, strips /api]
+    end
+    subgraph internal["app-internal network · internal: true (no egress)"]
+        API[api · Kestrel :8080]
+        MIG[[migrator · one-shot]]
+        DB[(db · PostgreSQL 17)]
+        MINIO[(minio · S3 storage)]
+    end
+    NG -->|/api /openapi /scalar| API
+    API --> DB
+    API --> MINIO
+    MIG -->|runs first, then exits| DB
 ```
 
-For local overrides, copy the example values and point Compose at the local file:
+| Service | Role | Network(s) | Host port |
+|---------|------|-----------|-----------|
+| `nginx` | Serves built SPA; reverse-proxies `/api`, `/openapi`, `/scalar` to the API; strips the `/api` prefix | `edge` + `app-internal` | **80** → 8080 |
+| `api` | ASP.NET Core (Kestrel) on `:8080`; migrates + seeds on first start | `app-internal` | — |
+| `migrator` | One-shot `dotnet ef database update`; the API waits for it to complete | `app-internal` | — |
+| `db` | PostgreSQL 17, named volume `db-data` | `app-internal` | — |
+| `minio` | S3-compatible object storage, named volume `minio-data` | `app-internal` | — |
+
+**Why two networks:** `app-internal` is `internal: true` — db/minio/api/migrator have **no outbound
+internet** and aren't reachable from the host. Only `nginx` joins the host-facing `edge` network, so
+port 80 is the single public surface. (Attaching a service *only* to an internal network prevents
+host port publishing — nginx must be on `edge` to expose port 80.)
+
+**Startup order** (enforced by `depends_on` + healthchecks):
+`db healthy` → `migrator` runs and exits 0 → `api` healthy → `nginx` healthy.
+
+## 3. Environment / configuration
+
+Compose reads variables from the file named by `COMPOSE_ENV_FILE` (defaults to `.env.example`).
 
 ```bash
+# Default (uses .env.example — fine for a local trial):
+docker compose up --build
+
+# With your own values:
 cp .env.example .env
-docker compose --env-file .env up --build
+# edit .env — replace every change-me-* value
+COMPOSE_ENV_FILE=.env docker compose up --build
 ```
 
-Keep `.env` out of git. Replace every `change-me-*` value before using this outside local
-development. The `COMPOSE_ENV_FILE` value in `.env.example` tells Compose which service env file to
-mount; the default compose command still falls back to `.env.example` when no local `.env` exists.
+Keep real `.env` files out of git. **This table is the canonical environment reference.**
 
-## API routing (dev and Docker)
+| Variable | Scope | Purpose | Example / default | Secret? |
+|----------|-------|---------|-------------------|:------:|
+| `COMPOSE_ENV_FILE` | compose | Which env file Compose mounts | `.env.example` | no |
+| `ASPNETCORE_ENVIRONMENT` | api | Runtime environment | `Production` | no |
+| `POSTGRES_DB` | db | Database name | `sponsorship_approval` | no |
+| `POSTGRES_USER` | db | DB role | `sponsorship_app` | no |
+| `POSTGRES_PASSWORD` | db | DB password | `change-me-*` | **yes** |
+| `MINIO_ROOT_USER` | minio | MinIO admin user | `minioadmin` | no |
+| `MINIO_ROOT_PASSWORD` | minio | MinIO admin password | `change-me-*` | **yes** |
+| `ConnectionStrings__Default` | api | Postgres connection string | `Host=db;Port=5432;Database=...;Username=...;Password=...` | **yes** (embeds pw) |
+| `Minio__Endpoint` | api | MinIO URL | `http://minio:9000` | no |
+| `Minio__AccessKey` | api | MinIO access key | `minioadmin` | no |
+| `Minio__SecretKey` | api | MinIO secret | `change-me-*` | **yes** |
+| `Minio__BucketName` | api | Attachment bucket | `sponsorship-attachments` | no |
+| `Jwt__Issuer` | api | JWT issuer | `sponsorship-approval` | no |
+| `Jwt__Audience` | api | JWT audience | `sponsorship-approval-api` | no |
+| `Jwt__SigningKey` | api | HMAC signing key — **≥ 32 chars** | `change-me-*-at-least-32-characters` | **yes** |
+| `Jwt__AccessTokenLifetimeMinutes` | api | Access-token TTL | `15` | no |
+| `Jwt__RefreshTokenLifetimeDays` | api | Refresh-token TTL | `7` | no |
 
-Browser API calls use the `/api` prefix (for example `/api/requests`, `/api/auth/login`). Both
-local Vite dev and nginx in Docker strip that prefix before forwarding to the ASP.NET Core service,
-which continues to expose routes at `/requests`, `/auth`, and so on. SPA page URLs such as
-`/requests/7` are not prefixed and are served by the frontend router.
+> The `__` (double underscore) in app variables maps to nested .NET config (e.g. `Jwt__SigningKey` →
+> `Jwt:SigningKey`). The README carries a short summary; this table is the source of truth.
 
-## Services
-
-- `nginx` publishes host port `80`, serves the built SPA, and proxies `/api`, `/openapi`,
-  and `/scalar` to the API container.
-- `api` runs the ASP.NET Core service on the internal network.
-- `db` runs PostgreSQL 17 with a named volume.
-- `minio` runs S3-compatible object storage with a named volume.
-- `migrator` is a one-shot placeholder. T1.1 replaces it with EF Core migration execution.
-
-The `app-internal` network is marked `internal: true`, so services can talk to each other but do not
-have outbound internet access from that network. Keep that restriction unless a later task adds a
-runtime dependency that legitimately needs egress; in that case, attach only that service to a
-separate external network.
-
-## Smoke Checks
-
-Start the stack:
+## 4. Bring the stack up
 
 ```bash
-docker compose up --build
+docker compose up --build -d      # build images and start detached
+docker compose ps                 # all services should reach healthy / migrator Exited (0)
 ```
 
-In another terminal:
+Expected steady state:
+
+```
+db        healthy
+minio     healthy
+migrator  exited (0)
+api       healthy
+nginx     healthy
+```
+
+## 5. Verify the deployment
+
+### 5a. Automated (CI)
+
+Every PR runs GitHub Actions (`.github/workflows/ci.yml`): **Backend** (build warnings-as-errors,
+`dotnet format --verify-no-changes`, unit + Testcontainers integration tests) and **Frontend**
+(typecheck, ESLint, Prettier, build, Vitest). A green CI is the gate before deploy.
+
+### 5b. Manual smoke (run after `up`)
+
+The whole flow goes through nginx and the `/api` prefix — exactly what the browser uses.
 
 ```bash
-curl --fail http://localhost/
-curl --fail http://localhost/api/health/ready
-curl --fail http://localhost/api/health/live
+# 1. SPA + API health
+curl -f  http://localhost/                       # 200, text/html (SPA shell)
+curl -f  http://localhost/api/health/live        # 200 — API process is up (no dependency checks)
+curl -f  http://localhost/api/health/ready        # 200 — readiness: PostgreSQL + MinIO reachable
+
+# 2. Auth + data (cookie jar captures the refresh cookie)
+JAR=$(mktemp)
+curl -s -c "$JAR" -X POST http://localhost/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@demo.local","password":"Password1!"}' -o /tmp/login.json
+TOKEN=$(python3 -c "import json;print(json.load(open('/tmp/login.json'))['accessToken'])")
+
+curl -f http://localhost/api/requests -H "Authorization: Bearer $TOKEN" >/dev/null   # 200
+curl -f http://localhost/api/users    -H "Authorization: Bearer $TOKEN" >/dev/null   # 200 (admin only)
+curl -f -b "$JAR" -X POST http://localhost/api/auth/refresh >/dev/null               # 200 (cookie round-trip)
+
+# 3. SPA deep link must return HTML, not a 401
+curl -s -o /dev/null -w '%{http_code} %{content_type}\n' http://localhost/requests/1  # 200 text/html
+
+# 4. API docs
+curl -f http://localhost/scalar/v1        >/dev/null   # 200 (Scalar UI)
+curl -f http://localhost/openapi/v1.json  >/dev/null   # 200 (OpenAPI doc)
+
+# 5. Auth gate
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost/api/requests  # 401 without a token
+
+rm -f "$JAR" /tmp/login.json
 ```
 
-`/health` and `/health/ready` verify dependencies (PostgreSQL, MinIO); `/health/live` checks the API process only. The health checks should return success once `db`, `minio`, `migrator`, `api`, and `nginx` are healthy.
+**Health endpoints:** `/health/live` checks only that the API process is running (use for liveness);
+`/health/ready` (and `/health`) verify dependencies — PostgreSQL and MinIO — so use it for readiness
+gating. The stack is fully up once `db`, `minio`, `migrator`, `api`, and `nginx` are healthy.
 
-### API auth smoke (through proxy)
+Also confirm the refresh cookie is scoped correctly: `Set-Cookie` on login should carry
+`Path=/api/auth; HttpOnly; SameSite=Strict`.
 
-After the stack is up, verify login, list, detail, and refresh through the `/api` prefix (same
-path the SPA uses; Vite dev mirrors this behaviour):
+**Verified:** on a clean volume the stack reaches all-healthy and the checklist above passes 10/10
+(SPA, health, login, requests, users, refresh, deep-link, Scalar, OpenAPI, unauth→401).
+
+## 6. Browse it
+
+| Surface | URL |
+|---------|-----|
+| Web app | http://localhost/ |
+| API (through proxy) | http://localhost/api/... |
+| API docs (Scalar) | http://localhost/scalar/v1 |
+| OpenAPI JSON | http://localhost/openapi/v1.json |
+
+Log in with any seeded account (see [README → Test accounts](../README.md#test-accounts-development--demo-only)).
+
+## 7. Shutdown / reset
 
 ```bash
-COOKIE_JAR=$(mktemp)
-curl --fail http://localhost/api/health
-
-curl -s -c "$COOKIE_JAR" -X POST http://localhost/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"requestor@demo.local","password":"Password1!"}' \
-  | tee /tmp/login.json >/dev/null
-
-TOKEN=$(python3 -c "import json; print(json.load(open('/tmp/login.json'))['accessToken'])")
-
-curl --fail http://localhost/api/requests -H "Authorization: Bearer $TOKEN" >/dev/null
-curl --fail http://localhost/api/requests/1 -H "Authorization: Bearer $TOKEN" >/dev/null
-curl --fail -b "$COOKIE_JAR" -X POST http://localhost/api/auth/refresh >/dev/null
-
-rm -f "$COOKIE_JAR" /tmp/login.json
+docker compose down              # stop, keep data volumes
+docker compose down --volumes    # stop and wipe DB + MinIO (clean reset)
 ```
 
-Confirm the refresh cookie is scoped to `Path=/api/auth` (inspect `Set-Cookie` on login).
-SPA routes such as `/requests/1` should return HTML, not API 401 responses.
+## 8. Troubleshooting
 
-## Shutdown
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `migrator` exits 1 with `relation ... already exists` | Dirty `db-data` volume from an earlier/partial run | `docker compose down --volumes` then `up` again |
+| Host `curl http://localhost/` refused | nginx not on the `edge` network / port not published | Ensure `nginx` lists both `edge` and `app-internal` networks |
+| `nginx` stuck `unhealthy` but site loads | Healthcheck used `localhost` (resolves to IPv6) | Healthcheck targets `127.0.0.1:8080` |
+| `minio` `unhealthy` | Image has no `curl`/`wget` | Healthcheck uses `bash` + `/dev/tcp` liveness probe |
 
-Stop containers while keeping data volumes:
+## 9. Production hardening (out of scope here → T4.3)
 
-```bash
-docker compose down
-```
-
-Remove local data volumes when you want a clean reset:
-
-```bash
-docker compose down --volumes
-```
+TLS termination (Let's Encrypt), backups, secret management, log shipping, and resource limits are
+deployment-finalize concerns tracked under T4.3. This runbook covers a correct, verified single-host
+Compose bring-up.

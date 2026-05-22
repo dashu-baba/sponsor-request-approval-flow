@@ -4,7 +4,9 @@ Project: **Sponsorship Request Approval Workflow**
 Status: **Proposed** · Date: 2026-05-21
 
 Companion to [`requirements-clarifications.md`](./requirements-clarifications.md). This is the
-high-level architecture; a detailed implementation plan follows separately.
+high-level **design rationale and decision log**. For the **as-built architecture with full flow
+diagrams** (system context, layering, request lifecycle, auth, deployment), see
+[`architecture.md`](./architecture.md).
 
 ---
 
@@ -189,8 +191,10 @@ backend FluentValidation rules.
   (Let's Encrypt).
 - Multi-stage Dockerfiles for API and SPA build.
 - **Migrations run via the dedicated `migrator` service** (`dotnet ef database update`) that
-  completes before `api` starts (compose `depends_on: condition: service_completed_successfully`);
-  the API does **not** migrate on startup. Seeding runs once after migration.
+  completes before `api` starts (compose `depends_on: condition: service_completed_successfully`).
+  **As built**, the API *also* runs `MigrateAndSeedAsync()` on startup, so on a fresh DB the migrator
+  applies schema and the API performs seeding; migrations are idempotent so the paths don't conflict.
+  The overlap is a simplification candidate (backlog **B-032**).
 - `.env.example` for secrets/config.
 - `docs/deploy.md` runbook: provision VPS, point domain, issue cert, `docker compose up`.
 
@@ -218,7 +222,7 @@ and **sample requests covering every status** so reviewers test approvals immedi
 | Git repo + commits + README | Monorepo, incremental commits, `README.md`. |
 | Working app (API + UI + DB) | Docker Compose stack. |
 | Setup guide (run BE/FE, DB, test logins) | `README.md`. |
-| Architecture explanation | This doc (`high-level-design.md`) + `requirements-clarifications.md`. |
+| Architecture explanation | [`architecture.md`](./architecture.md) (as-built + diagrams) + this doc (rationale) + `requirements-clarifications.md`. |
 | Live URLs (FE, API, docs, logins, repo, notes) | `docs/deploy.md` + README links section. |
 
 ---
