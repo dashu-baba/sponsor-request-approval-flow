@@ -24,6 +24,13 @@ public sealed class CurrentUserContext(
         ?? User.FindFirstValue(JwtRegisteredClaimNames.Name)
         ?? throw new InvalidOperationException("The access token is missing a display name claim.");
 
+    public IReadOnlyList<string> Roles =>
+        User.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList()
+            .AsReadOnly();
+
     public async Task<string?> GetDepartmentAsync(CancellationToken cancellationToken = default)
     {
         var user = await userManager.FindByIdAsync(UserId).ConfigureAwait(false);

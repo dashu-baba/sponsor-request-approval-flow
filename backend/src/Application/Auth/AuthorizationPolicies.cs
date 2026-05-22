@@ -9,4 +9,6 @@ public static class AuthorizationPolicies
     public const string FinanceAdmin = "FinanceAdmin";
 
     public const string SystemAdmin = "SystemAdmin";
+
+    public const string Approver = "Approver";
 }

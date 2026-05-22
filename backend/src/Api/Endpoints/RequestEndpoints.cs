@@ -11,14 +11,25 @@ public static class RequestEndpoints
 {
     public static IEndpointRouteBuilder MapRequestEndpoints(this IEndpointRouteBuilder app)
     {
-        var requests = app.MapGroup("/requests")
+        var requestorGroup = app.MapGroup("/requests")
             .WithTags("Requests")
             .RequireAuthorization(AuthorizationPolicies.Requestor);
 
-        requests.MapGet("/", ListOwnAsync);
-        requests.MapPost("/", CreateAsync);
-        requests.MapGet("/{id:guid}", GetByIdAsync);
-        requests.MapPut("/{id:guid}", UpdateDraftAsync);
+        requestorGroup.MapGet("/", ListOwnAsync);
+        requestorGroup.MapPost("/", CreateAsync);
+        requestorGroup.MapGet("/{id:guid}", GetByIdAsync);
+        requestorGroup.MapPut("/{id:guid}", UpdateDraftAsync);
+
+        // Workflow transition endpoints: any authenticated user can reach the route;
+        // role and ownership enforcement is handled by the state machine and handler.
+        var workflowGroup = app.MapGroup("/requests")
+            .WithTags("Requests")
+            .RequireAuthorization();
+
+        workflowGroup.MapPost("/{id:guid}/submit", SubmitAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
+        workflowGroup.MapPost("/{id:guid}/cancel", CancelAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
+        workflowGroup.MapPost("/{id:guid}/approve", ApproveAsync).RequireAuthorization(AuthorizationPolicies.Approver);
+        workflowGroup.MapPost("/{id:guid}/reject", RejectAsync).RequireAuthorization(AuthorizationPolicies.Approver);
 
         return app;
     }
@@ -66,6 +77,45 @@ public static class RequestEndpoints
             .Send(new UpdateDraftRequestCommand(id, body), cancellationToken)
             .ConfigureAwait(false);
 
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<IResult> SubmitAsync(
+        Guid id,
+        IMediator mediator,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new SubmitRequestCommand(id), cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<IResult> CancelAsync(
+        Guid id,
+        TransitionBody body,
+        IMediator mediator,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new CancelRequestCommand(id, body.Remarks), cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<IResult> ApproveAsync(
+        Guid id,
+        TransitionBody body,
+        IMediator mediator,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ApproveRequestCommand(id, body.Remarks), cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<IResult> RejectAsync(
+        Guid id,
+        TransitionBody body,
+        IMediator mediator,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new RejectRequestCommand(id, body.Remarks), cancellationToken).ConfigureAwait(false);
         return TypedResults.Ok(result);
     }
 }

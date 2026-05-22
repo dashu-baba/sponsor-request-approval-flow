@@ -67,7 +67,8 @@ public static class DependencyInjection
             .AddPolicy(AuthorizationPolicies.Requestor, policy => policy.RequireRole(Roles.Requestor))
             .AddPolicy(AuthorizationPolicies.Manager, policy => policy.RequireRole(Roles.Manager))
             .AddPolicy(AuthorizationPolicies.FinanceAdmin, policy => policy.RequireRole(Roles.FinanceAdmin))
-            .AddPolicy(AuthorizationPolicies.SystemAdmin, policy => policy.RequireRole(Roles.SystemAdmin));
+            .AddPolicy(AuthorizationPolicies.SystemAdmin, policy => policy.RequireRole(Roles.SystemAdmin))
+            .AddPolicy(AuthorizationPolicies.Approver, policy => policy.RequireRole(Roles.Manager, Roles.FinanceAdmin));
 
         services.AddHttpContextAccessor();
         services.AddApplication();
