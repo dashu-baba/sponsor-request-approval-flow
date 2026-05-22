@@ -29,6 +29,16 @@ public sealed class UpdateProfileRequestValidatorTests
     }
 
     [Fact]
+    public async Task Whitespace_only_display_name_should_fail()
+    {
+        var result = await _validator
+            .ValidateAsync(new UpdateProfileRequest("   ", "Marketing"), TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Display_name_over_max_length_should_fail()
     {
         var result = await _validator

@@ -124,16 +124,27 @@ public static class AuthEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var profile = await authService.UpdateProfileAsync(user, request, cancellationToken).ConfigureAwait(false);
-        if (profile is null)
+        var result = await authService.UpdateProfileAsync(user, request, cancellationToken).ConfigureAwait(false);
+        if (result.Succeeded)
         {
-            return TypedResults.Problem(
-                title: "Unauthorized",
-                detail: "The access token is invalid.",
-                statusCode: StatusCodes.Status401Unauthorized);
+            return TypedResults.Ok(result.Profile);
         }
 
-        return TypedResults.Ok(profile);
+        return result.FailureReason switch
+        {
+            UpdateProfileFailureReason.IdentityValidationFailed => TypedResults.Problem(
+                title: "Invalid profile update request",
+                detail: string.Join(' ', result.Errors ?? []),
+                statusCode: StatusCodes.Status400BadRequest),
+            UpdateProfileFailureReason.UnexpectedFailure => TypedResults.Problem(
+                title: "Profile update failed",
+                detail: "The profile could not be updated.",
+                statusCode: StatusCodes.Status500InternalServerError),
+            _ => TypedResults.Problem(
+                title: "Unauthorized",
+                detail: "The access token is invalid.",
+                statusCode: StatusCodes.Status401Unauthorized),
+        };
     }
 
     private static async Task<IResult> ChangePasswordAsync(
@@ -172,6 +183,10 @@ public static class AuthEndpoints
                 title: "Invalid password change request",
                 detail: string.Join(' ', result.PolicyErrors ?? []),
                 statusCode: StatusCodes.Status400BadRequest),
+            ChangePasswordFailureReason.SessionRefreshFailed => TypedResults.Problem(
+                title: "Password change incomplete",
+                detail: "Your password was updated, but the session could not be refreshed. Please sign in again.",
+                statusCode: StatusCodes.Status500InternalServerError),
             _ => TypedResults.Problem(
                 title: "Unauthorized",
                 detail: "The access token is invalid.",

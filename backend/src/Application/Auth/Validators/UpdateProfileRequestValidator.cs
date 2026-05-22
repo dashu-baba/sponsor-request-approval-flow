@@ -8,8 +8,10 @@ public sealed class UpdateProfileRequestValidator : AbstractValidator<UpdateProf
     public UpdateProfileRequestValidator()
     {
         RuleFor(request => request.DisplayName)
-            .NotEmpty()
-            .MaximumLength(AuthConstants.DisplayNameMaxLength);
+            .Must(name => !string.IsNullOrWhiteSpace(name))
+            .WithMessage("Display name is required.")
+            .Must(name => name.Trim().Length <= AuthConstants.DisplayNameMaxLength)
+            .WithMessage($"Display name must be {AuthConstants.DisplayNameMaxLength} characters or fewer.");
 
         RuleFor(request => request.Department)
             .MaximumLength(AuthConstants.DepartmentMaxLength)

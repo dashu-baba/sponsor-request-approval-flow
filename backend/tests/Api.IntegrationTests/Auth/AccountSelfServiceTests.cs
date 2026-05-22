@@ -45,6 +45,22 @@ public sealed class AccountSelfServiceTests(PostgresWebApplicationFactory factor
     }
 
     [Fact]
+    public async Task Update_profile_with_whitespace_display_name_should_return_400()
+    {
+        await CreateUserAsync("whitespace-profile@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+
+        using var client = await CreateAuthenticatedClientAsync("whitespace-profile@test.local", "Password1!")
+            .ConfigureAwait(true);
+
+        using var response = await client.PutAsJsonAsync(
+            "/me/profile",
+            new UpdateProfileRequest("   ", null),
+            TestContext.Current.CancellationToken).ConfigureAwait(true);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Me_endpoints_without_token_should_return_401()
     {
         using var client = factory.CreateClient();
@@ -94,10 +110,14 @@ public sealed class AccountSelfServiceTests(PostgresWebApplicationFactory factor
 
         using var response = await client.PutAsJsonAsync(
             "/me/password",
-            new ChangePasswordRequest("Password1!", "short"),
+            new ChangePasswordRequest("Password1!", "password1"),
             TestContext.Current.CancellationToken).ConfigureAwait(true);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(
+            cancellationToken: TestContext.Current.CancellationToken).ConfigureAwait(true);
+        problem!.Detail.Should().NotBeNullOrWhiteSpace();
+        problem.Detail!.Should().Contain("uppercase", because: "Identity password policy detail expected");
     }
 
     [Fact]

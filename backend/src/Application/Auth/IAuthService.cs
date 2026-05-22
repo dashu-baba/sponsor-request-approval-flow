@@ -19,7 +19,7 @@ public interface IAuthService
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default);
 
-    Task<UserProfileResponse?> UpdateProfileAsync(
+    Task<UpdateProfileResult> UpdateProfileAsync(
         ClaimsPrincipal principal,
         UpdateProfileRequest request,
         CancellationToken cancellationToken = default);

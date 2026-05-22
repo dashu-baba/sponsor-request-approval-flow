@@ -120,7 +120,7 @@ public sealed class AuthService(
         return MapProfile(user, role);
     }
 
-    public async Task<UserProfileResponse?> UpdateProfileAsync(
+    public async Task<UpdateProfileResult> UpdateProfileAsync(
         ClaimsPrincipal principal,
         UpdateProfileRequest request,
         CancellationToken cancellationToken = default)
@@ -128,7 +128,7 @@ public sealed class AuthService(
         var user = await FindUserFromPrincipalAsync(principal, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
-            return null;
+            return UpdateProfileResult.Failed(UpdateProfileFailureReason.UserNotFound);
         }
 
         user.DisplayName = request.DisplayName.Trim();
@@ -137,16 +137,17 @@ public sealed class AuthService(
         var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
         if (!updateResult.Succeeded)
         {
-            return null;
+            var errors = updateResult.Errors.Select(error => error.Description).ToArray();
+            return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
         }
 
         var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
         if (role is null)
         {
-            return null;
+            return UpdateProfileResult.Failed(UpdateProfileFailureReason.UnexpectedFailure);
         }
 
-        return MapProfile(user, role);
+        return UpdateProfileResult.Success(MapProfile(user, role));
     }
 
     public async Task<ChangePasswordResult> ChangePasswordAsync(
@@ -175,48 +176,79 @@ public sealed class AuthService(
             return ChangePasswordResult.Failed(ChangePasswordFailureReason.PolicyViolation, policyErrors);
         }
 
-        await RevokeAllRefreshTokensAsync(user.Id, cancellationToken).ConfigureAwait(false);
+        var issued = await RevokeAllRefreshTokensAndIssueAsync(user, cancellationToken).ConfigureAwait(false);
+        if (issued.Succeeded)
+        {
+            return ChangePasswordResult.Success(
+                issued.Response!,
+                issued.RawRefreshToken!,
+                issued.RefreshTokenExpiresAt!.Value);
+        }
 
+        return ChangePasswordResult.Failed(ChangePasswordFailureReason.SessionRefreshFailed);
+    }
+
+    private async Task<(bool Succeeded, LoginResponse? Response, string? RawRefreshToken, DateTimeOffset? RefreshTokenExpiresAt)> RevokeAllRefreshTokensAndIssueAsync(
+        ApplicationUser user,
+        CancellationToken cancellationToken)
+    {
         var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
         if (role is null)
         {
-            return ChangePasswordResult.Failed(ChangePasswordFailureReason.UserNotFound);
+            return (false, null, null, null);
         }
 
         var reloadedUser = await userManager.FindByIdAsync(user.Id).ConfigureAwait(false);
         if (reloadedUser is null)
         {
-            return ChangePasswordResult.Failed(ChangePasswordFailureReason.UserNotFound);
+            return (false, null, null, null);
         }
 
-        var issued = await IssueTokensAsync(reloadedUser, role, cancellationToken).ConfigureAwait(false);
-        if (issued is null)
-        {
-            return ChangePasswordResult.Failed(ChangePasswordFailureReason.UserNotFound);
-        }
-
-        return ChangePasswordResult.Success(
-            issued.Value.Response,
-            issued.Value.RawRefreshToken,
-            issued.Value.RefreshTokenExpiresAt);
-    }
-
-    private async Task RevokeAllRefreshTokensAsync(string userId, CancellationToken cancellationToken)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var activeTokens = await dbContext.RefreshTokens
-            .Where(token => token.UserId == userId && token.RevokedAt == null)
-            .ToListAsync(cancellationToken)
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        foreach (var token in activeTokens)
+        try
         {
-            token.RevokedAt = now;
-        }
+            var now = DateTimeOffset.UtcNow;
+            var activeTokens = await dbContext.RefreshTokens
+                .Where(token => token.UserId == user.Id && token.RevokedAt == null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-        if (activeTokens.Count > 0)
-        {
+            foreach (var token in activeTokens)
+            {
+                token.RevokedAt = now;
+            }
+
+            var accessTokenExpiresAt = jwtTokenService.GetAccessTokenExpiry();
+            var accessToken = jwtTokenService.CreateAccessToken(
+                reloadedUser.Id,
+                reloadedUser.Email ?? string.Empty,
+                reloadedUser.DisplayName,
+                role,
+                reloadedUser.SecurityStamp ?? string.Empty);
+
+            var (rawRefreshToken, refreshTokenHash) = jwtTokenService.CreateRefreshToken();
+            var refreshTokenExpiresAt = jwtTokenService.GetRefreshTokenExpiry();
+
+            dbContext.RefreshTokens.Add(new RefreshToken
+            {
+                UserId = reloadedUser.Id,
+                TokenHash = refreshTokenHash,
+                CreatedAt = DateTimeOffset.UtcNow,
+                ExpiresAt = refreshTokenExpiresAt,
+            });
+
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+            var response = new LoginResponse(accessToken, accessTokenExpiresAt, "Bearer");
+            return (true, response, rawRefreshToken, refreshTokenExpiresAt);
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
         }
     }
 

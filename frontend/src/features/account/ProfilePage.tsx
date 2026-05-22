@@ -52,8 +52,6 @@ export function ProfilePage() {
   })
 
   useEffect(() => {
-    if (!user) return
-
     profileForm.reset({
       displayName: user.displayName,
       department: user.department ?? '',
@@ -74,10 +72,6 @@ export function ProfilePage() {
       await refreshProfile()
     },
   })
-
-  if (!user) {
-    return null
-  }
 
   return (
     <div className="space-y-6">

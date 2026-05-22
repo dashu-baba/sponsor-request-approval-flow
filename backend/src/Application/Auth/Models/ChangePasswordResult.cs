@@ -5,6 +5,7 @@ public enum ChangePasswordFailureReason
     UserNotFound,
     WrongCurrentPassword,
     PolicyViolation,
+    SessionRefreshFailed,
 }
 
 public sealed record ChangePasswordResult(
