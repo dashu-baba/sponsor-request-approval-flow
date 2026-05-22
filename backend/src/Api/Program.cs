@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Features;
 using SponsorshipApproval.Api.Endpoints;
 using SponsorshipApproval.Api.Infrastructure;
@@ -6,6 +7,12 @@ using SponsorshipApproval.Infrastructure;
 using SponsorshipApproval.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true));
+});
 
 builder.WebHost.ConfigureKestrel(options =>
 {

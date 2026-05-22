@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace SponsorshipApproval.Domain.Requests;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RequestStatus
 {
     Draft = 0,
