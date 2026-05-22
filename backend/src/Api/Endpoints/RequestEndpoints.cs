@@ -26,10 +26,10 @@ public static class RequestEndpoints
             .WithTags("Requests")
             .RequireAuthorization();
 
-        workflowGroup.MapPost("/{id:guid}/submit", SubmitAsync);
-        workflowGroup.MapPost("/{id:guid}/cancel", CancelAsync);
-        workflowGroup.MapPost("/{id:guid}/approve", ApproveAsync);
-        workflowGroup.MapPost("/{id:guid}/reject", RejectAsync);
+        workflowGroup.MapPost("/{id:guid}/submit", SubmitAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
+        workflowGroup.MapPost("/{id:guid}/cancel", CancelAsync).RequireAuthorization(AuthorizationPolicies.Requestor);
+        workflowGroup.MapPost("/{id:guid}/approve", ApproveAsync).RequireAuthorization(AuthorizationPolicies.Approver);
+        workflowGroup.MapPost("/{id:guid}/reject", RejectAsync).RequireAuthorization(AuthorizationPolicies.Approver);
 
         return app;
     }

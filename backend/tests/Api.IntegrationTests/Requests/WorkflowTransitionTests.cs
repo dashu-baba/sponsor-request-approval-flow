@@ -259,6 +259,47 @@ public sealed class WorkflowTransitionTests(PostgresWebApplicationFactory factor
     }
 
     [Fact]
+    public async Task Concurrent_approve_transitions_should_never_double_transition()
+    {
+        // Proves optimistic-concurrency protection (xmin): two parallel approvals must not both
+        // succeed. The losing writer receives 409 (xmin conflict) when both overlap at the DB commit
+        // level, or 409/403 (state-machine rejection) when they run serially. Either way, only one
+        // WorkflowHistory row is appended and the request state advances exactly once.
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var requestorEmail = $"req-conc-{suffix}@test.local";
+        var manager1Email = $"mgr1-conc-{suffix}@test.local";
+        var manager2Email = $"mgr2-conc-{suffix}@test.local";
+
+        await CreateUserAsync(requestorEmail, Roles.Requestor);
+        await CreateUserAsync(manager1Email, Roles.Manager);
+        await CreateUserAsync(manager2Email, Roles.Manager);
+
+        using var requestorClient = await AuthenticatedClientAsync(requestorEmail);
+        var draft = await CreateDraftAsync(requestorClient);
+        (await requestorClient.PostAsJsonAsync($"/requests/{draft.Id}/submit", new { }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        using var mgr1Client = await AuthenticatedClientAsync(manager1Email);
+        using var mgr2Client = await AuthenticatedClientAsync(manager2Email);
+
+        // Fire both in parallel — at minimum one will succeed, the loser gets 409 or 403
+        var task1 = mgr1Client.PostAsJsonAsync(
+            $"/requests/{draft.Id}/approve", new { remarks = "mgr1 approval" }, TestContext.Current.CancellationToken);
+        var task2 = mgr2Client.PostAsJsonAsync(
+            $"/requests/{draft.Id}/approve", new { remarks = "mgr2 approval" }, TestContext.Current.CancellationToken);
+
+        using var resp1 = await task1;
+        using var resp2 = await task2;
+
+        var statuses = new[] { (int)resp1.StatusCode, (int)resp2.StatusCode };
+        statuses.Should().Contain(200, "exactly one approval must succeed");
+        statuses.Should().NotEqual(new[] { 200, 200 }, "double-transition must never occur");
+
+        // Exactly one transition succeeded → submit (1) + one approve (1) = 2 history rows
+        await AssertHistoryCountAsync(draft.Id, expectedCount: 2);
+    }
+
+    [Fact]
     public async Task Every_successful_transition_writes_a_WorkflowHistory_row()
     {
         var suffix = Guid.NewGuid().ToString("N")[..8];

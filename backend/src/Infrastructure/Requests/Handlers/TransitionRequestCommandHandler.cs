@@ -44,7 +44,7 @@ public sealed class TransitionRequestCommandHandler(AppDbContext dbContext, ICur
         }
 
         // B3: SystemAdmin is not part of the approval chain
-        var actorRole = currentUser.Roles.FirstOrDefault() ?? string.Empty;
+        var actorRole = currentUser.Roles.Single();
         if (actorRole == Roles.SystemAdmin)
         {
             throw new ForbiddenException("System administrators are not part of the approval chain.");
