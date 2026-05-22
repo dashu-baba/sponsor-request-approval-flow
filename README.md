@@ -268,15 +268,13 @@ The `__` in app vars maps to nested .NET config (`Jwt__SigningKey` → `Jwt:Sign
 
 ## Live URLs
 
-> **Pending deployment (T4.3).** Once the stack is hosted, the live endpoints go here:
-
 | Surface | URL |
 |---------|-----|
-| Web app | _to be added_ |
-| API | _to be added_ `/api` |
-| API docs (Scalar) | _to be added_ `/scalar/v1` |
+| Web app | https://sponsor-track.nowshad.dev |
+| API | https://sponsor-track.nowshad.dev/api |
+| API docs (Scalar) | https://sponsor-track.nowshad.dev/scalar/v1 |
 | Repository | https://github.com/dashu-baba/sponsor-request-approval-flow |
-| Deployment notes | [`docs/deploy.md`](docs/deploy.md) |
+| Deployment notes | [`docs/deployment.md`](docs/deployment.md) |
 
 Locally the equivalents are http://localhost/ (app), http://localhost/api, http://localhost/scalar/v1.
 
