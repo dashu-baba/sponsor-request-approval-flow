@@ -64,6 +64,7 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 | T4.2 | Testing pass to HLD bar (fill unit/integration gaps; CI coverage) | T3.4, T4.1 | `test/T4.2-test-hardening` | ⬜ |
 | T4.3 | Deployment finalize (compose/nginx/Let's Encrypt/env templates) + live bring-up runbook | T4.2 | `chore/T4.3-deploy` | ⬜ |
 | T4.4 | Docs finalization (README setup guide, architecture explanation, test logins, live-URLs section) | T4.3 | `docs/T4.4-final-docs` | ⬜ |
+| T4.5 | API `/api` prefix alignment — fix dev refresh 401 on `/requests/:id`, make Docker API calls work through nginx | T3.1 | `fix/T4.5-api-prefix-alignment` | ⬜ |
 
 ### Epic 5 — Account self-service
 | ID | Title | Depends on | Branch | Status |
