@@ -66,10 +66,11 @@ Epic 0 Foundation ─┬─▶ Epic 1 Data & Auth ─┬─▶ Epic 2 Workflow b
 | T4.4 | Docs finalization (README setup guide, architecture explanation, test logins, live-URLs section) | T4.3 | `docs/T4.4-final-docs` | ⬜ |
 | T4.5 | API `/api` prefix alignment — fix dev refresh 401 on `/requests/:id`, make Docker API calls work through nginx | T3.1 | `fix/T4.5-api-prefix-alignment` | ⬜ |
 
-### Epic 5 — Account self-service
+### Epic 5 — Account & user management
 | ID | Title | Depends on | Branch | Status |
 |----|-------|-----------|--------|--------|
 | T5.1 | Profile (display name + department) + password change (current-password re-auth, security-stamp access-token invalidation, refresh-token revoke, current device stays signed in) | T1.2, T3.1 | `feat/T5.1-account-self-service` | ✅ |
+| T5.2 | Admin user management — SystemAdmin user list + create user (one role, admin-set initial password; edit/role-change/deactivate deferred) (B6) | T1.2, T3.4 | `feat/T5.2-admin-user-management` | ⬜ |
 
 ---
 
