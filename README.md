@@ -70,22 +70,55 @@ docs/        specs, design, workflow, best-practice rulebooks, task backlog
 
 ## Getting started
 
-Two ways to run locally:
+Two ways to run locally — **start with Docker Compose; it's one command:**
 
 | Mode | Best for | App URL |
 |------|----------|---------|
-| **Local debug** (recommended) | Day-to-day development, breakpoints, hot reload | http://localhost:5173 |
-| **Docker Compose** | Full-stack smoke test, production-like nginx build | http://localhost |
+| **Docker Compose** (easiest) | Trying the app / a full-stack run — one command, production-like nginx | http://localhost |
+| **Local debug** | Active development — breakpoints + hot reload | http://localhost:5173 |
 
 See also [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md), and
-[`docs/deploy.md`](docs/deploy.md) for deployment details.
+[`docs/deploy.md`](docs/deploy.md) for the full deployment runbook.
+
+---
+
+## Run with Docker Compose (recommended — one command)
+
+The fastest way to see the whole app — SPA + API + PostgreSQL + MinIO behind nginx. Needs Docker
+running and **port 80** free.
+
+**1. Build and start** (first build takes a few minutes):
+```bash
+docker compose up --build -d
+```
+
+**2. Wait until everything is healthy** — re-run until `db`/`minio`/`api`/`nginx` show `healthy` and
+`migrator` shows `Exited (0)`:
+```bash
+docker compose ps
+```
+
+**3. Open the app:** http://localhost — log in with a
+[test account](#test-accounts-development--demo-only) (password `Password1!`).
+
+- API docs (Scalar): http://localhost/scalar/v1
+- Quick health check: `curl --fail http://localhost/api/health/ready`
+
+**Stop when done:**
+```bash
+docker compose down              # stop, keep data
+docker compose down --volumes    # stop and wipe DB + MinIO for a clean reset
+```
+
+For topology, environment variables, and troubleshooting, see the
+[deployment runbook](docs/deploy.md).
 
 ---
 
 ## Local development (debug workflow)
 
-Run **PostgreSQL + MinIO in Docker**, then start the **API** and **frontend dev server** on your
-machine. This gives you:
+For **active development** (breakpoints + hot reload). Run **PostgreSQL + MinIO in Docker**, then
+start the **API** and **frontend dev server** natively on your machine. This gives you:
 
 - Frontend hot reload (Vite) at port **5173**
 - API breakpoints and `dotnet watch` at port **5256**
@@ -137,12 +170,16 @@ Check what is running: `docker ps`
 
 ### 2. Start the API (with debugger support)
 
-In a terminal, export config for **localhost** (not Docker service names), then run the API:
+In a terminal, export config for **localhost** (not Docker service names), then run the API.
+
+> **Paste tip:** keep the `ConnectionStrings__Default` value on a **single line** — if your terminal
+> wraps it and injects a newline mid-word (e.g. inside `Password`), Npgsql fails with
+> `Couldn't set password`.
 
 ```bash
 cd backend
 
-export ConnectionStrings__Default="Host=localhost;Port=5432;Database=sponsorship_approval;Username=sponsorship_app;Password=change-me-local-postgres-password"
+export ConnectionStrings__Default='Host=localhost;Port=5432;Database=sponsorship_approval;Username=sponsorship_app;Password=change-me-local-postgres-password'
 export Minio__Endpoint="http://localhost:9000"
 export Minio__AccessKey="minioadmin"
 export Minio__SecretKey="change-me-local-minio-password"
@@ -201,35 +238,10 @@ Open http://localhost:5173 — the Vite dev server proxies API calls to http://l
 
 ---
 
-## Full stack with Docker Compose (smoke test)
-
-Use this when you want the built SPA behind nginx (no hot reload). Requires port **80** free.
-
-```bash
-cp .env.example .env    # optional local overrides
-docker compose up --build
-```
-
-Open http://localhost
-
-**Stop**
-
-```bash
-docker compose down              # keep volumes
-docker compose down --volumes    # wipe DB + MinIO data
-```
-
-**Stop individual compose services**
-
-```bash
-docker compose stop db minio api nginx
-docker compose start db minio    # start only what you need
-```
-
-Smoke checks: `curl --fail http://localhost/api/health/ready` (readiness) or `curl --fail http://localhost/api/health/live` (liveness). `/health` and `/health/ready` verify dependencies; `/health/live` checks the API process only.
-
-> **Note:** Compose uses internal Docker network hostnames (`db`, `minio`). The debug workflow
-> above uses `localhost` ports instead so you can run the API and frontend natively.
+> **Note:** Compose (above) uses internal Docker network hostnames (`db`, `minio`); this debug
+> workflow uses `localhost` ports instead so you can run the API and frontend natively. Need a
+> specific compose service controlled individually? `docker compose stop db minio api nginx` /
+> `docker compose start db minio`.
 
 ---
 
