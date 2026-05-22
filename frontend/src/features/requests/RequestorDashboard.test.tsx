@@ -171,6 +171,24 @@ describe('RequestorDashboard', () => {
     expect(toastSuccessMock).toHaveBeenCalledWith('Request cancelled.')
   })
 
+  it('shows empty state when requestor has no requests', async () => {
+    getRequestSummaryMock.mockResolvedValue({
+      total: 0,
+      draft: 0,
+      pendingManagerApproval: 0,
+      pendingFinanceReview: 0,
+      approved: 0,
+      rejected: 0,
+      cancelled: 0,
+    })
+    listRequestsMock.mockResolvedValue({ page: 1, pageSize: 20, totalCount: 0, items: [] })
+
+    renderDashboard()
+
+    expect(await screen.findByText('No requests found')).toBeVisible()
+    expect(screen.getByText('Try adjusting your filters or create a new request.')).toBeVisible()
+  })
+
   it('shows error state when summary fails', async () => {
     getRequestSummaryMock.mockRejectedValue(new Error('Network error'))
     listRequestsMock.mockRejectedValue(new Error('Network error'))

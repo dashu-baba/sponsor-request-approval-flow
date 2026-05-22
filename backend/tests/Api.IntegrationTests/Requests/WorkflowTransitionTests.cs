@@ -194,6 +194,21 @@ public sealed class WorkflowTransitionTests(PostgresWebApplicationFactory factor
         rejectResp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    [Theory]
+    [InlineData("submit")]
+    [InlineData("approve")]
+    [InlineData("reject")]
+    [InlineData("cancel")]
+    public async Task Workflow_action_without_token_should_return_401(string action)
+    {
+        using var client = factory.CreateClient();
+        using var response = await client
+            .PostAsJsonAsync($"/requests/1/{action}", new { }, TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
     [Fact]
     public async Task Wrong_role_should_return_403()
     {

@@ -187,6 +187,32 @@ public sealed class RequestCrudTests(PostgresWebApplicationFactory factory)
         problem!.Title.Should().Be("Validation failed");
     }
 
+    [Fact]
+    public async Task Create_with_amount_above_max_should_return_400_problem_details()
+    {
+        await CreateUserAsync("above-max-amount@test.local", "Password1!", Roles.Requestor).ConfigureAwait(true);
+
+        using var client = await CreateAuthenticatedClientAsync("above-max-amount@test.local", "Password1!")
+            .ConfigureAwait(true);
+
+        using var response = await client
+            .PostAsJsonAsync(
+                "/requests",
+                CreateMutationBody() with
+                {
+                    RequestedAmount = RequestValidationConstants.MaxRequestedAmount + 1,
+                },
+                TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await response.Content
+            .ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken)
+            .ConfigureAwait(true);
+
+        problem!.Title.Should().Be("Validation failed");
+    }
+
     private static RequestMutationBody CreateMutationBody(
         string title = "Integration test request",
         string? department = "Engineering") =>

@@ -28,4 +28,11 @@ public interface IAuthService
         ClaimsPrincipal principal,
         ChangePasswordRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<UserSummaryResponse>> ListUsersAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<CreateUserResult> CreateUserAsync(
+        CreateUserRequest request,
+        CancellationToken cancellationToken = default);
 }
