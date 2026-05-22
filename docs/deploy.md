@@ -37,8 +37,8 @@ which continues to expose routes at `/requests`, `/auth`, and so on. SPA page UR
 
 ## Services
 
-- `nginx` publishes host port `80`, serves the built SPA, and proxies `/api`, `/health`,
-  `/openapi`, and `/scalar` to the API container.
+- `nginx` publishes host port `80`, serves the built SPA, and proxies `/api`, `/openapi`,
+  and `/scalar` to the API container.
 - `api` runs the ASP.NET Core service on the internal network.
 - `db` runs PostgreSQL 17 with a named volume.
 - `minio` runs S3-compatible object storage with a named volume.
@@ -62,10 +62,35 @@ In another terminal:
 ```bash
 curl --fail http://localhost/
 curl --fail http://localhost/api/health
-curl --fail http://localhost/health
 ```
 
 The health checks should return success once `db`, `migrator`, `api`, and `nginx` are healthy.
+
+### API auth smoke (through proxy)
+
+After the stack is up, verify login, list, detail, and refresh through the `/api` prefix (same
+path the SPA uses; Vite dev mirrors this behaviour):
+
+```bash
+COOKIE_JAR=$(mktemp)
+curl --fail http://localhost/api/health
+
+curl -s -c "$COOKIE_JAR" -X POST http://localhost/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"requestor@demo.local","password":"Password1!"}' \
+  | tee /tmp/login.json >/dev/null
+
+TOKEN=$(python3 -c "import json; print(json.load(open('/tmp/login.json'))['accessToken'])")
+
+curl --fail http://localhost/api/requests -H "Authorization: Bearer $TOKEN" >/dev/null
+curl --fail http://localhost/api/requests/1 -H "Authorization: Bearer $TOKEN" >/dev/null
+curl --fail -b "$COOKIE_JAR" -X POST http://localhost/api/auth/refresh >/dev/null
+
+rm -f "$COOKIE_JAR" /tmp/login.json
+```
+
+Confirm the refresh cookie is scoped to `Path=/api/auth` (inspect `Set-Cookie` on login).
+SPA routes such as `/requests/1` should return HTML, not API 401 responses.
 
 ## Shutdown
 
