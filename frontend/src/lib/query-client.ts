@@ -21,4 +21,7 @@ export const queryKeys = {
     history: (id: string) => ['requests', 'history', id] as const,
     attachments: (id: string) => ['requests', 'attachments', id] as const,
   },
+  sponsorshipTypes: {
+    list: ['sponsorship-types', 'list'] as const,
+  },
 }

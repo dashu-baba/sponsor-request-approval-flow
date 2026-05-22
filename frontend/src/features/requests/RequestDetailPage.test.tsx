@@ -8,6 +8,10 @@ import { RequestDetailPage } from '@/features/requests/RequestDetailPage'
 import { ApiError } from '@/lib/api/api-error'
 import { Roles } from '@/lib/roles'
 import type { RequestDetail, WorkflowHistoryEntry } from '@/lib/schemas/requests'
+import type { Role } from '@/lib/roles'
+
+let currentRole: Role = Roles.Manager
+let currentUserId = 'manager-1'
 
 const getRequestMock = vi.fn<(id: string) => Promise<RequestDetail>>()
 const getRequestHistoryMock = vi.fn<(id: string) => Promise<WorkflowHistoryEntry[]>>()
@@ -27,11 +31,11 @@ vi.mock('@/lib/api/requests-api', () => ({
 
 vi.mock('@/features/auth/use-auth', () => ({
   useCurrentUser: () => ({
-    id: 'manager-1',
-    email: 'manager@demo.local',
-    displayName: 'James Okafor',
+    id: currentUserId,
+    email: 'user@demo.local',
+    displayName: 'Test User',
     department: 'Engineering',
-    role: Roles.Manager,
+    role: currentRole,
   }),
 }))
 
@@ -130,6 +134,26 @@ describe('RequestDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /confirm rejection/i }))
 
     expect(await screen.findByText(/action not permitted/i)).toBeInTheDocument()
+  })
+
+  it('hides attachment upload for requestor when request is not draft', async () => {
+    currentRole = Roles.Requestor
+    currentUserId = 'requestor-1'
+
+    getRequestMock.mockResolvedValue({
+      ...requestFixture,
+      requestorId: 'requestor-1',
+      status: 'PendingManagerApproval',
+    })
+    getRequestHistoryMock.mockResolvedValue(historyFixture)
+
+    renderDetailPage()
+
+    await screen.findByRole('heading', { name: /techconf 2025 sponsorship/i })
+    expect(screen.queryByText(/drag and drop files here/i)).not.toBeInTheDocument()
+
+    currentRole = Roles.Manager
+    currentUserId = 'manager-1'
   })
 
   it('shows retry when history fails to load', async () => {

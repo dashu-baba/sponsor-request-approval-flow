@@ -18,7 +18,12 @@ import { ApiError } from '@/lib/api/api-error'
 import { getRequest, getRequestHistory } from '@/lib/api/requests-api'
 import { formatCurrency, formatDate, formatDateTime, formatRequestId } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
-import { canApproveRequest, canCancelRequest, canEditRequest } from '@/lib/request-status'
+import {
+  canApproveRequest,
+  canCancelRequest,
+  canEditRequest,
+  canUploadAttachments,
+} from '@/lib/request-status'
 import { Roles } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 
@@ -109,6 +114,7 @@ export function RequestDetailPage() {
     !conflictDetected && !forbiddenDetected && canApproveRequest(request.status, user.role)
   const showEdit = isOwnerRequestor && canEditRequest(request.status)
   const showCancel = isOwnerRequestor && canCancelRequest(request.status)
+  const showUpload = isOwnerRequestor && canUploadAttachments(request.status)
 
   function refreshRequest() {
     setConflictDetected(false)
@@ -241,7 +247,7 @@ export function RequestDetailPage() {
               <CardTitle>Supporting documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <RequestAttachmentsSection requestId={request.id} allowUpload={isOwnerRequestor} />
+              <RequestAttachmentsSection requestId={request.id} allowUpload={showUpload} />
             </CardContent>
           </Card>
         </div>

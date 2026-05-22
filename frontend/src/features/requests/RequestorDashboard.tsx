@@ -26,6 +26,7 @@ import { RequestStatusBadge } from '@/features/requests/RequestStatusBadge'
 import { getDashboardHeading, type DashboardStatusFilter } from '@/features/auth/role-nav'
 import { ApiError } from '@/lib/api/api-error'
 import { getRequestSummary, listRequests } from '@/lib/api/requests-api'
+import { listSponsorshipTypes } from '@/lib/api/sponsorship-types-api'
 import { formatCurrency, formatDate, formatRequestId } from '@/lib/format'
 import { queryKeys } from '@/lib/query-client'
 import { canCancelRequest, canEditRequest } from '@/lib/request-status'
@@ -219,11 +220,7 @@ export function RequestorDashboard() {
     setPage(1)
     const next = new URLSearchParams(searchParams)
     if (!value) {
-      if (urlStatusFilter === 'all') {
-        next.delete('status')
-      } else {
-        next.set('status', 'all')
-      }
+      next.set('status', 'all')
     } else {
       next.set('status', value)
     }
@@ -240,10 +237,19 @@ export function RequestorDashboard() {
     queryFn: () => listRequests({ page, pageSize: PAGE_SIZE }),
   })
 
-  const sponsorshipTypes = useMemo(() => {
-    const items = listQuery.data?.items ?? []
-    return [...new Set(items.map((item) => item.sponsorshipTypeName))].sort()
-  }, [listQuery.data?.items])
+  const sponsorshipTypesQuery = useQuery({
+    queryKey: queryKeys.sponsorshipTypes.list,
+    queryFn: listSponsorshipTypes,
+  })
+
+  const sponsorshipTypeNames = useMemo(
+    () =>
+      (sponsorshipTypesQuery.data ?? [])
+        .filter((type) => type.isActive)
+        .map((type) => type.name)
+        .sort(),
+    [sponsorshipTypesQuery.data],
+  )
 
   const filteredItems = useMemo(() => {
     const items = listQuery.data?.items ?? []
@@ -410,7 +416,7 @@ export function RequestorDashboard() {
               aria-label="Filter by sponsorship type"
             >
               <option value="">All types</option>
-              {sponsorshipTypes.map((type) => (
+              {sponsorshipTypeNames.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
@@ -418,8 +424,8 @@ export function RequestorDashboard() {
             </select>
             <span className="text-xs text-text-hint">
               {filteredItems.length !== (paged?.items.length ?? 0)
-                ? `${filteredItems.length} of ${paged?.items.length ?? 0} on this page (filters apply to current page)`
-                : `${paged?.totalCount ?? 0} requests`}
+                ? `${filteredItems.length} of ${paged?.items.length ?? 0} on this page — search and filters apply to the current page only`
+                : `${paged?.totalCount ?? 0} requests — search and filters apply to the current page only`}
             </span>
           </div>
 

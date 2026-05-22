@@ -75,7 +75,11 @@ export function RequestAttachmentsSection({
         toast.error(`${file.name} exceeds the 10 MB limit.`)
         continue
       }
-      await uploadMutation.mutateAsync(file)
+      try {
+        await uploadMutation.mutateAsync(file)
+      } catch {
+        // onError handler surfaces the failure to the user
+      }
     }
   }
 

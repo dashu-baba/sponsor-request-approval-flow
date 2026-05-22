@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,6 +10,8 @@ import type { PagedRequests, RequestSummary } from '@/lib/schemas/requests'
 const getRequestSummaryMock = vi.fn<() => Promise<RequestSummary>>()
 const listRequestsMock =
   vi.fn<(params?: { page?: number; pageSize?: number }) => Promise<PagedRequests>>()
+const cancelRequestMock = vi.fn()
+const toastSuccessMock = vi.fn()
 
 vi.mock('@/lib/api/requests-api', () => ({
   getRequestSummary: () => getRequestSummaryMock(),
@@ -17,7 +19,7 @@ vi.mock('@/lib/api/requests-api', () => ({
   createRequest: vi.fn(),
   updateDraftRequest: vi.fn(),
   submitRequest: vi.fn(),
-  cancelRequest: vi.fn(),
+  cancelRequest: (...args: unknown[]) => cancelRequestMock(...args),
 }))
 
 vi.mock('@/lib/api/sponsorship-types-api', () => ({
@@ -35,7 +37,11 @@ vi.mock('@/features/auth/use-auth', () => ({
 }))
 
 vi.mock('sonner', () => ({
-  toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+  toast: {
+    success: (...args: unknown[]) => toastSuccessMock(...args),
+    error: vi.fn(),
+    warning: vi.fn(),
+  },
 }))
 
 const summaryFixture: RequestSummary = {
@@ -143,5 +149,35 @@ describe('RequestorDashboard', () => {
     await user.click(screen.getByRole('button', { name: /new request/i }))
 
     expect(await screen.findByRole('dialog', { name: /new sponsorship request/i })).toBeVisible()
+  })
+
+  it('cancels a pending request via confirmation modal', async () => {
+    cancelRequestMock.mockResolvedValue({ id: listFixture.items[1].id, status: 'Cancelled' })
+
+    renderDashboard()
+    const user = userEvent.setup()
+
+    await screen.findByText('Pending request')
+
+    const cancelButtons = screen
+      .getAllByRole('button', { name: /^cancel$/i })
+      .filter((button) => button.textContent === 'Cancel')
+    await user.click(cancelButtons[0])
+
+    expect(await screen.findByRole('dialog', { name: /cancel request/i })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: /cancel request$/i }))
+
+    await waitFor(() => expect(cancelRequestMock).toHaveBeenCalled())
+    expect(toastSuccessMock).toHaveBeenCalledWith('Request cancelled.')
+  })
+
+  it('shows error state when summary fails', async () => {
+    getRequestSummaryMock.mockRejectedValue(new Error('Network error'))
+    listRequestsMock.mockRejectedValue(new Error('Network error'))
+
+    renderDashboard()
+
+    expect(await screen.findByText('Something went wrong')).toBeVisible()
+    expect(screen.getByRole('button', { name: /retry/i })).toBeVisible()
   })
 })

@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { listAdminRequests, listSponsorshipTypes } from '@/features/admin/api/admin-api'
 import { formatDate, formatMoney, formatStatus, getErrorMessage } from '@/features/admin/format'
 import type { RequestListItem, RequestStatus } from '@/features/admin/types'
+import { queryKeys } from '@/lib/query-client'
 
 const pageSize = 10
 const clientFilterPageSize = 100
@@ -84,7 +85,7 @@ export function AdminRequestsPage() {
   })
 
   const typesQuery = useQuery({
-    queryKey: ['sponsorship-types'],
+    queryKey: queryKeys.sponsorshipTypes.list,
     queryFn: listSponsorshipTypes,
   })
 

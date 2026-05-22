@@ -319,7 +319,7 @@ export function RequestFormModal({ open, onClose, requestId, onSuccess }: Reques
   const isEdit = Boolean(requestId)
 
   const typesQuery = useQuery({
-    queryKey: ['sponsorship-types', 'active'],
+    queryKey: queryKeys.sponsorshipTypes.list,
     queryFn: listSponsorshipTypes,
     enabled: open,
   })
@@ -334,9 +334,11 @@ export function RequestFormModal({ open, onClose, requestId, onSuccess }: Reques
   })
 
   const isLoading = isEdit && detailQuery.isLoading
+  const loadedRequest = detailQuery.data
+  const isDraftEditable = !isEdit || loadedRequest?.status === 'Draft'
   const defaultValues =
-    isEdit && detailQuery.data
-      ? detailToFormValues(detailQuery.data)
+    isEdit && loadedRequest
+      ? detailToFormValues(loadedRequest)
       : emptyFormValues(user.department ?? '')
   const bodyKey = isEdit ? `edit-${requestId}` : 'create'
 
@@ -363,7 +365,21 @@ export function RequestFormModal({ open, onClose, requestId, onSuccess }: Reques
               : 'Unable to load sponsorship types.'}
           </AlertDescription>
         </Alert>
-      ) : open && (!isEdit || detailQuery.data) ? (
+      ) : isEdit && loadedRequest && !isDraftEditable ? (
+        <div className="space-y-4">
+          <Alert variant="warning">
+            <AlertDescription>
+              This request is no longer a draft and cannot be edited. View the request detail for
+              read-only information.
+            </AlertDescription>
+          </Alert>
+          <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        </div>
+      ) : open && (!isEdit || loadedRequest) ? (
         <RequestFormBody
           key={bodyKey}
           defaultValues={defaultValues}

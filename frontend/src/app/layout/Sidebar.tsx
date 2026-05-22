@@ -16,6 +16,7 @@ function getRequestorNavBadgeCount(
     total: number
     draft: number
     pendingManagerApproval: number
+    pendingFinanceReview: number
     approved: number
     rejected: number
   },
@@ -26,7 +27,7 @@ function getRequestorNavBadgeCount(
     case 'Draft':
       return summary.draft
     case 'PendingManagerApproval':
-      return summary.pendingManagerApproval
+      return summary.pendingManagerApproval + summary.pendingFinanceReview
     case 'Approved':
       return summary.approved
     case 'Rejected':
