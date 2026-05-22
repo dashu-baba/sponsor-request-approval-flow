@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/PageHeader'
@@ -32,9 +31,24 @@ export function AuditPage() {
   const [action, setAction] = useState('')
   const [category, setCategory] = useState('')
   const [requestId, setRequestId] = useState('')
+  const [actorId, setActorId] = useState('')
+  const [resourceType, setResourceType] = useState('')
+  const [resourceId, setResourceId] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
 
   const query = useQuery({
-    queryKey: queryKeys.audit.list(page, action, category, requestId),
+    queryKey: queryKeys.audit.list({
+      page,
+      action,
+      category,
+      requestId,
+      actorId,
+      resourceType,
+      resourceId,
+      fromDate,
+      toDate,
+    }),
     queryFn: () =>
       listAuditEvents({
         page,
@@ -42,6 +56,11 @@ export function AuditPage() {
         action: action || undefined,
         category: category || undefined,
         requestId: requestId || undefined,
+        actorId: actorId || undefined,
+        resourceType: resourceType || undefined,
+        resourceId: resourceId || undefined,
+        from: fromDate ? `${fromDate}T00:00:00.000Z` : undefined,
+        to: toDate ? `${toDate}T23:59:59.999Z` : undefined,
       }),
   })
 
@@ -51,13 +70,12 @@ export function AuditPage() {
     <div className="space-y-6">
       <PageHeader
         title="Audit trail"
-        description="SystemAdmin operations log. Separate from request workflow history."
-        icon={ShieldCheck}
+        subtitle="SystemAdmin operations log. Separate from request workflow history."
       />
 
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
             <div className="space-y-2">
               <Label htmlFor="audit-action">Action</Label>
               <Input
@@ -96,6 +114,66 @@ export function AuditPage() {
                 value={requestId}
                 onChange={(event) => {
                   setRequestId(event.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audit-actor-id">Actor ID</Label>
+              <Input
+                id="audit-actor-id"
+                placeholder="User ID"
+                value={actorId}
+                onChange={(event) => {
+                  setActorId(event.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audit-resource-type">Resource type</Label>
+              <Input
+                id="audit-resource-type"
+                placeholder="e.g. SponsorshipRequest"
+                value={resourceType}
+                onChange={(event) => {
+                  setResourceType(event.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audit-resource-id">Resource ID</Label>
+              <Input
+                id="audit-resource-id"
+                placeholder="Resource primary key"
+                value={resourceId}
+                onChange={(event) => {
+                  setResourceId(event.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audit-from">From date</Label>
+              <Input
+                id="audit-from"
+                type="date"
+                value={fromDate}
+                onChange={(event) => {
+                  setFromDate(event.target.value)
+                  setPage(1)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audit-to">To date</Label>
+              <Input
+                id="audit-to"
+                type="date"
+                value={toDate}
+                onChange={(event) => {
+                  setToDate(event.target.value)
                   setPage(1)
                 }}
               />

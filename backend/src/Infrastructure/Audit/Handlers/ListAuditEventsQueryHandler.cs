@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SponsorshipApproval.Application.Audit.Models;
@@ -11,6 +12,8 @@ namespace SponsorshipApproval.Infrastructure.Audit.Handlers;
 public sealed class ListAuditEventsQueryHandler(AppDbContext dbContext)
     : IRequestHandler<ListAuditEventsQuery, PagedResult<AuditEventDto>>
 {
+    private static readonly JsonSerializerOptions JsonFilterOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<PagedResult<AuditEventDto>> Handle(
         ListAuditEventsQuery query,
         CancellationToken cancellationToken)
@@ -60,7 +63,9 @@ public sealed class ListAuditEventsQueryHandler(AppDbContext dbContext)
         if (!string.IsNullOrWhiteSpace(query.RequestId))
         {
             var requestId = query.RequestId.Trim();
-            var jsonFilter = $$"""{"requestId":"{{requestId}}"}""";
+            var jsonFilter = JsonSerializer.Serialize(
+                new Dictionary<string, string> { ["requestId"] = requestId },
+                JsonFilterOptions);
             baseQuery = baseQuery.Where(auditEvent =>
                 auditEvent.Metadata != null && EF.Functions.JsonContains(auditEvent.Metadata, jsonFilter));
         }
@@ -72,13 +77,18 @@ public sealed class ListAuditEventsQueryHandler(AppDbContext dbContext)
             .ThenByDescending(auditEvent => auditEvent.Id)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Join(
+            .GroupJoin(
                 dbContext.Users,
                 auditEvent => auditEvent.ActorId,
                 user => user.Id,
-                (auditEvent, user) => AuditEventProjection.ToDto(
-                    auditEvent,
-                    user.DisplayName ?? user.UserName ?? auditEvent.ActorId))
+                (auditEvent, users) => new { auditEvent, users })
+            .SelectMany(
+                joined => joined.users.DefaultIfEmpty(),
+                (joined, user) => AuditEventProjection.ToDto(
+                    joined.auditEvent,
+                    user != null
+                        ? user.DisplayName ?? user.UserName ?? joined.auditEvent.ActorId
+                        : joined.auditEvent.ActorId))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 

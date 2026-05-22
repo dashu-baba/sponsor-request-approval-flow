@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using SponsorshipApproval.Application.Audit;
 using SponsorshipApproval.Application.Auth;
 using SponsorshipApproval.Application.Auth.Models;
@@ -17,8 +16,7 @@ public sealed class AuthService(
     AppDbContext dbContext,
     IJwtTokenService jwtTokenService,
     IAuditService auditService,
-    ICurrentUserContext currentUser,
-    ILogger<AuthService> logger) : IAuthService
+    ICurrentUserContext currentUser) : IAuthService
 {
     public async Task<(LoginResponse Response, string RawRefreshToken, DateTimeOffset RefreshTokenExpiresAt)?> LoginAsync(
         LoginRequest request,
@@ -163,15 +161,31 @@ public sealed class AuthService(
         user.DisplayName = trimmedDisplayName;
         user.Department = trimmedDepartment;
 
-        var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
-        if (!updateResult.Succeeded)
+        if (changedFields.Count == 0)
         {
-            var errors = updateResult.Errors.Select(error => error.Description).ToArray();
-            return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
+            var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
+            if (role is null)
+            {
+                return UpdateProfileResult.Failed(UpdateProfileFailureReason.UnexpectedFailure);
+            }
+
+            return UpdateProfileResult.Success(MapProfile(user, role));
         }
 
-        if (changedFields.Count > 0)
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        try
         {
+            var updateResult = await userManager.UpdateAsync(user).ConfigureAwait(false);
+            if (!updateResult.Succeeded)
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                var errors = updateResult.Errors.Select(error => error.Description).ToArray();
+                return UpdateProfileResult.Failed(UpdateProfileFailureReason.IdentityValidationFailed, errors);
+            }
+
             auditService.Record(new AuditRecord(
                 user.Id,
                 AuditActions.AuthProfileUpdated,
@@ -182,15 +196,25 @@ public sealed class AuthService(
                 Metadata: new Dictionary<string, object?> { ["changedFields"] = changedFields.ToArray() }));
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
         }
 
-        var role = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
-        if (role is null)
+        var updatedRole = await GetSingleRoleAsync(user, cancellationToken).ConfigureAwait(false);
+        if (updatedRole is null)
         {
             return UpdateProfileResult.Failed(UpdateProfileFailureReason.UnexpectedFailure);
         }
 
-        return UpdateProfileResult.Success(MapProfile(user, role));
+        return UpdateProfileResult.Success(MapProfile(user, updatedRole));
     }
 
     public async Task<ChangePasswordResult> ChangePasswordAsync(
@@ -269,49 +293,60 @@ public sealed class AuthService(
             EmailConfirmed = true,
         };
 
-        var createResult = await userManager.CreateAsync(user, request.InitialPassword).ConfigureAwait(false);
-        if (!createResult.Succeeded)
+        var transaction = await dbContext.Database
+            .BeginTransactionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        try
         {
-            if (createResult.Errors.Any(error =>
-                    error.Code is "DuplicateUserName" or "DuplicateEmail"))
+            var createResult = await userManager.CreateAsync(user, request.InitialPassword).ConfigureAwait(false);
+            if (!createResult.Succeeded)
             {
-                return CreateUserResult.Failed(CreateUserFailureReason.DuplicateEmail);
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+
+                if (createResult.Errors.Any(error =>
+                        error.Code is "DuplicateUserName" or "DuplicateEmail"))
+                {
+                    return CreateUserResult.Failed(CreateUserFailureReason.DuplicateEmail);
+                }
+
+                var policyErrors = createResult.Errors.Select(error => error.Description).ToArray();
+                return CreateUserResult.Failed(CreateUserFailureReason.PolicyViolation, policyErrors);
             }
 
-            var policyErrors = createResult.Errors.Select(error => error.Description).ToArray();
-            return CreateUserResult.Failed(CreateUserFailureReason.PolicyViolation, policyErrors);
-        }
-
-        var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
-        if (!roleResult.Succeeded)
-        {
-            var deleteResult = await userManager.DeleteAsync(user).ConfigureAwait(false);
-            if (!deleteResult.Succeeded)
+            var roleResult = await userManager.AddToRoleAsync(user, request.Role).ConfigureAwait(false);
+            if (!roleResult.Succeeded)
             {
-                logger.LogWarning(
-                    "Failed to delete user {UserId} after role assignment failure: {Errors}",
-                    user.Id,
-                    string.Join(", ", deleteResult.Errors.Select(error => error.Description)));
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
             }
 
-            return CreateUserResult.Failed(CreateUserFailureReason.RoleAssignmentFailed);
+            auditService.Record(new AuditRecord(
+                currentUser.UserId,
+                AuditActions.UserCreated,
+                AuditCategories.User,
+                AuditResourceTypes.User,
+                user.Id,
+                Summary: $"Created user {email}",
+                Metadata: new Dictionary<string, object?>
+                {
+                    ["email"] = email,
+                    ["role"] = request.Role,
+                    ["displayName"] = user.DisplayName,
+                }));
+
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
-
-        auditService.Record(new AuditRecord(
-            currentUser.UserId,
-            AuditActions.UserCreated,
-            AuditCategories.User,
-            AuditResourceTypes.User,
-            user.Id,
-            Summary: $"Created user {email}",
-            Metadata: new Dictionary<string, object?>
-            {
-                ["email"] = email,
-                ["role"] = request.Role,
-                ["displayName"] = user.DisplayName,
-            }));
-
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+        finally
+        {
+            await transaction.DisposeAsync().ConfigureAwait(false);
+        }
 
         return CreateUserResult.Success(MapSummary(user, request.Role));
     }

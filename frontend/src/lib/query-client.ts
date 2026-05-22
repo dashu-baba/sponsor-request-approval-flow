@@ -28,7 +28,29 @@ export const queryKeys = {
     list: ['users', 'list'] as const,
   },
   audit: {
-    list: (page: number, action: string, category: string, requestId: string) =>
-      ['audit', 'list', page, action, category, requestId] as const,
+    list: (filters: {
+      page: number
+      action: string
+      category: string
+      requestId: string
+      actorId: string
+      resourceType: string
+      resourceId: string
+      fromDate: string
+      toDate: string
+    }) =>
+      [
+        'audit',
+        'list',
+        filters.page,
+        filters.action,
+        filters.category,
+        filters.requestId,
+        filters.actorId,
+        filters.resourceType,
+        filters.resourceId,
+        filters.fromDate,
+        filters.toDate,
+      ] as const,
   },
 }
