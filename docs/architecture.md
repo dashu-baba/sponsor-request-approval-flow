@@ -326,6 +326,26 @@ flowchart TB
 CI (GitHub Actions) runs backend (build warnings-as-errors, `dotnet format`, tests) and frontend
 (typecheck, ESLint, Prettier, build, tests) on every PR.
 
+## 2.11 Assumptions & tradeoffs
+
+The full business-rule assumptions (A1–D1, e.g. *edit only while Draft*, *no self-approval*,
+*drafts private*, *no amount-based routing*) live in
+[`requirements-clarifications.md`](./requirements-clarifications.md); design risks are in
+[high-level-design.md §14](./high-level-design.md). The engineering tradeoffs worth calling out:
+
+| Decision | Tradeoff |
+|----------|----------|
+| **CQRS-lite via MediatR + AutoMapper** | More indirection than a service class, but consistent validation/logging pipeline and clear use-case boundaries. (Both are free under their Community tier at this scale — see HLD §4.) |
+| **`/api` prefix stripped at the proxy** rather than a Kestrel route group | Smallest diff and keeps backend routes clean, but the backend hardcodes the gateway mount for the cookie path; revisit if more absolute-URL surfaces appear (backlog B-026). |
+| **Access token in memory, refresh token in httpOnly cookie** | Survives XSS token theft better than `localStorage`, at the cost of a refresh round-trip after each access-token expiry. |
+| **Migrate + seed on API startup *and* a one-shot `migrator`** | Simple and idempotent, but two paths do overlapping work (backlog B-034). |
+| **MinIO instead of real S3** | Portable, no cloud account needed for the assessment; production would point at S3 via the same AWS SDK. |
+| **Single-node Docker Compose** | Reproducible and easy to run; no HA/autoscaling (explicitly out of scope). |
+| **Optimistic concurrency via Postgres `xmin`** | No extra version column, but concurrent transitions surface as a 409 the caller must retry. |
+
+Out of scope (confirmed): email/real-time notifications, multi-tenancy, amount-based approval tiers,
+rework/send-back loops, multi-currency, public self-registration, field-level audit diffing.
+
 ---
 
 *This document describes the system as built. For the original design rationale and decision log, see
