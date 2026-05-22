@@ -52,7 +52,7 @@ export function AdminRequestDetailPage() {
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="w-fit">
-        <Link to="/admin/requests">
+        <Link to="/dashboard">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back
         </Link>

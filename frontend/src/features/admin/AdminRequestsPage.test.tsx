@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -23,100 +23,164 @@ function renderWithProviders(route: string, element: ReactNode) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[route]}>
         <Routes>
-          <Route path="/admin/requests" element={element} />
-          <Route path="/admin/requests/:id" element={element} />
+          <Route path="/dashboard" element={element} />
+          <Route path="/dashboard/requests/:id" element={element} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
 }
 
+const sampleRequests = [
+  {
+    id: 'request-1',
+    title: 'Tech Summit Booth',
+    status: 'PendingManagerApproval' as const,
+    eventName: 'Tech Summit',
+    eventDate: '2026-08-15',
+    requestedAmount: 12500,
+    sponsorshipTypeName: 'Event Sponsorship',
+    createdAt: '2026-05-21T08:30:00Z',
+  },
+  {
+    id: 'request-2',
+    title: 'Community Workshop',
+    status: 'Approved' as const,
+    eventName: 'Community Outreach',
+    eventDate: '2026-09-02',
+    requestedAmount: 4500,
+    sponsorshipTypeName: 'Community',
+    createdAt: '2026-05-20T12:00:00Z',
+  },
+]
+
 describe('AdminRequestsPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(adminApi.listSponsorshipTypes).mockResolvedValue([
+      {
+        id: 'type-1',
+        name: 'Event Sponsorship',
+        description: 'Events',
+        isActive: true,
+        createdAt: '2026-05-21T08:30:00Z',
+        updatedAt: null,
+      },
+      {
+        id: 'type-2',
+        name: 'Community',
+        description: 'Community',
+        isActive: true,
+        createdAt: '2026-05-21T08:30:00Z',
+        updatedAt: null,
+      },
+    ])
+    vi.mocked(adminApi.listAdminRequests).mockImplementation(async (params) => {
+      if (params.status === 'Approved') {
+        return { items: [sampleRequests[1]], page: 1, pageSize: params.pageSize, totalCount: 1 }
+      }
+
+      if (params.status === 'PendingManagerApproval') {
+        return { items: [sampleRequests[0]], page: 1, pageSize: params.pageSize, totalCount: 1 }
+      }
+
+      if (params.status === 'PendingFinanceReview') {
+        return { items: [], page: 1, pageSize: params.pageSize, totalCount: 0 }
+      }
+
+      if (params.status === 'Rejected') {
+        return { items: [], page: 1, pageSize: params.pageSize, totalCount: 0 }
+      }
+
+      if (params.page === 2) {
+        return {
+          items: [
+            {
+              id: 'request-3',
+              title: 'Finance Expo',
+              status: 'PendingFinanceReview',
+              eventName: 'Finance Conference',
+              eventDate: '2026-10-11',
+              requestedAmount: 8000,
+              sponsorshipTypeName: 'Conference',
+              createdAt: '2026-05-19T09:00:00Z',
+            },
+          ],
+          page: 2,
+          pageSize: params.pageSize,
+          totalCount: 15,
+        }
+      }
+
+      return {
+        items: sampleRequests,
+        page: params.page,
+        pageSize: params.pageSize,
+        totalCount: 15,
+      }
+    })
   })
 
   it('filters submitted requests and paginates without showing drafts', async () => {
-    const listRequests = vi.mocked(adminApi.listAdminRequests)
-    listRequests.mockResolvedValueOnce({
-      items: [
-        {
-          id: 'request-1',
-          title: 'Tech Summit Booth',
-          status: 'PendingManagerApproval',
-          eventName: 'Tech Summit',
-          eventDate: '2026-08-15',
-          requestedAmount: 12500,
-          sponsorshipTypeName: 'Event Sponsorship',
-          createdAt: '2026-05-21T08:30:00Z',
-        },
-        {
-          id: 'request-2',
-          title: 'Community Workshop',
-          status: 'Approved',
-          eventName: 'Community Outreach',
-          eventDate: '2026-09-02',
-          requestedAmount: 4500,
-          sponsorshipTypeName: 'Community',
-          createdAt: '2026-05-20T12:00:00Z',
-        },
-      ],
-      page: 1,
-      pageSize: 2,
-      totalCount: 15,
-    })
-    listRequests.mockResolvedValueOnce({
-      items: [
-        {
-          id: 'request-3',
-          title: 'Finance Expo',
-          status: 'PendingFinanceReview',
-          eventName: 'Finance Conference',
-          eventDate: '2026-10-11',
-          requestedAmount: 8000,
-          sponsorshipTypeName: 'Conference',
-          createdAt: '2026-05-19T09:00:00Z',
-        },
-      ],
-      page: 2,
-      pageSize: 2,
-      totalCount: 5,
-    })
-    listRequests.mockResolvedValueOnce({
-      items: [
-        {
-          id: 'request-4',
-          title: 'Approved Partner Day',
-          status: 'Approved',
-          eventName: 'Partner Day',
-          eventDate: '2026-11-05',
-          requestedAmount: 3000,
-          sponsorshipTypeName: 'Partner',
-          createdAt: '2026-05-18T09:00:00Z',
-        },
-      ],
-      page: 1,
-      pageSize: 2,
-      totalCount: 1,
-    })
+    renderWithProviders('/dashboard', <AdminRequestsPage />)
 
-    renderWithProviders('/admin/requests', <AdminRequestsPage />)
-
-    expect(await screen.findByRole('heading', { name: /all submitted requests/i })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: /^dashboard$/i })).toBeVisible()
     expect(screen.getByText('Tech Summit Booth')).toBeVisible()
     expect(screen.getByText('Community Workshop')).toBeVisible()
     expect(screen.queryByText('Draft')).not.toBeInTheDocument()
-    expect(listRequests).toHaveBeenLastCalledWith({ page: 1, pageSize: 10, status: undefined })
+    expect(adminApi.listAdminRequests).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 10,
+      status: undefined,
+    })
 
     await userEvent.click(screen.getByRole('button', { name: /next page/i }))
 
     await waitFor(() => expect(screen.getByText('Finance Expo')).toBeVisible())
-    expect(listRequests).toHaveBeenLastCalledWith({ page: 2, pageSize: 10, status: undefined })
+    expect(adminApi.listAdminRequests).toHaveBeenCalledWith({
+      page: 2,
+      pageSize: 10,
+      status: undefined,
+    })
 
     await userEvent.selectOptions(screen.getByLabelText(/status/i), 'Approved')
 
-    await waitFor(() => expect(screen.getByText('Approved Partner Day')).toBeVisible())
-    expect(listRequests).toHaveBeenLastCalledWith({ page: 1, pageSize: 10, status: 'Approved' })
+    await waitFor(() => expect(screen.getByText('Community Workshop')).toBeVisible())
+    expect(adminApi.listAdminRequests).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 10,
+      status: 'Approved',
+    })
+  })
+
+  it('supports search, type filter, and grid view toggle', async () => {
+    renderWithProviders('/dashboard', <AdminRequestsPage />)
+
+    expect(await screen.findByText('Tech Summit Booth')).toBeVisible()
+
+    fireEvent.change(screen.getByLabelText(/search requests/i), {
+      target: { value: 'community' },
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByText('Tech Summit Booth')).not.toBeInTheDocument()
+      expect(screen.getByText('Community Workshop')).toBeVisible()
+    })
+
+    await userEvent.clear(screen.getByLabelText(/search requests/i))
+    await userEvent.selectOptions(screen.getByLabelText(/sponsorship type/i), 'Event Sponsorship')
+
+    await waitFor(() => {
+      expect(screen.getByText('Tech Summit Booth')).toBeVisible()
+      expect(screen.queryByText('Community Workshop')).not.toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /grid view/i }))
+
+    expect(screen.getByRole('button', { name: /grid view/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 })
 
@@ -165,7 +229,7 @@ describe('AdminRequestDetailPage', () => {
       },
     ])
 
-    renderWithProviders('/admin/requests/request-1', <AdminRequestDetailPage />)
+    renderWithProviders('/dashboard/requests/request-1', <AdminRequestDetailPage />)
 
     expect(await screen.findByRole('heading', { name: /tech summit booth/i })).toBeVisible()
     expect(screen.getByText('Rina Ahmed')).toBeVisible()

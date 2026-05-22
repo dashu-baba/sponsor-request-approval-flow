@@ -78,10 +78,7 @@ export function getNavSections(role: Role): NavSectionConfig[] {
         overview,
         {
           label: 'Administration',
-          items: [
-            { label: 'All Requests', to: '/admin/requests', icon: FileText },
-            { label: 'Sponsorship Types', to: '/admin/sponsorship-types', icon: Settings2 },
-          ],
+          items: [{ label: 'Sponsorship Types', to: '/admin/sponsorship-types', icon: Settings2 }],
         },
         account,
       ]

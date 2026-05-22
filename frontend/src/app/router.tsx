@@ -4,17 +4,13 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from '@/app/layout/AppShell'
 import { LoadingState } from '@/components/states/query-states'
 import { ProfileStubPage } from '@/features/account/ProfileStubPage'
+import { AdminRequestLegacyRedirect } from '@/features/admin/AdminRequestLegacyRedirect'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { adminOnly } from '@/features/auth/route-policy'
 import { GuestRoute, ProtectedRoute, RoleRedirect } from '@/features/auth/ProtectedRoute'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { UiStatesDemoPage } from '@/features/dev/UiStatesDemoPage'
 
-const adminRequestsPage = lazy(() =>
-  import('@/features/admin/AdminRequestsPage').then((module) => ({
-    default: module.AdminRequestsPage,
-  })),
-)
 const adminRequestDetailPage = lazy(() =>
   import('@/features/admin/AdminRequestDetailPage').then((module) => ({
     default: module.AdminRequestDetailPage,
@@ -48,16 +44,17 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: 'dashboard', element: <DashboardPage /> },
+          {
+            path: 'dashboard/requests/:id',
+            element: lazyPage(createElement(adminRequestDetailPage)),
+          },
           { path: 'dev/ui-states', element: <UiStatesDemoPage /> },
           { path: 'profile', element: <ProfileStubPage /> },
+          { path: 'admin/requests', element: <Navigate to="/dashboard" replace /> },
+          { path: 'admin/requests/:id', element: <AdminRequestLegacyRedirect /> },
           {
             element: <ProtectedRoute allowedRoles={[...adminOnly]} />,
             children: [
-              { path: 'admin/requests', element: lazyPage(createElement(adminRequestsPage)) },
-              {
-                path: 'admin/requests/:id',
-                element: lazyPage(createElement(adminRequestDetailPage)),
-              },
               {
                 path: 'admin/sponsorship-types',
                 element: lazyPage(createElement(sponsorshipTypesPage)),
