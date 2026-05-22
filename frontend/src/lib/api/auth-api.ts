@@ -15,6 +15,16 @@ export interface LoginRequest {
 
 export { setSessionExpiredHandler } from '@/lib/api/session-expired'
 
+const API_BASE = '/api'
+
+function apiUrl(path: string): string {
+  return `${API_BASE}${path}`
+}
+
+function fetchApi(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(apiUrl(path), init)
+}
+
 let refreshPromise: Promise<LoginResponse | null> | null = null
 
 async function requestJson<T>(
@@ -22,7 +32,7 @@ async function requestJson<T>(
   init: RequestInit,
   schema: { parse: (data: unknown) => T },
 ): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetchApi(path, {
     credentials: 'include',
     ...init,
     headers: {
@@ -60,7 +70,7 @@ export async function refreshSession(): Promise<LoginResponse | null> {
 
   refreshPromise = (async () => {
     try {
-      const response = await fetch('/auth/refresh', {
+      const response = await fetchApi('/auth/refresh', {
         method: 'POST',
         credentials: 'include',
       })
@@ -89,7 +99,7 @@ export async function refreshSession(): Promise<LoginResponse | null> {
 
 export async function logout(): Promise<void> {
   try {
-    await fetch('/auth/logout', {
+    await fetchApi('/auth/logout', {
       method: 'POST',
       credentials: 'include',
     })
@@ -132,7 +142,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set('Content-Type', 'application/json')
   }
 
-  let response = await fetch(path, {
+  let response = await fetchApi(path, {
     credentials: 'include',
     ...init,
     headers,
@@ -149,7 +159,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   }
 
   headers.set('Authorization', `Bearer ${refreshed.accessToken}`)
-  response = await fetch(path, {
+  response = await fetchApi(path, {
     credentials: 'include',
     ...init,
     headers,

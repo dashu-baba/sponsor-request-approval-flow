@@ -161,7 +161,7 @@ public sealed class AuthFlowTests(PostgresWebApplicationFactory factory)
         var cookie = cookieHeaders.Single(header => header.Contains("refresh_token", StringComparison.Ordinal));
         cookie.Should().ContainEquivalentOf("httponly");
         cookie.Should().ContainEquivalentOf("samesite=strict");
-        cookie.Should().ContainEquivalentOf("path=/auth");
+        cookie.Should().ContainEquivalentOf("path=/api/auth");
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email, string password)

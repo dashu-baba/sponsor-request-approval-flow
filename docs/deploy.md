@@ -28,6 +28,13 @@ Keep `.env` out of git. Replace every `change-me-*` value before using this outs
 development. The `COMPOSE_ENV_FILE` value in `.env.example` tells Compose which service env file to
 mount; the default compose command still falls back to `.env.example` when no local `.env` exists.
 
+## API routing (dev and Docker)
+
+Browser API calls use the `/api` prefix (for example `/api/requests`, `/api/auth/login`). Both
+local Vite dev and nginx in Docker strip that prefix before forwarding to the ASP.NET Core service,
+which continues to expose routes at `/requests`, `/auth`, and so on. SPA page URLs such as
+`/requests/7` are not prefixed and are served by the frontend router.
+
 ## Services
 
 - `nginx` publishes host port `80`, serves the built SPA, and proxies `/api`, `/health`,

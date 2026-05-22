@@ -5,7 +5,6 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 const apiTarget = 'http://localhost:5256'
-const apiProxyPaths = ['/auth', '/me', '/health', '/requests', '/sponsorship-types', '/system']
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -15,15 +14,13 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: Object.fromEntries(
-      apiProxyPaths.map((route) => [
-        route,
-        {
-          target: apiTarget,
-          changeOrigin: true,
-        },
-      ]),
-    ),
+    proxy: {
+      '/api': {
+        target: apiTarget,
+        changeOrigin: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
+      },
+    },
   },
   test: {
     environment: 'happy-dom',
